@@ -14,18 +14,18 @@
 \geometry{margin=1in}
 \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
 
+\newcommand{\TOPICTITLE}{Process Assignment, Scheduling and Load Balancing}
+
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\textbf{Lecture Notes:} \COURSETITLE}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
 \fancyhead[R]{\thepage}
 
-\newcommand{\COURSETITLE}{CSCI 65s4 Foundations of Parallel Computing}
-\newcommand{\LECTURETITLE}{Process Assignment, Scheduling and Load Balancing}
-\title{\LECTURETITLE\\\large Study-Ready Notes}
-\author{Compiled  Photsinakis}
-\date{September 30, 2025}
-
 \setlength{\headheight}{15pt}
+
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{October 2nd, 2025}
 
 \begin{document}
 \maketitle
@@ -36,31 +36,31 @@
 
 \subsection{Basic Concepts}
 \begin{itemize}
-\item \textbf{Process Assignment}: Mapping processes to processing elements (PEs)
-  \begin{itemize}
-  \item Considers: Process characteristics, Hardware/Software characteristics
-  \item Answers the question: \textbf{Where?}
-  \end{itemize}
-  
-\item \textbf{Scheduling}: Determining when to start executing each task
-  \begin{itemize}
-  \item Types: Undirected, Directed
-  \item Answers the question: \textbf{When?}
-  \end{itemize}
+  \item \textbf{Process Assignment}: Mapping processes to processing elements (PEs)
+        \begin{itemize}
+          \item Considers: Process characteristics, Hardware/Software characteristics
+          \item Answers the question: \textbf{Where?}
+        \end{itemize}
+
+  \item \textbf{Scheduling}: Determining when to start executing each task
+        \begin{itemize}
+          \item Types: Undirected, Directed
+          \item Answers the question: \textbf{When?}
+        \end{itemize}
 \end{itemize}
 
 [Summary] Process assignment determines where processes run, while scheduling determines when they execute. Both consider system and process characteristics for optimal performance.
 
 \subsection{Programming Models}
 \begin{itemize}
-\item \textbf{Definition}: Abstractions of CPU hardware, memory, and communication architectures
-\item \textbf{Types}: SPMD (Single Program Multiple Data), MPMD (Multiple Program Multiple Data), Shared Memory, Message Passing
-\item \textbf{Selection Criteria}:
-  \begin{itemize}
-  \item Application problem characteristics
-  \item Available parallel computer architecture
-  \item Knowledge of parallel algorithms and programming languages
-  \end{itemize}
+  \item \textbf{Definition}: Abstractions of CPU hardware, memory, and communication architectures
+  \item \textbf{Types}: SPMD (Single Program Multiple Data), MPMD (Multiple Program Multiple Data), Shared Memory, Message Passing
+  \item \textbf{Selection Criteria}:
+        \begin{itemize}
+          \item Application problem characteristics
+          \item Available parallel computer architecture
+          \item Knowledge of parallel algorithms and programming languages
+        \end{itemize}
 \end{itemize}
 
 [Summary] Programming models provide abstractions for parallel computing, with selection depending on application needs and available hardware.
@@ -69,36 +69,36 @@
 
 \subsection{Granularity}
 \begin{itemize}
-\item \textbf{Definition}: Ratio of computation to communication
-\item \textbf{Coarse vs Fine Granularity}:
-  \begin{itemize}
-  \item Coarse: Large computational work between communication events
-  \item Fine: Frequent communication with smaller computation chunks
-  \end{itemize}
-\item \textbf{Impact}: Higher computation/communication ratio $\rightarrow$ better speedup and efficiency
+  \item \textbf{Definition}: Ratio of computation to communication
+  \item \textbf{Coarse vs Fine Granularity}:
+        \begin{itemize}
+          \item Coarse: Large computational work between communication events
+          \item Fine: Frequent communication with smaller computation chunks
+        \end{itemize}
+  \item \textbf{Impact}: Higher computation/communication ratio $\rightarrow$ better speedup and efficiency
 \end{itemize}
 
 \subsection{Overheads}
 \begin{itemize}
-\item \textbf{Types}:
-  \begin{itemize}
-  \item Synchronization costs
-  \item Data communication costs
-  \end{itemize}
-\item \textbf{Significance}: Overheads reduce effective parallel speedup
+  \item \textbf{Types}:
+        \begin{itemize}
+          \item Synchronization costs
+          \item Data communication costs
+        \end{itemize}
+  \item \textbf{Significance}: Overheads reduce effective parallel speedup
 \end{itemize}
 
 \subsection{Scalability}
 \begin{itemize}
-\item \textbf{Definition}: Ability to maintain performance improvement with increasing processors
-\item \textbf{Influencing Factors}:
-  \begin{itemize}
-  \item Memory-CPU bandwidth
-  \item Network communication capabilities
-  \item Application algorithm design
-  \item Programming language characteristics
-  \item Process assignment strategy
-  \end{itemize}
+  \item \textbf{Definition}: Ability to maintain performance improvement with increasing processors
+  \item \textbf{Influencing Factors}:
+        \begin{itemize}
+          \item Memory-CPU bandwidth
+          \item Network communication capabilities
+          \item Application algorithm design
+          \item Programming language characteristics
+          \item Process assignment strategy
+        \end{itemize}
 \end{itemize}
 
 [Summary] Granularity, overheads, and scalability are critical factors affecting parallel performance, with granularity balancing computation and communication trade-offs.
@@ -107,43 +107,43 @@
 
 \subsection{Homogeneous vs Heterogeneous Systems}
 \begin{itemize}
-\item \textbf{Homogeneous Processors}:
-  \begin{itemize}
-  \item All processors identical in type and capability
-  \item Uniform computing and communication costs
-  \end{itemize}
-  
-\item \textbf{Heterogeneous Processors}:
-  \begin{itemize}
-  \item Processors with varying capabilities (speed, resources, software)
-  \item Different computing and communication costs
-  \item May require specific processors for certain processes
-  \end{itemize}
+  \item \textbf{Homogeneous Processors}:
+        \begin{itemize}
+          \item All processors identical in type and capability
+          \item Uniform computing and communication costs
+        \end{itemize}
+
+  \item \textbf{Heterogeneous Processors}:
+        \begin{itemize}
+          \item Processors with varying capabilities (speed, resources, software)
+          \item Different computing and communication costs
+          \item May require specific processors for certain processes
+        \end{itemize}
 \end{itemize}
 
 \subsection{Network Characteristics}
 \begin{itemize}
-\item \textbf{Homogeneous/Heterogeneous Networks}:
-  \begin{itemize}
-  \item Communication bandwidth may vary
-  \item Considerations: Mobility, disconnection issues
-  \end{itemize}
+  \item \textbf{Homogeneous/Heterogeneous Networks}:
+        \begin{itemize}
+          \item Communication bandwidth may vary
+          \item Considerations: Mobility, disconnection issues
+        \end{itemize}
 \end{itemize}
 
 \subsection{Cost Modeling}
 \begin{itemize}
-\item \textbf{Total Cost Formula}:
-  \[
-  \text{Total Cost} = \text{Computing Costs} + \text{Communication Costs}
-  \]
-  
-\item \textbf{Example Calculation}:
-  \begin{itemize}
-  \item Given process costs on different processors
-  \item Communication cost between processors = 1 unit
-  \item Assignment: (B,C,D) $\rightarrow$ P1; (A,E,F) $\rightarrow$ P2
-  \item Total Cost = Sum of computation costs + communication costs
-  \end{itemize}
+  \item \textbf{Total Cost Formula}:
+        \[
+          \text{Total Cost} = \text{Computing Costs} + \text{Communication Costs}
+        \]
+
+  \item \textbf{Example Calculation}:
+        \begin{itemize}
+          \item Given process costs on different processors
+          \item Communication cost between processors = 1 unit
+          \item Assignment: (B,C,D) $\rightarrow$ P1; (A,E,F) $\rightarrow$ P2
+          \item Total Cost = Sum of computation costs + communication costs
+        \end{itemize}
 \end{itemize}
 
 [Summary] System heterogeneity affects assignment decisions, with total cost being the sum of computation and communication expenses.
@@ -152,49 +152,49 @@
 
 \subsection{Problem Analysis}
 \begin{itemize}
-\item \textbf{Focus Areas}:
-  \begin{itemize}
-  \item Parallelize most time-consuming processes
-  \item Avoid parallelizing trivial processes
-  \item Identify bottlenecks: I/O, data dependencies
-  \end{itemize}
+  \item \textbf{Focus Areas}:
+        \begin{itemize}
+          \item Parallelize most time-consuming processes
+          \item Avoid parallelizing trivial processes
+          \item Identify bottlenecks: I/O, data dependencies
+        \end{itemize}
 \end{itemize}
 
 \subsection{System Analysis}
 \begin{itemize}
-\item \textbf{Processor Characteristics}:
-  \begin{itemize}
-  \item Speed, memory capacity
-  \end{itemize}
-  
-\item \textbf{Topology Types}:
-  \begin{itemize}
-  \item Mesh, Tree, Hypercube, 3-D Mesh
-  \end{itemize}
-  
-\item \textbf{Communication Patterns}:
-  \begin{itemize}
-  \item Processor-Processor
-  \item Processor-Memory
-  \item Memory-Memory
-  \end{itemize}
+  \item \textbf{Processor Characteristics}:
+        \begin{itemize}
+          \item Speed, memory capacity
+        \end{itemize}
+
+  \item \textbf{Topology Types}:
+        \begin{itemize}
+          \item Mesh, Tree, Hypercube, 3-D Mesh
+        \end{itemize}
+
+  \item \textbf{Communication Patterns}:
+        \begin{itemize}
+          \item Processor-Processor
+          \item Processor-Memory
+          \item Memory-Memory
+        \end{itemize}
 \end{itemize}
 
 \section{Decomposition Strategies}
 
 \subsection{Domain Decomposition}
 \begin{itemize}
-\item \textbf{Approach}: Divide data into discrete chunks
-\item \textbf{Applications}: Matrix operations, Image processing
-\item \textbf{Goal}: Maintain high $\frac{\text{cost of computing (R)}}{\text{cost of communication (C)}}$ ratio
-\item \textbf{Considerations}: Match system (R,C) with application (r,c)
+  \item \textbf{Approach}: Divide data into discrete chunks
+  \item \textbf{Applications}: Matrix operations, Image processing
+  \item \textbf{Goal}: Maintain high $\frac{\text{cost of computing (R)}}{\text{cost of communication (C)}}$ ratio
+  \item \textbf{Considerations}: Match system (R,C) with application (r,c)
 \end{itemize}
 
 \subsection{Functional Decomposition}
 \begin{itemize}
-\item \textbf{Approach}: Assign different functions to different processors
-\item \textbf{Applications}: Signal processing (pipelined filter stages)
-\item \textbf{Key Principle}: Maintain matching R/C to r/c ratios for improved parallelism
+  \item \textbf{Approach}: Assign different functions to different processors
+  \item \textbf{Applications}: Signal processing (pipelined filter stages)
+  \item \textbf{Key Principle}: Maintain matching R/C to r/c ratios for improved parallelism
 \end{itemize}
 
 [Summary] Domain decomposition partitions data, while functional decomposition partitions functions, both aiming to optimize computation-communication ratios.
@@ -203,29 +203,29 @@
 
 \subsection{Static Scheduling}
 \begin{itemize}
-\item \textbf{Characteristics}:
-  \begin{itemize}
-  \item Problem and process complexities known \textit{a priori}
-  \item Fixed assignments determined before execution
-  \end{itemize}
-  
-\item \textbf{Applications}: Traditional parallel systems with predictable workloads
+  \item \textbf{Characteristics}:
+        \begin{itemize}
+          \item Problem and process complexities known \textit{a priori}
+          \item Fixed assignments determined before execution
+        \end{itemize}
+
+  \item \textbf{Applications}: Traditional parallel systems with predictable workloads
 \end{itemize}
 
 \subsection{Dynamic Scheduling}
 \begin{itemize}
-\item \textbf{Characteristics}:
-  \begin{itemize}
-  \item Processor availability changes over time
-  \item Adapts to system state changes
-  \item Combined with process migration and load balancing
-  \end{itemize}
-  
-\item \textbf{Applications}:
-  \begin{itemize}
-  \item Cloud systems (shared resources)
-  \item Mobile systems (mobility, battery constraints)
-  \end{itemize}
+  \item \textbf{Characteristics}:
+        \begin{itemize}
+          \item Processor availability changes over time
+          \item Adapts to system state changes
+          \item Combined with process migration and load balancing
+        \end{itemize}
+
+  \item \textbf{Applications}:
+        \begin{itemize}
+          \item Cloud systems (shared resources)
+          \item Mobile systems (mobility, battery constraints)
+        \end{itemize}
 \end{itemize}
 
 [Summary] Static scheduling works with known parameters, while dynamic scheduling adapts to changing system conditions.
@@ -234,129 +234,129 @@
 
 \subsection{Centralized vs Decentralized}
 \begin{itemize}
-\item \textbf{Centralized Scheduling}:
-  \begin{itemize}
-  \item Single controller makes all decisions
-  \item Pros: Consistent, global view
-  \item Cons: Single point of failure, scalability issues
-  \end{itemize}
-  
-\item \textbf{Decentralized Scheduling}:
-  \begin{itemize}
-  \item Distributed decision making
-  \item Pros: Scalable, fault-tolerant
-  \item Cons: Coordination overhead, potential inconsistencies
-  \end{itemize}
+  \item \textbf{Centralized Scheduling}:
+        \begin{itemize}
+          \item Single controller makes all decisions
+          \item Pros: Consistent, global view
+          \item Cons: Single point of failure, scalability issues
+        \end{itemize}
+
+  \item \textbf{Decentralized Scheduling}:
+        \begin{itemize}
+          \item Distributed decision making
+          \item Pros: Scalable, fault-tolerant
+          \item Cons: Coordination overhead, potential inconsistencies
+        \end{itemize}
 \end{itemize}
 
 \subsection{Primary Issues: Problem Perspective}
 \begin{itemize}
-\item \textbf{Workload Distribution}:
-  \begin{itemize}
-  \item Distributing jobs and metadata
-  \item Queue length management
-  \end{itemize}
-  
-\item \textbf{Session State Management}:
-  \begin{itemize}
-  \item Node stickiness (affinity)
-  \item Cost of task reallocation
-  \item Session state distribution
-  \end{itemize}
+  \item \textbf{Workload Distribution}:
+        \begin{itemize}
+          \item Distributing jobs and metadata
+          \item Queue length management
+        \end{itemize}
+
+  \item \textbf{Session State Management}:
+        \begin{itemize}
+          \item Node stickiness (affinity)
+          \item Cost of task reallocation
+          \item Session state distribution
+        \end{itemize}
 \end{itemize}
 
 \subsection{Primary Issues: System Perspective}
 \begin{itemize}
-\item \textbf{Node Selection Policies}:
-  \begin{itemize}
-  \item Random selection
-  \item Round Robin
-  \item Shortest queue
-  \item Threshold-based (queue length > threshold)
-  \end{itemize}
-  
-\item \textbf{Workload Metrics}:
-  \begin{itemize}
-  \item Queue Length
-  \item CPU Utilization
-  \item Response Time, Capacity, Network latency
-  \item Probe limit
-  \end{itemize}
+  \item \textbf{Node Selection Policies}:
+        \begin{itemize}
+          \item Random selection
+          \item Round Robin
+          \item Shortest queue
+          \item Threshold-based (queue length > threshold)
+        \end{itemize}
+
+  \item \textbf{Workload Metrics}:
+        \begin{itemize}
+          \item Queue Length
+          \item CPU Utilization
+          \item Response Time, Capacity, Network latency
+          \item Probe limit
+        \end{itemize}
 \end{itemize}
 
 \section{Optimal Scheduling Analysis}
 
 \subsection{Mathematical Formulation}
 \begin{itemize}
-\item \textbf{System Model}:
-  \begin{itemize}
-  \item N tasks: $p_1, p_2, p_3, \ldots, p_N$
-  \item 2 processors: A and B
-  \item Assignment: A: $p_1, p_2, \ldots, p_k$; B: $p_{k+1}, p_{k+2}, \ldots, p_N$
-  \end{itemize}
-  
-\item \textbf{Cost Components}:
-  \begin{itemize}
-  \item Computation cost for process $p_i = r_i$
-  \item Communication cost between $p_i$ and $p_j = c_{i,j}$ if on different processors
-  \item Communication cost = 0 if on same processor
-  \end{itemize}
+  \item \textbf{System Model}:
+        \begin{itemize}
+          \item N tasks: $p_1, p_2, p_3, \ldots, p_N$
+          \item 2 processors: A and B
+          \item Assignment: A: $p_1, p_2, \ldots, p_k$; B: $p_{k+1}, p_{k+2}, \ldots, p_N$
+        \end{itemize}
+
+  \item \textbf{Cost Components}:
+        \begin{itemize}
+          \item Computation cost for process $p_i = r_i$
+          \item Communication cost between $p_i$ and $p_j = c_{i,j}$ if on different processors
+          \item Communication cost = 0 if on same processor
+        \end{itemize}
 \end{itemize}
 
 \subsection{Cost Analysis}
 \begin{itemize}
-\item \textbf{Total Cost Formula}:
-  \[
-  \text{Total Cost} = r \times \max(k, N-k) + c \times [k \times (N-k)]
-  \]
-  
-\item \textbf{Special Cases}:
-  \begin{itemize}
-  \item All processes on one processor ($k = N$):
-    \[
-    \text{Cost} = r \times N
-    \]
-    
-  \item Equal division ($k = N/2$):
-    \[
-    \text{Cost} = \frac{r \times N}{2} + c \times \left(\frac{N}{2} \times \frac{N}{2}\right) = \frac{1}{2}\left(r \times N + \frac{c \times N^2}{2}\right)
-    \]
-  \end{itemize}
+  \item \textbf{Total Cost Formula}:
+        \[
+          \text{Total Cost} = r \times \max(k, N-k) + c \times [k \times (N-k)]
+        \]
+
+  \item \textbf{Special Cases}:
+        \begin{itemize}
+          \item All processes on one processor ($k = N$):
+                \[
+                  \text{Cost} = r \times N
+                \]
+
+          \item Equal division ($k = N/2$):
+                \[
+                  \text{Cost} = \frac{r \times N}{2} + c \times \left(\frac{N}{2} \times \frac{N}{2}\right) = \frac{1}{2}\left(r \times N + \frac{c \times N^2}{2}\right)
+                \]
+        \end{itemize}
 \end{itemize}
 
 \subsection{Parallelization Decision}
 \begin{itemize}
-\item \textbf{Condition for Parallelization}:
-  \[
-  r \times N > \frac{1}{2}\left(r \times N + \frac{c \times N^2}{2}\right)
-  \]
-  Simplifies to:
-  \[
-  \frac{r}{c} > \frac{N}{2}
-  \]
-  
-\item \textbf{Decision Rule}:
-  \begin{itemize}
-  \item Equal distribution if $\frac{r}{c} > \frac{N}{2}$
-  \item Use single processor if $\frac{r}{c} \leq \frac{N}{2}$
-  \item Decision independent of number of processors
-  \end{itemize}
+  \item \textbf{Condition for Parallelization}:
+        \[
+          r \times N > \frac{1}{2}\left(r \times N + \frac{c \times N^2}{2}\right)
+        \]
+        Simplifies to:
+        \[
+          \frac{r}{c} > \frac{N}{2}
+        \]
+
+  \item \textbf{Decision Rule}:
+        \begin{itemize}
+          \item Equal distribution if $\frac{r}{c} > \frac{N}{2}$
+          \item Use single processor if $\frac{r}{c} \leq \frac{N}{2}$
+          \item Decision independent of number of processors
+        \end{itemize}
 \end{itemize}
 
 \subsection{Assumptions and Limitations}
 \begin{itemize}
-\item \textbf{Key Assumptions}:
-  \begin{itemize}
-  \item Total communication among all processes
-  \item No overlap between computation and communication
-  \item All processes communicate with each other
-  \end{itemize}
-  
-\item \textbf{Real-world Considerations}:
-  \begin{itemize}
-  \item Subset of processes communicate
-  \item Computation and communication can often overlap
-  \end{itemize}
+  \item \textbf{Key Assumptions}:
+        \begin{itemize}
+          \item Total communication among all processes
+          \item No overlap between computation and communication
+          \item All processes communicate with each other
+        \end{itemize}
+
+  \item \textbf{Real-world Considerations}:
+        \begin{itemize}
+          \item Subset of processes communicate
+          \item Computation and communication can often overlap
+        \end{itemize}
 \end{itemize}
 
 [Summary] Optimal scheduling depends on the computation-to-communication cost ratio, with parallelization beneficial only when $r/c > N/2$.
@@ -365,61 +365,61 @@
 
 \subsection{Clustering Concept}
 \begin{itemize}
-\item \textbf{Objective}: Group processes to minimize communication costs
-\item \textbf{Computation Cost}: $\sum_{i=1}^n r_i$
-\item \textbf{Communication Cost}: $\sum c_{in} + \sum c_{out}$
+  \item \textbf{Objective}: Group processes to minimize communication costs
+  \item \textbf{Computation Cost}: $\sum_{i=1}^n r_i$
+  \item \textbf{Communication Cost}: $\sum c_{in} + \sum c_{out}$
 \end{itemize}
 
 \subsection{Clustering Strategies}
 \begin{itemize}
-\item \textbf{Input/Output Focus}:
-  \begin{itemize}
-  \item Consider incoming and outgoing communication costs
-  \item Balance computation and communication within clusters
-  \end{itemize}
+  \item \textbf{Input/Output Focus}:
+        \begin{itemize}
+          \item Consider incoming and outgoing communication costs
+          \item Balance computation and communication within clusters
+        \end{itemize}
 \end{itemize}
 
 \section{Dynamic Load Balancing}
 
 \subsection{Basic Concepts}
 \begin{itemize}
-\item \textbf{Definition}: Equitable distribution of load among processors
-\item \textbf{Goal}: Minimize difference between most heavily and lightly loaded processors
-\item \textbf{Key Principle}: Adjust based on monitored system state
+  \item \textbf{Definition}: Equitable distribution of load among processors
+  \item \textbf{Goal}: Minimize difference between most heavily and lightly loaded processors
+  \item \textbf{Key Principle}: Adjust based on monitored system state
 \end{itemize}
 
 \subsection{Dynamic Scheduling Algorithms}
 \begin{itemize}
-\item \textbf{Sender-Initiated Algorithms}:
-  \begin{itemize}
-  \item Transfer policy: When queue length exceeds threshold
-  \item Selection policy: Which process to transfer
-  \item Location policy: Cost and distance considerations
-  \end{itemize}
-  
-\item \textbf{Receiver-Initiated Algorithms}:
-  \begin{itemize}
-  \item Triggered when queue length falls below threshold
-  \end{itemize}
+  \item \textbf{Sender-Initiated Algorithms}:
+        \begin{itemize}
+          \item Transfer policy: When queue length exceeds threshold
+          \item Selection policy: Which process to transfer
+          \item Location policy: Cost and distance considerations
+        \end{itemize}
+
+  \item \textbf{Receiver-Initiated Algorithms}:
+        \begin{itemize}
+          \item Triggered when queue length falls below threshold
+        \end{itemize}
 \end{itemize}
 
 \subsection{Dynamic System Challenges}
 \begin{itemize}
-\item \textbf{Sources of Dynamism}:
-  \begin{itemize}
-  \item Uncertainty in task execution times
-  \item Dynamic task arrival and departure
-  \item Changing processor availability
-  \item Network condition variations
-  \item Task priority changes
-  \item Processor and network faults
-  \end{itemize}
-  
-\item \textbf{Exacerbating Factors}:
-  \begin{itemize}
-  \item Cloud systems (resource sharing)
-  \item Mobile systems (mobility, energy constraints)
-  \end{itemize}
+  \item \textbf{Sources of Dynamism}:
+        \begin{itemize}
+          \item Uncertainty in task execution times
+          \item Dynamic task arrival and departure
+          \item Changing processor availability
+          \item Network condition variations
+          \item Task priority changes
+          \item Processor and network faults
+        \end{itemize}
+
+  \item \textbf{Exacerbating Factors}:
+        \begin{itemize}
+          \item Cloud systems (resource sharing)
+          \item Mobile systems (mobility, energy constraints)
+        \end{itemize}
 \end{itemize}
 
 [Summary] Dynamic load balancing adapts to changing system conditions using sender or receiver initiated approaches to maintain equitable load distribution.
@@ -428,174 +428,174 @@
 
 \subsection{Approaches to Load Balancing}
 \begin{itemize}
-\item \textbf{Centralized vs Decentralized}:
-  \begin{itemize}
-  \item Centralized: Single controller, less scalable
-  \item Decentralized: Distributed control, more scalable
-  \end{itemize}
-  
-\item \textbf{Information Collection}:
-  \begin{itemize}
-  \item How to obtain processor state information
-  \item Centralized vs decentralized collection
-  \item Periodic vs event-driven updates
-  \item Threshold-based monitoring
-  \end{itemize}
+  \item \textbf{Centralized vs Decentralized}:
+        \begin{itemize}
+          \item Centralized: Single controller, less scalable
+          \item Decentralized: Distributed control, more scalable
+        \end{itemize}
+
+  \item \textbf{Information Collection}:
+        \begin{itemize}
+          \item How to obtain processor state information
+          \item Centralized vs decentralized collection
+          \item Periodic vs event-driven updates
+          \item Threshold-based monitoring
+        \end{itemize}
 \end{itemize}
 
 \subsection{Key Questions in Load Balancing}
 \begin{itemize}
-\item \textbf{Transfer Policy}: Whether to move processes
-\item \textbf{Location Policy}: Where to move processes
-\item \textbf{Process Selection}: Which processes to move
-\item \textbf{Decision Architecture}: Centralized or distributed control
+  \item \textbf{Transfer Policy}: Whether to move processes
+  \item \textbf{Location Policy}: Where to move processes
+  \item \textbf{Process Selection}: Which processes to move
+  \item \textbf{Decision Architecture}: Centralized or distributed control
 \end{itemize}
 
 \subsection{Cost Considerations}
 \begin{itemize}
-\item \textbf{Processing Overhead}:
-  \begin{itemize}
-  \item Data collection for load monitoring
-  \item Decision making computations
-  \end{itemize}
-  
-\item \textbf{Network Overhead}:
-  \begin{itemize}
-  \item Distribution of load information
-  \item Process migration costs
-  \item Job redistribution
-  \end{itemize}
+  \item \textbf{Processing Overhead}:
+        \begin{itemize}
+          \item Data collection for load monitoring
+          \item Decision making computations
+        \end{itemize}
+
+  \item \textbf{Network Overhead}:
+        \begin{itemize}
+          \item Distribution of load information
+          \item Process migration costs
+          \item Job redistribution
+        \end{itemize}
 \end{itemize}
 
 \section{Static vs Dynamic Load Balancing}
 
 \subsection{Static Load Sharing}
 \begin{itemize}
-\item \textbf{Characteristics}:
-  \begin{itemize}
-  \item Fixed policy, no adaptation to system state
-  \item Simple, low cost implementation
-  \item Handles session state easily
-  \item Cannot adjust to dynamic changes
-  \end{itemize}
+  \item \textbf{Characteristics}:
+        \begin{itemize}
+          \item Fixed policy, no adaptation to system state
+          \item Simple, low cost implementation
+          \item Handles session state easily
+          \item Cannot adjust to dynamic changes
+        \end{itemize}
 \end{itemize}
 
 \subsection{Dynamic Load Balancing}
 \begin{itemize}
-\item \textbf{Advantages}:
-  \begin{itemize}
-  \item Adapts to changing system conditions
-  \item Better resource utilization
-  \item Handles unpredictable workloads
-  \end{itemize}
-  
-\item \textbf{Disadvantages}:
-  \begin{itemize}
-  \item Complex implementation
-  \item Significant overhead costs
-  \item Session state management challenges
-  \end{itemize}
+  \item \textbf{Advantages}:
+        \begin{itemize}
+          \item Adapts to changing system conditions
+          \item Better resource utilization
+          \item Handles unpredictable workloads
+        \end{itemize}
+
+  \item \textbf{Disadvantages}:
+        \begin{itemize}
+          \item Complex implementation
+          \item Significant overhead costs
+          \item Session state management challenges
+        \end{itemize}
 \end{itemize}
 
 \section{Process Migration}
 
 \subsection{Migration Process}
 \begin{itemize}
-\item \textbf{Steps}:
-  \begin{itemize}
-  \item Migration request initiation
-  \item Process suspension on source host
-  \item State transfer to destination host
-  \item Process resumption on destination
-  \item File server coordination
-  \end{itemize}
+  \item \textbf{Steps}:
+        \begin{itemize}
+          \item Migration request initiation
+          \item Process suspension on source host
+          \item State transfer to destination host
+          \item Process resumption on destination
+          \item File server coordination
+        \end{itemize}
 \end{itemize}
 
 \subsection{Migration Scenarios}
 \begin{itemize}
-\item \textbf{Work Stealing}:
-  \begin{itemize}
-  \item Idle processor seeks work from busy ones
-  \item "No more work $\rightarrow$ Find work elsewhere"
-  \end{itemize}
-  
-\item \textbf{Load Distribution}:
-  \begin{itemize}
-  \item Balance load across multiple processors
-  \item Handle processor saturation scenarios
-  \end{itemize}
+  \item \textbf{Work Stealing}:
+        \begin{itemize}
+          \item Idle processor seeks work from busy ones
+          \item "No more work $\rightarrow$ Find work elsewhere"
+        \end{itemize}
+
+  \item \textbf{Load Distribution}:
+        \begin{itemize}
+          \item Balance load across multiple processors
+          \item Handle processor saturation scenarios
+        \end{itemize}
 \end{itemize}
 
 \section{Distributed Scheduling Framework}
 
 \subsection{System Components}
 \begin{itemize}
-\item \textbf{Load Information Management}:
-  \begin{itemize}
-  \item Collects local node load information
-  \item Disseminates information to other nodes
-  \end{itemize}
-  
-\item \textbf{Distributed Scheduling}:
-  \begin{itemize}
-  \item Makes migration decisions
-  \item Determines when, where, and which processes to migrate
-  \end{itemize}
-  
-\item \textbf{Migration Mechanism}:
-  \begin{itemize}
-  \item Executes the actual process transfer
-  \end{itemize}
+  \item \textbf{Load Information Management}:
+        \begin{itemize}
+          \item Collects local node load information
+          \item Disseminates information to other nodes
+        \end{itemize}
+
+  \item \textbf{Distributed Scheduling}:
+        \begin{itemize}
+          \item Makes migration decisions
+          \item Determines when, where, and which processes to migrate
+        \end{itemize}
+
+  \item \textbf{Migration Mechanism}:
+        \begin{itemize}
+          \item Executes the actual process transfer
+        \end{itemize}
 \end{itemize}
 
 \subsection{Implementation Considerations}
 \begin{itemize}
-\item \textbf{Local Information Collection}: Monitoring node status
-\item \textbf{Information Dissemination}: Sharing load data
-\item \textbf{Migration Directives}: Decision rules for process movement
+  \item \textbf{Local Information Collection}: Monitoring node status
+  \item \textbf{Information Dissemination}: Sharing load data
+  \item \textbf{Migration Directives}: Decision rules for process movement
 \end{itemize}
 
 \section*{Study Aids}
 
 \subsection*{Key Formulas}
 \begin{itemize}
-\item Total Cost = Computing Costs + Communication Costs
-\item Optimal scheduling condition: $\frac{r}{c} > \frac{N}{2}$
-\item Clustering costs: Computation = $\sum r_i$, Communication = $\sum c_{in} + \sum c_{out}$
+  \item Total Cost = Computing Costs + Communication Costs
+  \item Optimal scheduling condition: $\frac{r}{c} > \frac{N}{2}$
+  \item Clustering costs: Computation = $\sum r_i$, Communication = $\sum c_{in} + \sum c_{out}$
 \end{itemize}
 
 \subsection*{Important Concepts}
 \begin{itemize}
-\item Granularity: Computation-to-communication ratio
-\item Homogeneous vs Heterogeneous systems
-\item Static vs Dynamic scheduling
-\item Centralized vs Decentralized control
-\item Sender vs Receiver initiated load balancing
+  \item Granularity: Computation-to-communication ratio
+  \item Homogeneous vs Heterogeneous systems
+  \item Static vs Dynamic scheduling
+  \item Centralized vs Decentralized control
+  \item Sender vs Receiver initiated load balancing
 \end{itemize}
 
 \subsection*{Exam Questions}
 \begin{enumerate}
-\item Compare and contrast static and dynamic scheduling approaches, including their advantages and limitations.
+  \item Compare and contrast static and dynamic scheduling approaches, including their advantages and limitations.
 
-\item Derive the condition for optimal parallelization in a 2-processor system and explain its practical implications.
+  \item Derive the condition for optimal parallelization in a 2-processor system and explain its practical implications.
 
-\item Describe three node selection policies for load balancing and discuss situations where each would be most appropriate.
+  \item Describe three node selection policies for load balancing and discuss situations where each would be most appropriate.
 
-\item Explain the process migration mechanism and discuss the costs involved in dynamic load balancing.
+  \item Explain the process migration mechanism and discuss the costs involved in dynamic load balancing.
 
-\item How does system heterogeneity affect process assignment decisions? Provide examples.
+  \item How does system heterogeneity affect process assignment decisions? Provide examples.
 \end{enumerate}
 
 [Mnemonic] "GCD SL" - Granularity, Cost, Dynamism for Scheduling and Load balancing
 
-[Concept Map]
+  [Concept Map]
 \begin{itemize}
-\item Process Assignment $\rightarrow$ Where (Mapping)
-\item Scheduling $\rightarrow$ When (Timing)
-\item Load Balancing $\rightarrow$ How (Distribution)
-\item Static vs Dynamic approaches
-\item Centralized vs Decentralized control
-\item Homogeneous vs Heterogeneous systems
+  \item Process Assignment $\rightarrow$ Where (Mapping)
+  \item Scheduling $\rightarrow$ When (Timing)
+  \item Load Balancing $\rightarrow$ How (Distribution)
+  \item Static vs Dynamic approaches
+  \item Centralized vs Decentralized control
+  \item Homogeneous vs Heterogeneous systems
 \end{itemize}
 
 \end{document}

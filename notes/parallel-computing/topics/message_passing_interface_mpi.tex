@@ -1,0 +1,371 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted} % Code highlighting
+\usepackage{booktabs} % Clean tables}
+\usepackage{tikz} % Optional for concept maps
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\newcommand{\TOPICTITLE}{Message Passing Interface (MPI)}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf\TOPICTITLE}
+\fancyhead[R]{\thepage}
+
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% This LaTeX file should be saved at: parallel_computing/week04/message_passing_interface_mpi.tex
+
+\section{Introduction to MPI}
+
+\subsection{What is MPI?}
+\begin{itemize}
+    \item Message Passing Interface (MPI) - a specification, not a library
+    \item Message-passing parallel programming model: data moved from address space of one process to another through cooperative operations
+    \item Well-known implementations: Open MPI and MVAPICH2
+    \item All parallelism is explicit: programmer responsible for identifying parallelism and implementing parallel algorithms
+\end{itemize}
+
+\textcolor{blue}{[Summary: MPI is a standardized message-passing specification for parallel programming where processes communicate by explicitly sending and receiving messages between their separate address spaces.]}
+
+\subsection{Parallel Computing Systems}
+\begin{itemize}
+    \item Distributed Memory: Computers in a network
+    \item Distributed Shared Memory: Computers in a cluster
+    \item Multiprocessor systems
+    \item Multicore systems
+    \item In-cloud and Edge computing
+\end{itemize}
+
+\subsection{MPI Program Structure}
+\begin{minted}{c}
+#include "mpi.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    int numtasks, rank, dest, source, rc, count, tag=1;
+    char inmsg, outmsg='x';
+    MPI_Status Stat;
+    
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    
+    if (rank == 0) {
+        dest = 1; source = 1;
+        rc = MPI_Send(&outmsg, 1, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
+        rc = MPI_Recv(&inmsg, 1, MPI_CHAR, source, tag, MPI_COMM_WORLD, &Stat);
+    }
+    else if (rank == 1) {
+        dest = 0; source = 0;
+        rc = MPI_Recv(&inmsg, 1, MPI_CHAR, source, tag, MPI_COMM_WORLD, &Stat);
+        rc = MPI_Send(&outmsg, 1, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
+    }
+    
+    MPI_Get_count(&Stat, MPI_CHAR, &count);
+    printf("Task %d: Received %d char(s) from task %d with tag %d\n", 
+           rank, count, Stat.MPI_SOURCE, Stat.MPI_TAG);
+    
+    MPI_Finalize();
+}
+\end{minted}
+
+\textcolor{blue}{[Summary: Basic MPI programs initialize with MPI\_Init, get process count and rank, perform communication operations, and finalize with MPI\_Finalize. Processes are identified by unique ranks within communicators.]}
+
+\section{MPI Communication Fundamentals}
+
+\subsection{Basic Send and Receive Operations}
+\begin{itemize}
+    \item \textbf{MPI\_Send(void *sendbuf, int nelems, int dest, int tag, MPI\_Comm comm)}
+    \item \textbf{MPI\_Recv(void *recvbuf, int nelems, int source, int tag, MPI\_Comm comm, MPI\_Status *status)}
+    \item Parameters:
+          \begin{itemize}
+              \item sendbuf/recvbuf: pointers to data buffers
+              \item nelems: number of data elements
+              \item dest/source: process identifiers
+              \item tag: message identifier (non-negative integer)
+              \item comm: communicator (usually MPI\_COMM\_WORLD)
+          \end{itemize}
+\end{itemize}
+
+\subsection{Communicators and Groups}
+\begin{itemize}
+    \item \textbf{Communicators}: Define which processes can communicate
+    \item \textbf{MPI\_COMM\_WORLD}: Predefined communicator including all processes
+    \item \textbf{Rank}: Unique integer identifier for each process within a communicator
+    \item Ranks are contiguous starting from 0
+    \item Used to specify source/destination of messages and control program flow
+\end{itemize}
+
+\textcolor{blue}{[Summary: MPI uses communicators to define communication groups, with ranks identifying individual processes for message routing and conditional execution.]}
+
+\section{Point-to-Point Communication}
+
+\subsection{Communication Types}
+\begin{itemize}
+    \item Synchronous send
+    \item Blocking send/blocking receive
+    \item Non-blocking send/non-blocking receive
+    \item Buffered send
+    \item Combined send/receive
+    \item "Ready" send
+    \item Any send type can pair with any receive type
+\end{itemize}
+
+\subsection{System Buffers}
+\begin{itemize}
+    \item Buffer space reserved for data in transit
+    \item Managed entirely by MPI library (opaque to programmer)
+    \item Finite resource that can be exhausted
+    \item Can exist on sending side, receiving side, or both
+    \item Allows send-receive operations to be asynchronous
+\end{itemize}
+
+\textcolor{teal}{[Concept Map: Point-to-Point Communication → Blocking/Non-blocking → Synchronous/Asynchronous → Buffered/Non-buffered → System Buffer Management]}
+
+\subsection{Blocking vs Non-blocking Operations}
+
+\subsubsection{Blocking Operations}
+\begin{itemize}
+    \item \textbf{Blocking Send}: Returns only when safe to modify application buffer
+    \item \textbf{Blocking Receive}: Returns only when data has arrived and is ready
+    \item Can be synchronous (handshaking) or asynchronous (using system buffers)
+\end{itemize}
+
+\subsubsection{Non-blocking Operations}
+\begin{itemize}
+    \item Return immediately without waiting for communication events
+    \item Simply "request" MPI to perform operation when able
+    \item Unsafe to modify application buffer until operation completes
+    \item Use "wait" routines (MPI\_Wait, MPI\_Test) to check completion
+    \item Used to overlap computation with communication
+\end{itemize}
+
+\textcolor{orange}{[Mnemonic: Blocking = Wait for completion, Non-blocking = Fire and (maybe) forget until checked]}
+
+\section{Collective Communication}
+
+\subsection{Types of Collective Operations}
+\begin{itemize}
+    \item \textbf{Synchronization}: Processes wait until all reach synchronization point (MPI\_Barrier, MPI\_Waitall)
+    \item \textbf{Data Movement}: Broadcast, scatter/gather, all to all
+    \item \textbf{Collective Computation (Reductions)}: One member collects data and performs operations (min, max, add, multiply)
+\end{itemize}
+
+\subsection{Important Collective Routines}
+
+\subsubsection{Broadcast (MPI\_Bcast)}
+\begin{itemize}
+    \item Broadcasts message from one task to all others in communicator
+    \item \texttt{MPI\_Bcast(\&buffer, count, datatype, root, comm)}
+\end{itemize}
+
+\subsubsection{Scatter (MPI\_Scatter)}
+\begin{itemize}
+    \item Sends chunks of data from one task to all tasks
+    \item \texttt{MPI\_Scatter (sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm)}
+\end{itemize}
+
+\subsubsection{Gather (MPI\_Gather)}
+\begin{itemize}
+    \item Gathers data from all tasks to a single task
+    \item Inverse of scatter operation
+\end{itemize}
+
+\subsubsection{Reduce (MPI\_Reduce)}
+\begin{itemize}
+    \item Performs reduction (sum, max, min, etc.) across all tasks
+    \item Result stored in one task
+    \item \texttt{MPI\_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm)}
+\end{itemize}
+
+\subsubsection{Allreduce (MPI\_Allreduce)}
+\begin{itemize}
+    \item Performs reduction and stores result across all tasks
+\end{itemize}
+
+\textcolor{blue}{[Summary: Collective operations involve all processes in a communicator for synchronization, data movement, or collective computation, with routines like broadcast, scatter/gather, and reductions.]}
+
+\section{Derived Data Types}
+
+\subsection{Continuous Derived Data Type}
+\begin{itemize}
+    \item Represents contiguous blocks of data
+    \item \texttt{MPI\_Type\_contiguous(count, oldtype, \&newtype)}
+    \item Example: Representing a row of a 2D array
+\end{itemize}
+
+\subsection{Vector Derived Data Type}
+\begin{itemize}
+    \item Represents regularly spaced data blocks
+    \item \texttt{MPI\_Type\_vector(count, blocklength, stride, oldtype, \&newtype)}
+    \item Example: Representing a column of a 2D array
+\end{itemize}
+
+\subsection{Indexed Derived Data Type}
+\begin{itemize}
+    \item Represents irregular data patterns
+    \item \texttt{MPI\_Type\_indexed(count, array\_of\_blocklengths, array\_of\_displacements, oldtype, \&newtype)}
+\end{itemize}
+
+\subsection{Struct Derived Data Type}
+\begin{itemize}
+    \item Represents heterogeneous data structures
+    \item \texttt{MPI\_Type\_struct(count, array\_of\_blocklengths, array\_of\_offsets, array\_of\_types, \&newtype)}
+    \item Example: Representing a particle with position, velocity, and type information
+\end{itemize}
+
+\textcolor{orange}{[Mnemonic: Continuous = Contiguous blocks, Vector = Regular spacing, Indexed = Irregular patterns, Struct = Mixed data types]}
+
+\section{Groups and Communicators}
+
+\subsection{Definitions}
+\begin{itemize}
+    \item \textbf{Group}: Ordered set of processes with unique integer ranks (0 to N-1)
+    \item \textbf{Communicator}: Encompasses a group of processes that can communicate
+    \item \textbf{MPI\_COMM\_WORLD}: Default communicator containing all processes
+    \item Groups and communicators are dynamic - can be created/destroyed during execution
+    \item Processes can be in multiple groups/communicators with different ranks
+\end{itemize}
+
+\subsection{Group Management Operations}
+\begin{enumerate}
+    \item Extract global group: \texttt{MPI\_Comm\_group(MPI\_COMM\_WORLD, \&group)}
+    \item Create new group: \texttt{MPI\_Group\_incl(group, n, ranks, \&newgroup)}
+    \item Create new communicator: \texttt{MPI\_Comm\_create(comm, group, \&newcomm)}
+    \item Get new rank: \texttt{MPI\_Comm\_rank(newcomm, \&rank)}
+    \item Free resources: \texttt{MPI\_Comm\_free(), MPI\_Group\_free()}
+\end{enumerate}
+
+\subsection{Communicator Splitting}
+\begin{itemize}
+    \item \texttt{MPI\_Comm\_split(comm, color, key, \&newcomm)}
+    \item Groups processes by color, sorts by key within each color group
+    \item Useful for organizing processes by function or data partitioning
+\end{itemize}
+
+\textcolor{blue}{[Summary: Groups define process sets, communicators enable communication within those sets, and MPI provides operations to dynamically create and manage these entities for flexible parallel programming.]}
+
+\section{Virtual Topologies}
+
+\subsection{Concept and Purpose}
+\begin{itemize}
+    \item Virtual topology: Mapping/ordering of MPI processes into geometric shapes
+    \item Types: Cartesian (grid) and Graph topologies
+    \item Virtual - no relation to physical machine structure required
+    \item Must be programmed by application developer
+\end{itemize}
+
+\subsection{Benefits}
+\begin{itemize}
+    \item \textbf{Convenience}: Match communication patterns to application needs
+    \item \textbf{Efficiency}: Potential optimization for specific hardware architectures
+    \item Example: Cartesian topology for grid-based computations with nearest-neighbor communication
+\end{itemize}
+
+\subsection{Cartesian Topology Example}
+\begin{itemize}
+    \item Processes arranged in 2D grid with row-major ordering
+    \item Each process identified by (row, column) coordinates
+    \item Supports operations like \texttt{MPI\_Cart\_sub()} for creating sub-grids
+\end{itemize}
+
+\textcolor{teal}{[Concept Map: Virtual Topologies → Cartesian/Graph Types → Process Mapping → Communication Patterns → Potential Hardware Optimization]}
+
+\section{MPI Programming Examples}
+
+\subsection{Monte Carlo Pi Calculation}
+
+\subsubsection{Mathematical Basis}
+\begin{itemize}
+    \item Circle area: $\pi r^2$, Square area: $4r^2$
+    \item Ratio: $\frac{\pi r^2}{4r^2} = \frac{\pi}{4}$
+    \item Random points: $M \approx \frac{N\pi}{4}$
+    \item Approximation: $\pi \approx \frac{4M}{N}$
+\end{itemize}
+
+\subsubsection{Parallel Implementation Strategy}
+\begin{itemize}
+    \item Divide total points among available tasks
+    \item Each task calculates points in circle for its subset
+    \item Master task collects results using send/receive operations
+    \item No data dependencies between tasks
+\end{itemize}
+
+\subsection{Nearest Neighbor Exchange}
+\begin{minted}{c}
+// Non-blocking ring communication
+MPI_Irecv(&buf[0], 1, MPI_INT, prev, tag1, MPI_COMM_WORLD, &reqs[0]);
+MPI_Irecv(&buf[1], 1, MPI_INT, next, tag2, MPI_COMM_WORLD, &reqs[1]);
+MPI_Isend(&rank, 1, MPI_INT, prev, tag2, MPI_COMM_WORLD, &reqs[2]);
+MPI_Isend(&rank, 1, MPI_INT, next, tag1, MPI_COMM_WORLD, &reqs[3]);
+
+// Do work while communications progress
+MPI_Waitall(4, reqs, stats);
+\end{minted}
+
+\textcolor{blue}{[Summary: MPI enables various parallel algorithms through point-to-point and collective communication, with examples including Monte Carlo simulations and nearest-neighbor exchanges in ring topologies.]}
+
+\section{MPI Advantages and Characteristics}
+
+\subsection{Key Features}
+\begin{itemize}
+    \item \textbf{Practical}: Easy to implement on any system
+    \item \textbf{Portable}: Works on networks, clusters, multiprocessors
+    \item \textbf{Efficient}: Programmer has more control over communication
+    \item \textbf{Flexible}: Easy to scale problem and processor size
+    \item \textbf{Explicit Parallelism}: Burden on programmer to identify and manage parallelism
+\end{itemize}
+
+\section{Study Aids and Exam Preparation}
+
+\subsection*{Key Concepts to Master}
+\begin{itemize}
+    \item Difference between blocking and non-blocking operations
+    \item Purpose and usage of communicators and groups
+    \item Collective communication operations and when to use them
+    \item Derived data types and their applications
+    \item Virtual topologies and their benefits
+    \item MPI program structure and initialization/finalization
+\end{itemize}
+
+\subsection*{Exam Questions}
+\textcolor{red}{Exam Questions:}
+\begin{enumerate}
+    \item Explain the difference between blocking and non-blocking communication in MPI, including when you would use each type.
+    \item Describe how MPI communicators and groups work, and provide an example of when you might create a new communicator.
+    \item Write pseudocode for a parallel Monte Carlo $\pi$ calculation using MPI collective operations.
+    \item What are derived data types in MPI and why are they useful? Provide an example.
+    \item Explain the concept of virtual topologies in MPI and discuss potential benefits for parallel applications.
+\end{enumerate}
+\textcolor{red}{]}
+
+\subsection*{Common MPI Functions Reference}
+\begin{itemize}
+    \item Environment: MPI\_Init, MPI\_Finalize, MPI\_Comm\_size, MPI\_Comm\_rank
+    \item Point-to-point: MPI\_Send, MPI\_Recv, MPI\_Isend, MPI\_Irecv, MPI\_Wait
+    \item Collective: MPI\_Bcast, MPI\_Scatter, MPI\_Gather, MPI\_Reduce, MPI\_Barrier
+    \item Groups/Communicators: MPI\_Comm\_split, MPI\_Comm\_create, MPI\_Group\_incl
+\end{itemize}
+
+\textcolor{orange}{[Mnemonic: MPI Basics - Init, Size, Rank, Send, Recv, Finalize. Collective Ops - Bcast, Scatter, Gather, Reduce. Advanced - Groups, Topologies, Derived Types]}
+
+\end{document}

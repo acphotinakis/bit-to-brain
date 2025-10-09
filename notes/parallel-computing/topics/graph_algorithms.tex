@@ -1,0 +1,529 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted} 
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{graphicx}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\newcommand{\TOPICTITLE}{Graph Algorithms and Parallel Computing}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf\TOPICTITLE}
+\fancyhead[R]{\thepage}
+
+\setlength{\headheight}{15pt}
+
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{October 2nd, 2025}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Graph Representations}
+
+\subsection{Undirected Graph Representation}
+
+\begin{itemize}
+    \item \textbf{Adjacency Matrix}: Square matrix where entry (i,j) = 1 if vertices i and j are connected, 0 otherwise
+    \item \textbf{Adjacency List}: For each vertex, list of adjacent vertices
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \textbf{Example G1 (Undirected Graph)} \\
+    Adjacency Matrix:
+    \[
+        \begin{bmatrix}
+            0 & 1 & 0 & 1 & 1 \\
+            1 & 0 & 1 & 0 & 1 \\
+            0 & 1 & 0 & 1 & 1 \\
+            1 & 0 & 1 & 0 & 0 \\
+            1 & 1 & 1 & 0 & 0 \\
+        \end{bmatrix}
+    \]
+    \caption{Undirected graph with vertices A,B,C,D,E}
+\end{figure}
+
+\subsection{Directed Graph Representation}
+
+\begin{figure}[h]
+    \centering
+    \textbf{Example G2 (Directed Graph)} \\
+    Adjacency Matrix:
+    \[
+        \begin{bmatrix}
+            0 & 1 & 0 & 0 & 0 \\
+            0 & 0 & 1 & 0 & 0 \\
+            0 & 0 & 0 & 1 & 0 \\
+            1 & 0 & 0 & 0 & 1 \\
+            1 & 0 & 1 & 0 & 0 \\
+        \end{bmatrix}
+    \]
+    \caption{Directed graph with vertices P,Q,R,S,T}
+\end{figure}
+
+[Summary] Graph representations include adjacency matrices (good for dense graphs) and adjacency lists (good for sparse graphs). Directed graphs have asymmetric matrices.
+
+\section{Graph Traversal Algorithms}
+
+\subsection{Depth-First Search (DFS)}
+
+\begin{itemize}
+    \item Explores as far as possible along each branch before backtracking
+    \item Uses stack (implicit or explicit) for traversal
+    \item Applications: Cycle detection, topological sorting, maze solving
+\end{itemize}
+
+\textbf{Example DFS Tree:}
+\begin{itemize}
+    \item A → D, E, B
+    \item B → A, E, C
+    \item C → D, E, B
+    \item D → A, C
+    \item E → A, B, C
+\end{itemize}
+
+\subsection{Breadth-First Search (BFS)}
+
+\begin{itemize}
+    \item Explores all neighbors at current depth before moving deeper
+    \item Uses queue for traversal
+    \item Applications: Shortest path in unweighted graphs, social networks
+\end{itemize}
+
+\textbf{Example BFS Tree:}
+\begin{itemize}
+    \item A → B, E, D
+    \item B → E, C
+    \item E → C
+    \item D → C
+\end{itemize}
+
+[Summary] DFS goes deep first using stack, BFS goes wide first using queue. DFS finds paths, BFS finds shortest paths in unweighted graphs.
+
+\section{Minimum-Cost Spanning Trees (MCST)}
+
+\subsection{Definition and Applications}
+
+\begin{itemize}
+    \item \textbf{Spanning Tree}: Connected subgraph containing all vertices with no cycles
+    \item \textbf{Minimum-Cost Spanning Tree}: Spanning tree with minimum total edge weight
+    \item \textbf{Applications}: Network design, circuit wiring, clustering
+\end{itemize}
+
+\textbf{Network Example:}
+\begin{itemize}
+    \item Computer network with bidirectional links
+    \item Each link has positive cost (message sending cost)
+    \item Broadcast message from arbitrary computer
+    \item Goal: Minimize total broadcast cost
+\end{itemize}
+
+\subsection{Prim's Algorithm}
+
+\begin{minted}{python}
+def prim_mst(graph, start_node):
+    mst = set()
+    visited = {start_node}
+    edges = [
+        (cost, start_node, to)
+        for to, cost in graph[start_node].items()
+    ]
+    heapify(edges)
+    
+    while edges and len(visited) < len(graph):
+        cost, frm, to = heappop(edges)
+        if to not in visited:
+            visited.add(to)
+            mst.add((frm, to, cost))
+            for to_next, cost2 in graph[to].items():
+                if to_next not in visited:
+                    heappush(edges, (cost2, to, to_next))
+    return mst
+\end{minted}
+
+\textbf{Algorithm Steps:}
+\begin{enumerate}
+    \item Start with any node as root
+    \item Grow tree greedily by adding cheapest edge connecting tree to outside vertex
+    \item Repeat until all vertices are included
+\end{enumerate}
+
+\textbf{Complexity:} $O(E \log V)$ with binary heap
+
+    [Summary] MCST finds minimum weight tree spanning all vertices. Prim's algorithm grows tree greedily from start node.
+
+\section{Shortest Path Algorithms}
+
+\subsection{Single-Source Shortest Paths (Dijkstra's Algorithm)}
+
+\begin{itemize}
+    \item Finds shortest paths from source vertex to all other vertices
+    \item Works for weighted graphs with non-negative weights
+    \item Based on greedy principle
+\end{itemize}
+
+\textbf{Algorithm:}
+\begin{enumerate}
+    \item Initialize $d[v] = 0$ for source, $\infty$ for others
+    \item For each vertex, compute: $d[x] = \min\{d[x], d[v] + w(v,x)\}$
+    \item Always pick vertex with minimum distance
+\end{enumerate}
+
+\textbf{Mathematical Formulation:}
+\[
+    d[x] = \min \{d[x], d[v] + w(v,x)\}, \text{ where } v,x \in V
+\]
+
+\subsection{All-Pairs Shortest Paths}
+
+\textbf{Recursive Solution:}
+\[
+    dist(i, j) =
+    \begin{cases}
+        w(i, j)                                       & \text{if } k = 0    \\
+        \min\{dist(i, j), [dist(i, k) + dist(k, j)]\} & \text{if } k \geq 1
+    \end{cases}
+\]
+
+\textbf{Matrix Operations Approach:}
+\begin{itemize}
+    \item Replace 'multiply' by 'ADD'
+    \item Replace 'add' by 'MINIMUM'
+    \item Ignore infinity entries
+\end{itemize}
+
+[Summary] Dijkstra finds single-source shortest paths, all-pairs uses dynamic programming. Both use greedy/minimization principles.
+
+\section{Transitive Closure}
+
+\subsection{Definition and Applications}
+
+\begin{itemize}
+    \item \textbf{Transitive Closure}: Directed graph where edge (i,j) exists if there's a directed path from i to j in original graph
+    \item \textbf{Security Application}: Identify all users with permission (direct or indirect) to access accounts
+    \item Many applications in database systems, compiler optimization
+\end{itemize}
+
+\subsection{Warshall's Algorithm}
+
+\begin{minted}{pascal}
+procedure WARSHALL(G=[V,E])
+    Input: n × n matrix A representing adjacency
+    Output: transitive closure matrix T
+    
+    for i ← 1 to n do
+        for j ← 1 to n do
+            t[i,j] ← a(i,j)
+    
+    for k ← 1 to n do
+        for i ← 1 to n do
+            for j ← 1 to n do
+                if NOT t[i,j] then
+                    t[i,j] ← t[i,k] AND t[k,j]
+    return T
+\end{minted}
+
+\textbf{Complexity:} $\Theta(n^3)$
+
+\textbf{Improvement:} Algorithm can be optimized for better performance
+
+    [Summary] Transitive closure identifies all reachable pairs in a graph. Warshall's algorithm computes it in cubic time using dynamic programming.
+
+\section{Matrix Operations on Graphs}
+
+\subsection{Connectivity and Path Counting}
+
+\textbf{Paths of Length 2:}
+\begin{itemize}
+    \item Replace 'multiply' by 'AND' and 'add' by 'OR' for existence
+    \item Keep 'add' and replace 'multiply' by 'AND' for counting
+\end{itemize}
+
+\textbf{Example:}
+\[
+    C^2 = C \times C = \begin{bmatrix}
+        0 & 1 & 1 & 0 \\
+        0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & 1 \\
+        1 & 0 & 0 & 0 \\
+    \end{bmatrix} \times \begin{bmatrix}
+        0 & 1 & 1 & 0 \\
+        0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & 1 \\
+        1 & 0 & 0 & 0 \\
+    \end{bmatrix} = \begin{bmatrix}
+        0 & 0 & 0 & 1 \\
+        1 & 0 & 0 & 0 \\
+        1 & 0 & 0 & 0 \\
+        0 & 1 & 1 & 0 \\
+    \end{bmatrix}
+\]
+
+\subsection{All-Pairs Shortest Paths via Matrix Operations}
+
+\textbf{Operations:}
+\begin{itemize}
+    \item Replace 'multiply' by 'ADD'
+    \item Replace 'add' by 'MINIMUM'
+    \item Handle infinity entries appropriately
+\end{itemize}
+
+[Summary] Matrix operations can compute connectivity and shortest paths by redefining multiplication and addition operations.
+
+\section{Optimal Binary Search Trees (OBST)}
+
+\subsection{Problem Definition}
+
+\begin{itemize}
+    \item Given keys with access probabilities
+    \item Find BST arrangement that minimizes expected access cost
+    \item Cost = $\sum$ (probability × depth) for all keys
+\end{itemize}
+
+\textbf{Example:} Keys A,B,C,D with probabilities (0.1, 0.2, 0.4, 0.3)
+
+\subsection{Recursive Structure}
+
+\[
+    c[i,j] = c[i,k-1] + c[k+1,j] + \sum_{s=i}^{j} p_s
+\]
+
+\textbf{Where:}
+\begin{itemize}
+    \item $c[i,j]$ = cost of optimal BST for keys $i$ through $j$
+    \item $k$ = root of subtree
+    \item $\sum p_s$ = sum of probabilities in current subtree
+\end{itemize}
+
+\subsection{Bottom-Up Computation}
+
+\textbf{Base Cases:}
+\begin{itemize}
+    \item $c[i,j] = 0$ if $i = 0$ or $i \geq j$
+    \item $c[i,j] = p_i$ if $i = j$
+\end{itemize}
+
+\textbf{Example Computation with P=0.2, Q=0.4, R=0.1, S=0.3:}
+\begin{itemize}
+    \item C[1,1] = 0.2, C[2,2] = 0.4, C[3,3] = 0.1, C[4,4] = 0.3
+    \item C[1,2] = 0.8 (Q root), C[2,3] = 0.6 (Q root), C[3,4] = 0.5 (S root)
+\end{itemize}
+
+\subsection{Parallel OBST Computation}
+
+\begin{itemize}
+    \item Compute diagonals in parallel
+    \item C(1,2), C(2,3), C(3,4) on n-1 processors
+    \item C(1,3), C(2,4) on n-2 processors
+    \item Load balancing needed for initial unbalanced assignments
+\end{itemize}
+
+[Summary] OBST minimizes expected search cost using dynamic programming. Parallel computation processes matrix diagonals concurrently.
+
+\section{Subgraph Matching}
+
+\subsection{Problem Definition}
+
+\begin{itemize}
+    \item Given data graph G and query graph Q
+    \item Find all subgraphs of G isomorphic to Q
+    \item Applications: Social networks, web graphs, relational databases
+\end{itemize}
+
+\textbf{Formal Definition:}
+\begin{itemize}
+    \item G(V,E), Q(Vq, Eq)
+    \item Find subgraph g(Vg, Eg) where Vq → Vg and Eq → Eg
+\end{itemize}
+
+\subsection{Query Decomposition}
+
+\begin{itemize}
+    \item Decompose complex query into simpler components (twigs)
+    \item Each processor searches for specific twig in distributed graph
+    \item Handle large graphs: $|E| - O(10^9)$ and $|V| - O(10^8)$
+\end{itemize}
+
+\textbf{Parallelization Strategy:}
+\begin{itemize}
+    \item Distribute G across computers
+    \item Each computer searches for assigned twig pattern
+    \item Combine results from all processors
+\end{itemize}
+
+[Summary] Subgraph matching finds pattern occurrences in large graphs. Parallel approach decomposes query and distributes search.
+
+\section{Process Assignment and Scheduling}
+
+\subsection{Basic Concepts}
+
+\begin{itemize}
+    \item \textbf{Assignment}: Processes to processing elements (WHERE)
+    \item \textbf{Scheduling}: When to execute each task (WHEN)
+    \item \textbf{Programming Models}: SPMD, MPMD, Shared Memory, Message Passing
+\end{itemize}
+
+\subsection{Critical Factors}
+
+\textbf{Granularity:}
+\begin{itemize}
+    \item Coarse vs Fine grain
+    \item Ratio of computation to communication
+    \item Higher ratio → better speedup and efficiency
+\end{itemize}
+
+\textbf{Overheads:}
+\begin{itemize}
+    \item Coordination costs
+    \item Synchronization
+    \item Data communication
+\end{itemize}
+
+\textbf{Scalability:}
+\begin{itemize}
+    \item Proportionate speedup with more processors
+    \item Affected by memory-CPU bandwidth, network, algorithm characteristics
+\end{itemize}
+
+\subsection{System Characteristics}
+
+\textbf{Processor Types:}
+\begin{itemize}
+    \item \textbf{Homogeneous}: Identical processors, uniform costs
+    \item \textbf{Heterogeneous}: Varying capabilities, speeds, resources
+\end{itemize}
+
+\textbf{Network Types:}
+\begin{itemize}
+    \item Homogeneous/heterogeneous communication bandwidth
+    \item Mobile systems with disconnections
+\end{itemize}
+
+\textbf{Total Cost Calculation:}
+\[
+    \text{Total Cost} = \text{computing costs} + \text{communication costs}
+\]
+
+[Summary] Process assignment and scheduling consider granularity, overheads, scalability. Systems can be homogeneous or heterogeneous.
+
+\section{Decomposition Strategies}
+
+\subsection{Domain Decomposition}
+
+\begin{itemize}
+    \item Divide data into discrete chunks
+    \item Each process works on portion of data
+    \item Examples: Matrix operations, image processing
+    \item Maintain high computation/communication ratio (R/C)
+\end{itemize}
+
+\subsection{Functional Decomposition}
+
+\begin{itemize}
+    \item Each processor performs different function
+    \item Examples: Signal processing pipelines
+    \item Match system (R,C) to application (r,c) characteristics
+\end{itemize}
+
+[Summary] Domain decomposition divides data, functional decomposition divides tasks. Both aim to optimize computation/communication ratio.
+
+\section{Load Balancing}
+
+\subsection{Static Load Balancing}
+
+\begin{itemize}
+    \item Fixed policy based on a priori knowledge
+    \item Does not adjust to system state changes
+\end{itemize}
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Simple, low cost
+    \item Easy session state management
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item Cannot adapt to dynamic changes
+    \item May lead to poor resource utilization
+\end{itemize}
+
+\subsection{Dynamic Load Balancing}
+
+\begin{itemize}
+    \item Adjusts based on current system state
+    \item Handles uncertainty in execution times, resource availability
+\end{itemize}
+
+\textbf{Types:}
+\begin{itemize}
+    \item \textbf{Sender-initiated}: Overloaded nodes send work
+    \item \textbf{Receiver-initiated}: Underloaded nodes request work
+    \item \textbf{Centralized vs Decentralized}
+\end{itemize}
+
+\textbf{Challenges:}
+\begin{itemize}
+    \item State monitoring overhead
+    \item Network topology considerations
+    \item Process migration costs
+\end{itemize}
+
+\subsection{Process Migration}
+
+\textbf{Migration Process:}
+\begin{enumerate}
+    \item Migration request initiated
+    \item Process suspended on source host
+    \item Process state transferred to destination
+    \item Process resumes execution on new host
+\end{enumerate}
+
+\textbf{Migration Scenarios:}
+\begin{itemize}
+    \item Host A has no more work → finds work elsewhere
+    \item Host cannot proceed due to resource constraints
+\end{itemize}
+
+[Summary] Static balancing is simple but inflexible. Dynamic balancing adapts but has overheads. Process migration enables load redistribution.
+
+\subsection*{Exam Questions}
+
+\begin{enumerate}
+    \item Compare and contrast adjacency matrix vs adjacency list representations. When would you use each?
+    \item Explain the greedy principle in Prim's algorithm and Dijkstra's algorithm with examples.
+    \item Derive the recursive formula for optimal BST cost and explain each term.
+    \item Compare static vs dynamic load balancing in terms of overhead, adaptability, and suitable applications.
+    \item Describe the process migration mechanism and discuss two scenarios where it would be beneficial.
+\end{enumerate}
+
+[Mnemonic]
+\begin{itemize}
+    \item \textbf{DFS}: Deep First Search (Stack)
+    \item \textbf{BFS}: Broad First Search (Queue)
+    \item \textbf{MCST}: Minimum Cost Spanning Tree
+    \item \textbf{OBST}: Optimal Binary Search Tree
+\end{itemize}
+
+[Concept Map]
+\begin{itemize}
+    \item Graph Algorithms → Representations → Traversal → Shortest Paths → Spanning Trees
+    \item Scheduling → Assignment → Load Balancing → Static/Dynamic → Migration
+    \item Parallel Computing → Decomposition → Domain/Functional → Granularity → Scalability
+\end{itemize}
+
+\end{document}
