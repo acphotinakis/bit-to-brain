@@ -1,7 +1,7 @@
 import os
 
 # Root project folder
-root = "bit-to-brain"
+root = "."
 
 # Class topics
 classes = {
@@ -11,7 +11,7 @@ classes = {
         "Transport Layer",
         "Network Layer",
         "Link Layer",
-        "Wireless and Mobile Networks + Security"
+        "Wireless and Mobile Networks + Security",
     ],
     "parallel-computing": [
         "Introduction and overview",
@@ -26,7 +26,7 @@ classes = {
         "Shared memory, POSIX and OpenMP",
         "Parallel graph algorithms and programs",
         "Scheduling and load balancing",
-        "Cloud and Edge Computing"
+        "Cloud and Edge Computing",
     ],
     "data-security-privacy": [
         # TBD topics
@@ -45,9 +45,27 @@ classes = {
         "Control Flow",
         "Scripting Languages / Bash",
         "Type Systems",
-        "Composite Types"
-    ]
+        "Composite Types",
+    ],
 }
+
+
+# Track created paths for rollback
+created_paths = []
+
+
+def safe_mkdir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        created_paths.append(path)
+
+
+def safe_create_file(path, content=""):
+    if not os.path.exists(path):
+        with open(path, "w") as f:
+            f.write(content)
+        created_paths.append(path)
+
 
 # Helper function to convert topic to filename
 def topic_to_filename(topic):
@@ -59,6 +77,7 @@ def topic_to_filename(topic):
     filename = filename.replace("  ", " ")
     filename = "-".join(filename.split())
     return filename + ".tex"
+
 
 # Function to create structure and files
 def create_structure():
@@ -108,10 +127,12 @@ def create_structure():
 
     except Exception as e:
         print("Error occurred, rolling back changes...")
-        import shutil
-        if os.path.exists(root):
-            shutil.rmtree(root)
-        print(e)
+        # import shutil
+
+        # if os.path.exists(root):
+        #     shutil.rmtree(root)
+        # print(e)
+
 
 if __name__ == "__main__":
     create_structure()
