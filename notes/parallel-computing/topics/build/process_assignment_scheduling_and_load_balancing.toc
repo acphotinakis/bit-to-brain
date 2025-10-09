@@ -1,0 +1,49 @@
+\contentsline {section}{\numberline {1}Introduction to Process Assignment and Scheduling}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Basic Concepts}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Programming Models}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Critical Factors in Parallel Computing}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Granularity}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Overheads}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Scalability}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Processor and System Characteristics}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Homogeneous vs Heterogeneous Systems}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Network Characteristics}{4}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Cost Modeling}{5}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Problem and System Knowledge Requirements}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Problem Analysis}{5}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}System Analysis}{5}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Decomposition Strategies}{6}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Domain Decomposition}{6}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Functional Decomposition}{6}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Process Assignment and Scheduling Types}{6}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Static Scheduling}{6}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Dynamic Scheduling}{6}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Process Scheduling Approaches}{7}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Centralized vs Decentralized}{7}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Primary Issues: Problem Perspective}{7}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Primary Issues: System Perspective}{7}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Optimal Scheduling Analysis}{8}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Mathematical Formulation}{8}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Cost Analysis}{8}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Parallelization Decision}{8}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Assumptions and Limitations}{9}{subsection.8.4}%
+\contentsline {section}{\numberline {9}Clustering in Process Scheduling}{9}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Clustering Concept}{9}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Clustering Strategies}{9}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Dynamic Load Balancing}{9}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Basic Concepts}{9}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Dynamic Scheduling Algorithms}{10}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Dynamic System Challenges}{10}{subsection.10.3}%
+\contentsline {section}{\numberline {11}Load Balancing Methods and Challenges}{10}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Approaches to Load Balancing}{10}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Key Questions in Load Balancing}{11}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Cost Considerations}{11}{subsection.11.3}%
+\contentsline {section}{\numberline {12}Static vs Dynamic Load Balancing}{11}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Static Load Sharing}{11}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}Dynamic Load Balancing}{11}{subsection.12.2}%
+\contentsline {section}{\numberline {13}Process Migration}{12}{section.13}%
+\contentsline {subsection}{\numberline {13.1}Migration Process}{12}{subsection.13.1}%
+\contentsline {subsection}{\numberline {13.2}Migration Scenarios}{12}{subsection.13.2}%
+\contentsline {section}{\numberline {14}Distributed Scheduling Framework}{12}{section.14}%
+\contentsline {subsection}{\numberline {14.1}System Components}{12}{subsection.14.1}%
+\contentsline {subsection}{\numberline {14.2}Implementation Considerations}{13}{subsection.14.2}%
