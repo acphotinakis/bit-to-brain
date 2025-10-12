@@ -1,0 +1,400 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{caption}
+\usetikzlibrary{shapes, arrows, positioning}
+
+% -------------------------------
+% Page and link settings
+% -------------------------------
+\geometry{margin=1in}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=cyan
+}
+
+% -------------------------------
+% Custom Commands & Metadata
+% -------------------------------
+\newcommand{\TOPICTITLE}{Application Layer - Additional Clarity Keywords}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+\setlength{\headheight}{15pt}
+
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+% -------------------------------
+% Begin Document
+% -------------------------------
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Ports}
+
+\subsection{What is a Port?}
+\begin{enumerate}
+    \item A port is like a doorway into a computer for network communication.
+    \item Every device on a network (like your laptop, a web server, or a phone) has:
+          \begin{itemize}
+              \item A unique IP address, which identifies the device.
+              \item Multiple ports, which identify specific applications (processes) running on that device.
+          \end{itemize}
+    \item Analogy: Think of the IP address as the street address of an apartment building, and the port numbers as the apartment numbers inside it.
+\end{enumerate}
+
+\subsection{Why we need ports?}
+\begin{enumerate}
+    \item Many programs can use the network at once:
+          \begin{itemize}
+              \item Your web browser.
+              \item Your email client.
+              \item A game you are playing online.
+              \item A video call using Zoom or Skype.
+          \end{itemize}
+    \item All of these share the same IP address (your computer's address on the network), but each communicates using a different port number so the OS knows which process should get each incoming packet.
+    \item Without ports, your computer would not know whether an incoming packet was meant for your browser or your email app.
+\end{enumerate}
+
+\subsection{Structure: IP + Port = Socket}
+\begin{enumerate}
+    \item Each network connection is identified by a socket pair:
+          \begin{minted}{bash}
+(source IP, source port) → (destination IP, destination port)
+          \end{minted}
+    \item Example (you visiting a website):
+          \begin{itemize}
+              \item \begin{minted}{bash}
+(192.168.1.10, 49523) → (128.119.245.12, 80)
+                    \end{minted}
+              \item Your computer (client) uses a temporary port like 49523 assigned by your OS.
+              \item The web server listens on port 80 for HTTP requests.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Port Number Ranges}
+\begin{center}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Range} & \textbf{Description}                & \textbf{Examples}                   \\
+        \hline
+        0--1023        & Well-known ports (assigned by IANA) & HTTP 80, HTTPS 443, SMTP 25, DNS 53 \\
+        1024--49151    & Registered ports (specific apps)    & MySQL 3306, NFS 2049                \\
+        49152--65535   & Dynamic/private ports (temporary)   & Client ephemeral ports              \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Common Port Numbers}
+\begin{center}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Service}       & \textbf{Protocol} & \textbf{Port} \\
+        \hline
+        HTTP                   & TCP               & 80            \\
+        HTTPS (Secure HTTP)    & TCP               & 443           \\
+        FTP (File Transfer)    & TCP               & 21            \\
+        SMTP (Email sending)   & TCP               & 25            \\
+        IMAP (Email retrieval) & TCP               & 143           \\
+        DNS                    & UDP/TCP           & 53            \\
+        SSH (Secure Shell)     & TCP               & 22            \\
+        Telnet                 & TCP               & 23            \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Ports and Protocols (TCP vs UDP)}
+\begin{center}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Feature} & \textbf{TCP Port}         & \textbf{UDP Port}      \\
+        \hline
+        Connection-based & Yes                       & No                     \\
+        Reliability      & Guaranteed                & Best effort            \\
+        Use case         & Web, Email, File Transfer & DNS, Streaming, Gaming \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Ports and Security}
+\begin{enumerate}
+    \item Ports can act as entry points for attacks.
+    \item Firewalls are configured to block or allow specific ports.
+    \item Port scanning tools (like \texttt{nmap}) are used to identify open or vulnerable ports.
+    \item Example: A secure web server only opens port 443 (HTTPS) instead of 80, ensuring all traffic is encrypted.
+\end{enumerate}
+
+\subsection{Real Example: Visiting a Website}
+\begin{enumerate}
+    \item Your browser creates a TCP connection.
+    \item The OS assigns an ephemeral (temporary) port on your machine, e.g., 54321.
+    \item It sends a packet to:
+          \begin{minted}{bash}
+destination IP: 128.119.245.12
+destination port: 80
+          \end{minted}
+    \item The server receives it on port 80, where its web server software (like Apache) is listening.
+    \item The server replies from (80) → (54321).
+    \item When done, the connection closes and your port 54321 becomes free again.
+\end{enumerate}
+
+\subsection{Summary}
+\begin{center}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{Concept} & \textbf{Explanation}                                 \\
+        \hline
+        Port             & A number identifying a process or service on a host. \\
+        IP + Port        & Together identify a specific communication endpoint. \\
+        Server port      & Fixed, well-known (e.g., 80, 443).                   \\
+        Client port      & Temporary, dynamically assigned.                     \\
+        Socket pair      & Defines one full connection between two hosts.       \\
+        Firewall use     & Controls access to ports for security.               \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Quick Recap}
+\begin{itemize}
+    \item Ports separate traffic for multiple applications on one device.
+    \item Port numbers range from 0--65535.
+    \item Well-known ports are reserved for common services.
+    \item Clients use ephemeral ports; servers use fixed ones.
+    \item Both TCP and UDP use port numbers, but handle connections differently.
+\end{itemize}
+
+\section{Ports in Computer Networks}
+
+\subsection{Introduction}
+In computer networks, a \textbf{port} is a logical endpoint for communication that allows multiple networked applications to coexist on a single device. While an \textbf{IP address} identifies \textit{which device} on the network to reach, a \textbf{port number} specifies \textit{which process or service} within that device should receive the data. This combination of IP address and port number forms a \textbf{socket} --- the foundation of process-to-process communication across the Internet.
+
+\textcolor{blue}{[Summary: Ports serve as numbered entry points that allow multiple applications to share the same network connection on a device.]}
+
+\subsection{Keyword Breakdown}
+\begin{itemize}[label=\textbullet]
+    \item \textbf{Port Number:} A 16-bit integer (0–65535) identifying a specific application or process.
+    \item \textbf{Socket:} The pairing of an IP address and port number (e.g., 192.168.1.10:443).
+    \item \textbf{Well-Known Ports:} Reserved for standard Internet services (0–1023).
+    \item \textbf{Registered Ports:} Assigned by IANA to specific applications (1024–49151).
+    \item \textbf{Dynamic or Private Ports:} Used temporarily by client applications (49152–65535).
+\end{itemize}
+
+\textcolor{orange}{[Mnemonic: ``W-R-D'' — Well-known, Registered, Dynamic — helps recall the three port ranges.]}
+
+\subsection{Analogy: Apartments in a Building}
+An IP address is like the \textit{street address} of an apartment building, and ports are the \textit{apartment numbers}. Data arriving at the building (IP address) must know which apartment (port) to go to. For instance, a web server might live in apartment 80, while an email server lives in apartment 25.
+
+\textcolor{blue}{[Summary: The port number directs network messages to the correct application, much like an apartment number directs mail within a building.]}
+
+\subsection{How Ports Function in Communication}
+Every Internet connection involves two endpoints, each identified by a socket:
+\[
+    \text{Socket Pair: } ( \text{Source IP, Source Port, Destination IP, Destination Port} )
+\]
+
+When a client (browser) requests a webpage:
+\begin{enumerate}
+    \item The browser selects a random \textbf{source port} (e.g., 51820).
+    \item The web server listens on a known \textbf{destination port} (e.g., 443 for HTTPS).
+    \item The request is sent as:
+          \[
+              192.168.1.5:51820 \rightarrow 93.184.216.34:443
+          \]
+    \item The server’s response is sent back along the same path, using the port numbers to ensure data reaches the right application.
+\end{enumerate}
+
+\textcolor{blue}{[Summary: Ports ensure that each networked process on a host receives the correct data among multiple concurrent communications.]}
+
+\subsection{Port Number Categories}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Range} & \textbf{Type}           & \textbf{Example Usage}            \\ \midrule
+        0–1023         & Well-Known Ports        & HTTP (80), HTTPS (443), SMTP (25) \\
+        1024–49151     & Registered Ports        & MySQL (3306), PostgreSQL (5432)   \\
+        49152–65535    & Dynamic / Private Ports & Temporary client connections      \\ \bottomrule
+    \end{tabular}
+    \caption{Port number categories and examples.}
+\end{table}
+
+\textcolor{blue}{[Summary: Port numbers are divided into standardized ranges to manage global consistency and avoid conflicts.]}
+
+\subsection{TCP vs. UDP Ports}
+Both TCP and UDP protocols use port numbers, but for different purposes:
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{@{}llll@{}}
+        \toprule
+        \textbf{Protocol} & \textbf{Type}       & \textbf{Example Port} & \textbf{Description}                           \\ \midrule
+        TCP               & Connection-Oriented & 80 (HTTP)             & Reliable data delivery via acknowledgment      \\
+        UDP               & Connectionless      & 53 (DNS)              & Faster transmission with no delivery guarantee \\ \bottomrule
+    \end{tabular}
+    \caption{Comparison of TCP and UDP port usage.}
+\end{table}
+
+\textcolor{blue}{[Summary: TCP ports manage reliable, ordered communication; UDP ports handle faster, simpler message delivery.]}
+
+\subsection{Common Port Numbers in Practice}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Service} & \textbf{Protocol} & \textbf{Port} \\ \midrule
+        HTTP             & TCP               & 80            \\
+        HTTPS            & TCP               & 443           \\
+        FTP              & TCP               & 21            \\
+        SSH              & TCP               & 22            \\
+        DNS              & UDP/TCP           & 53            \\
+        SMTP             & TCP               & 25            \\
+        POP3             & TCP               & 110           \\
+        IMAP             & TCP               & 143           \\
+        DHCP             & UDP               & 67, 68        \\ \bottomrule
+    \end{tabular}
+    \caption{Commonly used port numbers in networking.}
+\end{table}
+
+\textcolor{orange}{[Mnemonic: ``2-1-2-2-5-3-8-6'' pattern for FTP (21), SSH (22), SMTP (25), DNS (53), POP3 (110), IMAP (143), HTTPS (443) helps recall key ports.]}
+
+\subsection{Visual Diagram Description}
+\begin{quote}
+    Imagine a diagram showing:
+    \begin{itemize}
+        \item A client on the left labeled with ``Source IP: 192.168.1.5, Port: 51820''.
+        \item A server on the right labeled ``Destination IP: 93.184.216.34, Port: 443 (HTTPS)''.
+        \item Arrows between them representing TCP segments or UDP datagrams.
+    \end{itemize}
+    This visualization helps reinforce how port numbers map communication between specific processes on each host.
+\end{quote}
+
+\textcolor{blue}{[Summary: Visualizing sockets clarifies how each connection is identified by IP and port on both ends.]}
+
+\subsection{Integration with the Broader Network System}
+Ports operate within the \textbf{Transport Layer} (Layer 4 of the OSI model) but are essential to the \textbf{Application Layer} (Layer 7) where specific network services reside. The transport layer (e.g., TCP/UDP) uses port numbers to multiplex multiple application streams across a single IP connection.
+
+\textcolor{blue}{[Summary: Ports bridge the gap between transport mechanisms and application processes, enabling simultaneous communication across many services.]}
+
+\subsection{Key Takeaways}
+
+\textcolor{blue}{[Summary: Ports are numerical identifiers that distinguish network services on a host, allowing simultaneous communication over shared IP connections. They are crucial for process-to-process data delivery in TCP/IP networks.]}
+
+\textcolor{orange}{[Mnemonic: ``IP = device, Port = program'' — IP locates the machine, Port locates the process.]}
+
+\textcolor{red}{[Exam Questions:
+            (1) Explain the relationship between IP addresses, ports, and sockets.
+            (2) Differentiate between well-known, registered, and dynamic ports.
+            (3) Compare TCP and UDP port usage and reliability mechanisms.]}
+
+
+
+
+\section{Ports in Computer Networks}
+
+\subsection{Core Definitions}
+\begin{itemize}
+    \item \textbf{Port:} Numerical identifier used to direct network traffic to the correct application or process.
+    \item \textbf{Socket:} Combination of IP address + port number; uniquely identifies a communication endpoint.
+    \item \textbf{Well-Known Ports:} Ports 0--1023 reserved for standard services (e.g., HTTP=80, HTTPS=443).
+    \item \textbf{Ephemeral Ports:} Temporary ports (1024--65535) assigned by client for short-lived sessions.
+\end{itemize}
+
+\subsection{Keyword Breakdown}
+\begin{itemize}
+    \item \textbf{IP Address:} Device location on network.
+    \item \textbf{Port Number:} Specific application/service identifier on a device.
+    \item \textbf{TCP vs UDP:}
+          \begin{itemize}
+              \item TCP: Connection-oriented, reliable.
+              \item UDP: Connectionless, faster, no delivery guarantee.
+          \end{itemize}
+    \item \textbf{Multiplexing:} Multiple applications share one IP using different ports.
+\end{itemize}
+
+\subsection{Step-by-Step Function}
+\begin{enumerate}
+    \item Client chooses ephemeral port \& sends request to server IP + well-known port.
+    \item Server receives packet, inspects destination port.
+    \item Packet routed to correct application/service.
+    \item Response sent back to client socket (IP + ephemeral port).
+    \item Communication continues until session ends.
+\end{enumerate}
+
+\subsection{Examples \& Applications}
+\begin{itemize}
+    \item HTTP: Port 80 → Web pages
+    \item HTTPS: Port 443 → Secure web pages
+    \item FTP: Ports 20/21 → File transfers
+    \item SSH: Port 22 → Secure remote login
+    \item DNS: Port 53 → Domain name resolution
+\end{itemize}
+
+\subsection{Comparisons / Contrasts}
+\begin{itemize}
+    \item \textbf{Port vs IP:} IP = device, Port = application on device.
+    \item \textbf{TCP vs UDP Ports:}
+          \begin{itemize}
+              \item TCP: Reliable, ordered, connection-based.
+              \item UDP: Fast, unordered, connectionless.
+          \end{itemize}
+    \item Well-Known vs Ephemeral:
+          \begin{itemize}
+              \item Well-Known: Fixed for standard services.
+              \item Ephemeral: Dynamic, temporary for clients.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Analogies}
+\begin{itemize}
+    \item IP Address = House address
+    \item Port = Specific room in the house
+    \item Socket = House + Room (full delivery location)
+\end{itemize}
+
+\subsection{Visual / Diagram Description}
+\begin{itemize}
+    \item Server = building, rooms = ports
+    \item Client sends packets → addressed to room number (port)
+    \item Responses follow reverse path to client's ephemeral port
+\end{itemize}
+
+\subsection{Concept Integration}
+\begin{itemize}
+    \item Works at Transport Layer (OSI Layer 4)
+    \item Allows multiple applications to share a single IP
+    \item Essential for TCP/IP networking and client-server models
+\end{itemize}
+
+\subsection{Summary \& Study Aids}
+\textcolor{blue}{[Summary: Ports identify applications on a host, enabling organized network communication with IP addresses and sockets.]}
+
+\textcolor{orange}{[Mnemonic: IP = House, Port = Room, Socket = House + Room]}
+
+\textcolor{red}{[Exam Questions:
+            \begin{enumerate}
+                \item Difference between well-known and ephemeral ports.
+                \item Role of socket in network communication.
+                \item Examples of services and default ports.
+                \item Compare TCP and UDP port behavior.
+            \end{enumerate}
+        ]}
+\end{document}

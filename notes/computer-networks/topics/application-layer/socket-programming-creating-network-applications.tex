@@ -1,0 +1,324 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted} % Code highlighting
+\usepackage{booktabs} % Clean tables
+\usepackage{tikz} % Optional for concept maps
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% -------------------------------
+% Topic Metadata
+% -------------------------------
+\newcommand{\TOPICTITLE}{Application Layer: Socket Programming with UDP and TCP}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% This LaTeX file should be saved at: computer_networks/chapter02/application_layer.tex
+
+\section{Socket Programming Fundamentals}
+
+\subsection{Socket Definition and Purpose}
+
+\begin{itemize}
+    \item \textbf{Socket}: A door between application process and end-to-end transport protocol
+    \item Acts as an interface between application layer and transport layer
+    \item Application developer controls the application process
+    \item Operating system controls the socket and underlying transport protocols
+\end{itemize}
+
+\subsection{Two Socket Types}
+
+\begin{itemize}
+    \item \textbf{UDP (User Datagram Protocol)}: Unreliable datagram service
+    \item \textbf{TCP (Transmission Control Protocol)}: Reliable, byte stream-oriented service
+\end{itemize}
+
+\subsection{Application Example}
+
+\begin{enumerate}
+    \item Client reads a line of characters (data) from its keyboard and sends data to server
+    \item Server receives the data and converts characters to uppercase
+    \item Server sends modified data to client
+    \item Client receives modified data and displays line on its screen
+\end{enumerate}
+
+\textcolor{blue}{[Summary: Socket programming enables communication between client and server applications. UDP provides connectionless, unreliable service while TCP provides connection-oriented, reliable service.]}
+
+\textcolor{orange}{[Mnemonic: UDP = Unreliable Datagram Protocol; TCP = Trustworthy Connection Protocol]}
+
+\section{Socket Programming with UDP}
+
+\subsection{UDP Characteristics}
+
+\begin{itemize}
+    \item No "connection" between client and server
+    \item No handshaking before sending data
+    \item Sender explicitly attaches IP destination address and port number to each packet
+    \item Receiver extracts sender IP address and port number from received packet
+    \item Transmitted data may be lost or received out-of-order
+    \item Provides \textit{unreliable} transfer of groups of bytes ("datagrams")
+\end{itemize}
+
+\subsection{Client/Server Socket Interaction: UDP}
+
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Server}                             & \textbf{Client}                             \\
+        \hline
+        create socket, port=x:                      & create socket:                              \\
+        serverSocket = socket(AF\_INET,SOCK\_DGRAM) & clientSocket = socket(AF\_INET,SOCK\_DGRAM) \\
+        \hline
+        read datagram from serverSocket             & Create datagram with serverIP address       \\
+                                                    & and port=x; send datagram via clientSocket  \\
+        \hline
+        write reply to serverSocket                 & read datagram from clientSocket             \\
+        specifying client address, port number      &                                             \\
+        \hline
+                                                    & close clientSocket                          \\
+        \hline
+    \end{tabular}
+    \caption{UDP Client/Server Interaction Sequence}
+\end{figure}
+
+\subsection{Example Application: UDP Client}
+
+\begin{minted}{python}
+from socket import *
+serverName = 'hostname'
+serverPort = 12000
+clientSocket = socket(AF_INET, SOCK_DGRAM)
+message = raw_input('Input lowercase sentence:')
+clientSocket.sendto(message.encode(), (serverName, serverPort))
+modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
+print modifiedMessage.decode()
+clientSocket.close()
+\end{minted}
+
+\subsection{Example Application: UDP Server}
+
+\begin{minted}{python}
+from socket import *
+serverPort = 12000
+serverSocket = socket(AF_INET, SOCK_DGRAM)
+serverSocket.bind(("", serverPort))
+print "The server is ready to receive"
+while True:
+    message, clientAddress = serverSocket.recvfrom(2048)
+    modifiedMessage = message.decode().upper()
+    serverSocket.sendto(modifiedMessage.encode(), clientAddress)
+\end{minted}
+
+\textcolor{blue}{[Summary: UDP socket programming involves connectionless communication where each datagram is sent independently. The server binds to a port and waits for incoming datagrams, while the client sends datagrams to the server's address and port.]}
+
+\textcolor{teal}{[Concept Map: UDP → Connectionless → No handshaking → Explicit addressing → Unreliable → May lose/reorder data → Suitable for real-time applications]}
+
+\section{Socket Programming with TCP}
+
+\subsection{TCP Characteristics}
+
+\begin{itemize}
+    \item Client must contact server first
+    \item Server process must be running first
+    \item Server must have created socket (welcoming socket) for client contact
+    \item When client creates socket: client TCP establishes connection to server TCP
+    \item When contacted by client, server TCP creates new socket for that particular client
+    \item Allows server to communicate with multiple clients simultaneously
+    \item Source port numbers used to distinguish clients
+    \item Provides reliable, in-order byte-stream transfer ("pipe")
+\end{itemize}
+
+\subsection{Client/Server Socket Interaction: TCP}
+
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Server}                              & \textbf{Client}                          \\
+        \hline
+        create socket, port=x, for incoming request: &                                          \\
+        serverSocket = socket()                      &                                          \\
+        \hline
+        wait for incoming connection request         & create socket, connect to hostid, port=x \\
+        connectionSocket = serverSocket.accept()     & clientSocket = socket()                  \\
+        \hline
+        read request from connectionSocket           & send request using clientSocket          \\
+        \hline
+        write reply to connectionSocket              & read reply from clientSocket             \\
+        \hline
+        close connectionSocket                       & close clientSocket                       \\
+        \hline
+    \end{tabular}
+    \caption{TCP Client/Server Interaction Sequence}
+\end{figure}
+
+\subsection{Example Application: TCP Client}
+
+\begin{minted}{python}
+from socket import *
+serverName = 'servername'
+serverPort = 12000
+clientSocket = socket(AF_INET, SOCK_STREAM)
+clientSocket.connect((serverName, serverPort))
+sentence = raw_input('Input lowercase sentence:')
+clientSocket.send(sentence.encode())
+modifiedSentence = clientSocket.recv(1024)
+print 'From Server:', modifiedSentence.decode()
+clientSocket.close()
+\end{minted}
+
+\subsection{Example Application: TCP Server}
+
+\begin{minted}{python}
+from socket import *
+serverPort = 12000
+serverSocket = socket(AF_INET, SOCK_STREAM)
+serverSocket.bind(("", serverPort))
+serverSocket.listen(1)
+print 'The server is ready to receive'
+while True:
+    connectionSocket, addr = serverSocket.accept()
+    sentence = connectionSocket.recv(1024).decode()
+    capitalizedSentence = sentence.upper()
+    connectionSocket.send(capitalizedSentence.encode())
+    connectionSocket.close()
+\end{minted}
+
+\textcolor{blue}{[Summary: TCP socket programming involves connection-oriented communication with a three-way handshake. The server creates a welcoming socket, accepts client connections, and creates dedicated sockets for each client, providing reliable, in-order data transfer.]}
+
+\section{Chapter 2: Summary}
+
+\subsection{Key Concepts Covered}
+
+\begin{itemize}
+    \item \textbf{Application Architectures}:
+          \begin{itemize}
+              \item Client-server architecture
+              \item P2P (Peer-to-Peer) architecture
+          \end{itemize}
+
+    \item \textbf{Service Requirements Specification}:
+          \begin{itemize}
+              \item Reliability requirements
+              \item Bandwidth requirements
+              \item Delay requirements
+          \end{itemize}
+
+    \item \textbf{Internet Transport Service Model}:
+          \begin{itemize}
+              \item Connection-oriented, reliable: TCP
+              \item Unreliable, datagrams: UDP
+          \end{itemize}
+
+    \item \textbf{Specific Protocols Studied}:
+          \begin{itemize}
+              \item HTTP (HyperText Transfer Protocol)
+              \item SMTP (Simple Mail Transfer Protocol), IMAP (Internet Message Access Protocol)
+              \item DNS (Domain Name System)
+              \item P2P: BitTorrent
+          \end{itemize}
+
+    \item \textbf{Advanced Topics}:
+          \begin{itemize}
+              \item Video streaming techniques
+              \item Content Delivery Networks (CDNs)
+              \item Socket programming with TCP and UDP
+          \end{itemize}
+\end{itemize}
+
+\subsection{Protocol Design Principles}
+
+\begin{itemize}
+    \item \textbf{Typical request/reply message exchange}:
+          \begin{itemize}
+              \item Client requests information or service
+              \item Server responds with data, status code
+          \end{itemize}
+
+    \item \textbf{Message formats}:
+          \begin{itemize}
+              \item \textit{Headers}: Fields giving information about data
+              \item \textit{Data}: Information (payload) being communicated
+          \end{itemize}
+
+    \item \textbf{Important design themes}:
+          \begin{itemize}
+              \item Centralized vs. decentralized architectures
+              \item Stateless vs. stateful protocols
+              \item Scalability considerations
+              \item Reliable vs. unreliable message transfer
+              \item "Complexity at network edge" principle
+          \end{itemize}
+\end{itemize}
+
+\textcolor{blue}{[Summary: The application layer encompasses diverse protocols and architectures for network applications. Key considerations include reliability, performance requirements, and the choice between connection-oriented (TCP) and connectionless (UDP) transport services.]}
+
+\textcolor{teal}{[Concept Map: Application Layer → Architectures (Client-Server, P2P) → Transport Services (TCP, UDP) → Protocols (HTTP, SMTP, DNS) → Advanced Topics (Streaming, CDNs) → Socket Programming]}
+
+\section*{Exam Preparation}
+
+\subsection*{Exam Questions}
+
+\textcolor{red}{[Exam Questions:}
+\begin{enumerate}
+    \item Compare and contrast TCP and UDP socket programming. When would you choose one over the other?
+    \item Explain the difference between a welcoming socket and a connection socket in TCP server programming.
+    \item What are the key differences in how UDP and TCP handle addressing in socket programming?
+    \item Write a Python code snippet for a UDP client that sends a message to a server and prints the response.
+    \item Describe the sequence of socket method calls in a typical TCP client-server application.
+    \item What are the advantages and disadvantages of connection-oriented vs. connectionless protocols?
+    \item How does a TCP server handle multiple concurrent clients?
+\end{enumerate}
+\textcolor{red}{]}
+
+\subsection*{Key Differences: TCP vs UDP}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{TCP}              & \textbf{UDP}           \\
+        \hline
+        Connection       & Connection-oriented       & Connectionless         \\
+        Reliability      & Reliable                  & Unreliable             \\
+        Ordering         & In-order delivery         & No ordering guarantees \\
+        Handshaking      & 3-way handshake required  & No handshaking         \\
+        Overhead         & Higher                    & Lower                  \\
+        Use Cases        & Web, email, file transfer & DNS, streaming, VoIP   \\
+        \hline
+    \end{tabular}
+    \caption{Comparison of TCP and UDP Protocols}
+\end{table}
+
+\subsection*{Study Tips}
+
+\begin{itemize}
+    \item Practice writing both UDP and TCP client-server code
+    \item Understand the socket API method sequence for both protocols
+    \item Memorize the key differences between connection-oriented and connectionless protocols
+    \item Be able to explain when to use TCP vs UDP for different application requirements
+    \item Review the protocol headers and message formats for HTTP, SMTP, and DNS
+\end{itemize}
+
+\end{document}

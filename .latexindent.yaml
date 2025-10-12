@@ -1,0 +1,4 @@
+defaultIndent: '    '       
+modifyLineBreaks: 1
+lookForAlignDelims: 1
+preserveTrailingWhitespace: 1
