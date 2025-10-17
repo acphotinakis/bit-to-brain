@@ -117,12 +117,7 @@
 \textcolor{orange}{[Mnemonic: USA - User agents, Servers, SMTP Architecture]}
 \textcolor{blue}{[Summary: Email infrastructure consists of user agents for interface, mail servers for storage and queuing, and SMTP protocol for server-to-server communication.]}
 
-\subsection{Exam Questions}
-\begin{enumerate}
-    \item What are the three major components of email infrastructure and what is the role of each?
-    \item Explain the difference between a mailbox and a message queue in a mail server.
-    \item Why do user agents store messages on servers rather than locally?
-\end{enumerate}
+
 
 \section{Simple Mail Transfer Protocol (SMTP)}
 
@@ -229,14 +224,6 @@ S: 221 hamburger.edu closing connection
 
 \textcolor{blue}{[Summary: SMTP uses a push model with persistent connections, requires 7-bit ASCII encoding, and follows a strict command-response sequence for reliable email transfer between servers.]}
 
-\subsection{Exam Questions}
-\begin{enumerate}
-    \item Explain the three phases of SMTP message transfer with the commands used in each phase.
-    \item Compare and contrast SMTP with HTTP in terms of transfer model and message handling.
-    \item Why does SMTP require messages to be in 7-bit ASCII format, and what are the implications?
-    \item What is the purpose of the DATA command in SMTP, and how is the end of message indicated?
-\end{enumerate}
-
 \section{Mail Message Format}
 
 \subsection{RFC Standards}
@@ -321,14 +308,6 @@ Let's meet at the usual place at noon.
 
 \textcolor{blue}{[Summary: While SMTP handles server-to-server delivery, mail access protocols like IMAP and HTTP handle retrieval from servers to user agents, with IMAP maintaining server storage and HTTP providing web interfaces.]}
 
-\subsection{Exam Questions}
-\begin{enumerate}
-    \item What is the difference between SMTP commands (MAIL FROM, RCPT TO) and email header fields (From, To)?
-    \item Explain the role of IMAP in email retrieval and how it differs from SMTP.
-    \item Why do webmail services like Gmail use HTTP on top of SMTP and IMAP?
-    \item What are the advantages of storing messages on the server (IMAP) versus downloading to local storage?
-\end{enumerate}
-
 \section{Key Concepts Review}
 
 \subsection{Important Definitions}
@@ -364,15 +343,6 @@ Let's meet at the usual place at noon.
     \item Email has two types of addressing: SMTP commands and message headers
     \item IMAP keeps messages on server, POP3 typically downloads to local machine
     \item HTTP-based email adds web interface layer to traditional email protocols
-\end{itemize}
-
-\section{References}
-\begin{itemize}
-    \item RFC 5321: SMTP Protocol Specification
-    \item RFC 2822: Internet Message Format
-    \item RFC 3501: IMAP Protocol Specification
-    \item Computer Networking: A Top-Down Approach (8th ed.) - J.F. Kurose, K.W. Ross
-    \item COMPSCI453 Computer Networks - Professor Jim Kurose
 \end{itemize}
 
 \end{document}

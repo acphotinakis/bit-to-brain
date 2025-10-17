@@ -266,7 +266,7 @@ Here we'll contrast application-level requirements with transport services (TCP 
           \begin{itemize}
               \item HTTP server: port 80
               \item Mail server: port 25
-              \item Example: Sending HTTP to gaia.cs.umass.edu
+              \item Example: Sending HTTP to cs.rit.edu
                     \begin{itemize}
                         \item IP address: 128.119.245.12
                         \item Port number: 80
@@ -435,40 +435,5 @@ The course will cover:
 \end{itemize}
 
 \textcolor{orange}{[Mnemonic: WED P2P VS - Web, Email, DNS, P2P, Video Streaming - major application layer topics]}
-
-\section{Exam Questions}
-
-\subsection*{Application Layer Fundamentals}
-\begin{enumerate}
-    \item Compare and contrast client-server and peer-to-peer architectures. What are the advantages and disadvantages of each?
-    \item Explain why network applications are written to run on end systems rather than network core devices.
-    \item Describe the role of sockets in network communication. What aspects are controlled by the application developer versus the operating system?
-\end{enumerate}
-
-\subsection*{Transport Protocols}
-\begin{enumerate}
-    \item What are the key differences between TCP and UDP? For what types of applications would you choose each and why?
-    \item Explain why some applications can tolerate packet loss while others require 100\% reliability. Provide examples of each type.
-    \item How does TLS enhance the security of TCP connections? At what layer is TLS implemented?
-\end{enumerate}
-
-\subsection*{Protocol Design}
-\begin{enumerate}
-    \item What four key elements does an application-layer protocol define? Provide examples for each element using HTTP.
-    \item Explain the difference between open protocols and proprietary protocols. What are the benefits of each approach?
-    \item Why is both an IP address and port number needed to identify a process running on a host?
-\end{enumerate}
-
-\textcolor{red}{[Exam Questions: Focus on comparing architectures, understanding transport protocol trade-offs, and analyzing application requirements. Practice explaining concepts with concrete examples.]}
-
-
-\section{Textbook Chapter}
-\section{2.1.1 Network Application Architectures}
-\begin{enumerate}
-    \item From the application developer’s perspective, the network architecture is fixed and provides a specific set of services to applications.
-    \item When choosing an application architecture, an app dev will likely choose either client-server or peer-to-peer.
-    \item The choice of architecture impacts scalability, performance, and complexity of the application.
-\end{enumerate}
-
 
 \end{document}

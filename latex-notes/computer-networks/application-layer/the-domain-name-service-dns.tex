@@ -43,7 +43,7 @@
     \item \textbf{Internet host identifiers}:
           \begin{itemize}
               \item IP address (32-bit) - used for addressing datagrams
-              \item Domain name (e.g., cs.umass.edu) - used by humans
+              \item Domain name (e.g., cs.rit.edu) - used by humans
           \end{itemize}
 \end{itemize}
 
@@ -242,10 +242,10 @@
         \node (local) at (4,0) {\shortstack{Local DNS server\\dns.nyu.edu}};
         \node (root) at (8,2) {Root DNS server};
         \node (tld) at (8,0) {TLD DNS server};
-        \node (auth) at (8,-2) {\shortstack{Authoritative DNS server\\dns.cs.umass.edu}};
+        \node (auth) at (8,-2) {\shortstack{Authoritative DNS server\\dns.cs.rit.edu}};
 
         % Arrows
-        \draw[->] (host) -- node[above] {1: gaia.cs.umass.edu} (local);
+        \draw[->] (host) -- node[above] {1: cs.rit.edu} (local);
         \draw[->] (local) -- node[above] {2: Query root} (root);
         \draw[->] (root) -- node[sloped, above] {3: Refer to .edu server} (local);
         \draw[->] (local) -- node[above] {4: Query .edu TLD} (tld);
@@ -276,9 +276,9 @@
         \node[draw] (local) at (3,0) {\shortstack{Local DNS server\\dns.nyu.edu}};
         \node[draw] (root) at (6,2) {Root DNS server};
         \node[draw] (tld) at (6,0) {TLD DNS server};
-        \node[draw] (auth) at (6,-2) {\shortstack{Authoritative DNS server\\dns.cs.umass.edu}};
+        \node[draw] (auth) at (6,-2) {\shortstack{Authoritative DNS server\\dns.cs.rit.edu}};
 
-        \draw[->] (host) -- node[above] {1: gaia.cs.umass.edu} (local);
+        \draw[->] (host) -- node[above] {1: cs.rit.edu} (local);
         \draw[->] (local) -- node[above] {2: Recursive query} (root);
         \draw[->] (root) -- node[above] {3: Query TLD} (tld);
         \draw[->] (tld) -- node[above] {4: Query authoritative} (auth);
@@ -438,30 +438,5 @@ DNS query and reply messages share the same format:
 \end{itemize}
 
 \textcolor{blue}{[Summary: DNS administration involves registering domains with registrars who update TLD servers, while DNS security addresses DDoS and spoofing attacks through filtering, caching, and DNSSEC authentication.]}
-
-\section*{Exam Questions}
-
-\subsection*{DNS Fundamentals}
-\begin{enumerate}
-    \item Explain why DNS uses a distributed hierarchical architecture instead of a centralized system. List at least three reasons.
-    \item Compare and contrast iterative and recursive DNS query resolution methods. What are the advantages and disadvantages of each?
-    \item Describe the four main types of DNS servers in the hierarchy and their respective roles.
-\end{enumerate}
-
-\subsection*{DNS Operations}
-\begin{enumerate}
-    \item Walk through the complete process of resolving www.example.com using iterative queries, naming each server type involved.
-    \item Explain how DNS caching improves performance and what problem it introduces regarding record freshness.
-    \item What is TTL in DNS and why is it important for both performance and reliability?
-\end{enumerate}
-
-\subsection*{DNS Records and Security}
-\begin{enumerate}
-    \item Compare DNS A records, CNAME records, NS records, and MX records. Provide an example use case for each.
-    \item Describe two major types of DNS security attacks and the countermeasures used against them.
-    \item Explain the process of registering a new domain name and getting it into the DNS system.
-\end{enumerate}
-
-\textcolor{red}{[Exam Questions: These questions cover DNS architecture, operations, record types, and security - key areas for understanding how the Domain Name System works in practice.]}
 
 \end{document}

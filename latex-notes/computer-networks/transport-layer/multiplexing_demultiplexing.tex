@@ -301,7 +301,7 @@ DatagramSocket mySocket1 = new DatagramSocket(12534);
 
 \textcolor{blue}{[Summary: UDP uses simple destination port-based demultiplexing where all traffic for a port goes to one socket, while TCP uses 4-tuple identification creating separate sockets for each connection, enabling multiple simultaneous conversations.]}
 
-\section{Study Aids and Exam Preparation}
+\section{Study Aids}
 
 \subsection{Key Concepts to Master}
 \begin{itemize}
@@ -311,19 +311,6 @@ DatagramSocket mySocket1 = new DatagramSocket(12534);
     \item Be able to explain why TCP needs more complex demultiplexing than UDP
     \item Understand real-world analogies and how they relate to network concepts
 \end{itemize}
-
-\subsection{Practice Questions}
-\begin{enumerate}
-    \item \textbf{Compare and contrast} connectionless (UDP) and connection-oriented (TCP) demultiplexing. Why does TCP require a 4-tuple while UDP only needs destination port?
-
-    \item Describe the process that occurs when a host receives a UDP datagram. How does it determine which socket should receive the data?
-
-    \item A web server is running on port 80 and has three simultaneous TCP connections from different clients. Explain how the server keeps these connections separate and directs incoming segments to the correct socket.
-
-    \item Using the \textbf{airport analogy}, explain how multiplexing and demultiplexing work in a network context. What represents ports? What represents sockets?
-
-    \item What would happen if two different applications on the same host tried to bind to the same UDP port? What about the same TCP 4-tuple?
-\end{enumerate}
 
 \textcolor{orange}{[Mnemonic: "UDP: Simple Port, TCP: Four Report" - UDP uses simple port numbers, TCP requires four pieces of information (the 4-tuple).]}
 
@@ -335,14 +322,6 @@ DatagramSocket mySocket1 = new DatagramSocket(12534);
     \item \textbf{TCP}: Demultiplexing using 4-tuple (source and destination IP addresses and port numbers)
     \item Multiplexing/demultiplexing happen at all layers of the network stack
     \item These mechanisms enable multiple applications to share network resources efficiently
-\end{itemize}
-
-\section{References}
-\begin{itemize}
-    \item Kurose, J.F., \& Ross, K.W. (2020). \textit{Computer Networking: A Top-Down Approach (8th ed.)}. Pearson.
-    \item Course: COMPSCI 453 Computer Networks, University of Massachusetts
-    \item Professor: Jim Kurose, College of Information and Computer Sciences
-    \item Textbook website: http://gala.cs.umass.edu/kurose\_ross
 \end{itemize}
 
 \end{document}

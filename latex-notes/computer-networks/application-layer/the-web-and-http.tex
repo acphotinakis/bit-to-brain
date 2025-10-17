@@ -283,11 +283,11 @@ host name      |   path name
 
 \subsection{Trying HTTP with Netcat}
 \begin{enumerate}
-    \item Open TCP connection: \texttt{\% nc -c -v gaia.cs.umass.edu 80}
+    \item Open TCP connection: \texttt{\% nc -c -v cs.rit.edu 80}
     \item Send GET request:
           \begin{verbatim}
-    GET /kurose_ross/interactive/index.php HTTP/1.1
-    Host: gaia.cs.umass.edu
+    GET interactive/index.php HTTP/1.1
+    Host: cs.rit.edu
     \end{verbatim}
     \item Examine server response
 \end{enumerate}
@@ -491,30 +491,5 @@ sdf
                 \item HTTP/3 → UDP-based → Per-object control + security
             \end{itemize}
         ]}
-
-\section*{Exam Questions}
-
-\subsection*{HTTP Fundamentals}
-\begin{enumerate}
-    \item Compare and contrast persistent vs. non-persistent HTTP connections. What are the performance implications of each?
-    \item Calculate the response time for downloading a web page with 5 objects using non-persistent HTTP, given RTT = 100ms and transmission time per object = 50ms.
-    \item Explain how cookies overcome HTTP's stateless nature and discuss the privacy concerns associated with them.
-\end{enumerate}
-
-\subsection*{Caching and Performance}
-\begin{enumerate}
-    \item A web cache has a hit rate of 60\%. The average response time for cache hits is 10ms and for cache misses is 200ms. Calculate the overall average response time.
-    \item Describe how conditional GET works and why it's beneficial for network performance.
-    \item Compare the cost-effectiveness of upgrading access link speed vs. installing a web cache for improving institutional network performance.
-\end{enumerate}
-
-\subsection*{HTTP Evolution}
-\begin{enumerate}
-    \item Explain how HTTP/2 mitigates head-of-line blocking compared to HTTP 1.1.
-    \item What are the main advantages of HTTP/3 over HTTP/2, and why was UDP chosen as the transport protocol?
-    \item Describe a scenario where HTTP/2's object prioritization would provide significant performance benefits over HTTP 1.1.
-\end{enumerate}
-
-\textcolor{red}{[Exam Questions: These questions cover key concepts including HTTP connection types, performance calculations, caching benefits, and protocol evolution from HTTP 1.1 to HTTP/3.]}
 
 \end{document}
