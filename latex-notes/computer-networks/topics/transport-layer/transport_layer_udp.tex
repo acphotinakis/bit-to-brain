@@ -1,0 +1,277 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted} % Code highlighting
+\usepackage{booktabs} % Clean tables
+\usepackage{tikz} % Optional for concept maps
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% -------------------------------
+% Topic Metadata
+% -------------------------------
+\newcommand{\TOPICTITLE}{Transport Layer: UDP (User Datagram Protocol)}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction to Transport Layer}
+\begin{itemize}
+    \item Transport-layer services provide end-to-end communication between applications
+    \item Key functions include multiplexing and demultiplexing
+    \item Two main transport protocols: UDP (connectionless) and TCP (connection-oriented)
+    \item Additional topics: reliable data transfer, congestion control principles
+\end{itemize}
+
+\textcolor{blue}{[Summary: The transport layer enables application-to-application communication across networks, with UDP providing lightweight connectionless service and TCP offering reliable connection-oriented service.]}
+
+\section{UDP: User Datagram Protocol}
+
+\subsection{Basic Characteristics}
+\begin{itemize}
+    \item \textbf{"No frills," "bare bones"} Internet transport protocol
+    \item \textbf{Best effort service} - segments may be:
+          \begin{itemize}
+              \item Lost during transmission
+              \item Delivered out-of-order to application
+          \end{itemize}
+    \item \textbf{Connectionless} - no handshaking between UDP sender and receiver
+    \item Each UDP segment handled independently of others
+\end{itemize}
+
+\subsection{Why Use UDP?}
+\begin{itemize}
+    \item \textbf{No connection establishment} - avoids RTT delay
+    \item \textbf{Simple} - no connection state maintained at sender or receiver
+    \item \textbf{Small header size} - minimal overhead
+    \item \textbf{No congestion control} - can transmit as fast as desired
+    \item \textbf{Robust} - can function even when network service is compromised
+\end{itemize}
+
+\textcolor{orange}{[Mnemonic: UDP = Uncomplicated, Direct, Prompt - emphasizes its simplicity and speed]}
+
+\section{UDP Applications and Use Cases}
+
+\subsection{Common UDP Applications}
+\begin{itemize}
+    \item \textbf{Streaming multimedia apps} - loss tolerant, rate sensitive
+    \item \textbf{DNS (Domain Name System)} - quick name resolution
+    \item \textbf{SNMP (Simple Network Management Protocol)} - network monitoring
+    \item \textbf{HTTP/3} - modern web protocol built on UDP
+\end{itemize}
+
+\subsection{Reliability Over UDP}
+\begin{itemize}
+    \item If reliable transfer needed (e.g., HTTP/3):
+          \begin{itemize}
+              \item Add reliability mechanisms at application layer
+              \item Implement congestion control at application layer
+          \end{itemize}
+    \item Applications can customize reliability to their specific needs
+\end{itemize}
+
+\section{UDP Protocol Specification [RFC 768]}
+
+\subsection{Protocol Definition}
+\begin{itemize}
+    \item Standardized in RFC 768 (August 28, 1980)
+    \item Provides datagram mode of packet-switched communication
+    \item Assumes Internet Protocol (IP) as underlying protocol
+    \item Transaction-oriented with minimal protocol mechanism
+\end{itemize}
+
+\subsection{Service Guarantees}
+\begin{itemize}
+    \item \textbf{No guaranteed delivery} - packets may be lost
+    \item \textbf{No duplicate protection} - may receive copies
+    \item \textbf{No ordered delivery} - out-of-order arrival possible
+    \item Applications needing reliable streams should use TCP instead
+\end{itemize}
+
+\section{UDP Segment Format}
+
+\subsection{Header Structure}
+\begin{itemize}
+    \item 32-bit (4-byte) header followed by data payload
+    \item Header fields:
+          \begin{itemize}
+              \item \textbf{Source Port} (16 bits) - sender's port number
+              \item \textbf{Destination Port} (16 bits) - receiver's port number
+              \item \textbf{Length} (16 bits) - total segment size in bytes (header + data)
+              \item \textbf{Checksum} (16 bits) - error detection field
+          \end{itemize}
+\end{itemize}
+
+\subsection{Format Visualization}
+\begin{verbatim}
+    0               16              31
+    +---------------+---------------+ 
+    |  Source Port  | Destination Port|
+    +---------------+---------------+ 
+    |    Length     |   Checksum     |
+    +---------------+---------------+ 
+    |                                 |
+    |          Data Payload          |
+    |                                 |
+    +-------------------------------+
+\end{verbatim}
+
+\textcolor{teal}{[Concept Map: UDP Segment → Header (Ports + Length + Checksum) + Data → IP Packet → Network Transmission]}
+
+\section{UDP Transport Layer Actions}
+
+\subsection{Sender Actions}
+\begin{enumerate}
+    \item Receives application-layer message
+    \item Determines UDP segment header field values
+    \item Creates UDP segment with header and data
+    \item Passes segment to IP layer for transmission
+\end{enumerate}
+
+\subsection{Receiver Actions}
+\begin{enumerate}
+    \item Receives segment from IP layer
+    \item Verifies UDP checksum header value
+    \item Extracts application-layer message from payload
+    \item Demultiplexes message to appropriate application via socket
+\end{enumerate}
+
+\subsection{SNMP Example}
+\begin{itemize}
+    \item SNMP client creates SNMP message
+    \item UDP layer adds header and passes to IP
+    \item SNMP server receives via IP, checks checksum, delivers to application
+\end{itemize}
+
+\section{UDP Checksum Mechanism}
+
+\subsection{Goal and Purpose}
+\begin{itemize}
+    \item \textbf{Primary goal}: Detect errors (flipped bits) in transmitted segments
+    \item Provides basic data integrity verification
+    \item Covers UDP header, data, and pseudo-IP header information
+\end{itemize}
+
+\subsection{Sender Procedure}
+\begin{enumerate}
+    \item Treat UDP segment contents as sequence of 16-bit integers
+    \item Include UDP header fields and IP addresses in calculation
+    \item Compute one's complement sum of all 16-bit integers
+    \item Place resulting checksum value in UDP checksum field
+\end{enumerate}
+
+\subsection{Receiver Procedure}
+\begin{enumerate}
+    \item Compute checksum of received segment using same method
+    \item Compare computed checksum with received checksum field
+    \item \textbf{Not equal}: Error detected - segment may be corrupted
+    \item \textbf{Equal}: No error detected (but errors still possible due to checksum limitations)
+\end{enumerate}
+
+\section{Internet Checksum: Detailed Example}
+
+\subsection{Calculation Process}
+\begin{itemize}
+    \item Add two 16-bit integers using one's complement arithmetic
+    \item Example:
+          \begin{itemize}
+              \item First number: 1110 0110 0110 0110 (binary)
+              \item Second number: 1101 0101 0101 0101 (binary)
+              \item Sum: 1101 1101 1101 1011 (with carry)
+          \end{itemize}
+    \item \textbf{Wraparound}: Carry from most significant bit added back to result
+\end{itemize}
+
+\subsection{Mathematical Representation}
+\[
+    \begin{array}{cccccccccccccccc}
+        1 & 1 & 1 & 0 & 0 & 1 & 1 & 0 & 0 & 1 & 1 & 0 & 0 & 1 & 1 & 0     \\
+        1 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1     \\
+        \hline
+        1 & 1 & 0 & 1 & 1 & 1 & 0 & 1 & 1 & 1 & 0 & 1 & 1 & 1 & 0 & 1 & 1 \\
+    \end{array}
+\]
+
+\subsection{Checksum Weaknesses}
+\begin{itemize}
+    \item \textbf{Limited error detection capability}
+    \item May not detect certain error patterns (e.g., swapped bytes)
+    \item Example: Even when numbers change due to bit flips, checksum may remain unchanged
+    \item Not cryptographically secure - easy to forge
+\end{itemize}
+
+\textcolor{blue}{[Summary: UDP checksum provides basic error detection using one's complement addition, but has limitations and cannot guarantee complete data integrity.]}
+
+\section{Comprehensive UDP Summary}
+
+\subsection{Protocol Characteristics}
+\begin{itemize}
+    \item \textbf{"No frills"} protocol with minimal overhead
+    \item Segments may be lost or delivered out-of-order
+    \item Best effort service: "send and hope for the best"
+\end{itemize}
+
+\subsection{UDP Advantages}
+\begin{itemize}
+    \item No setup/handshaking required (avoids RTT delay)
+    \item Can function when network conditions are poor
+    \item Provides basic error detection via checksum
+    \item Enables application-specific reliability implementations
+\end{itemize}
+
+\subsection{Modern Applications}
+\begin{itemize}
+    \item Foundation for HTTP/3 and other modern protocols
+    \item Allows building customized transport functionality
+    \item Ideal for applications preferring timeliness over reliability
+\end{itemize}
+
+\textcolor{orange}{[Mnemonic: UDP Benefits = FAST - Fast setup, Application control, Simple, Timely delivery]}
+
+\section{Study Questions and Exam Preparation}
+
+\subsection{Conceptual Questions}
+\begin{enumerate}
+    \item Compare and contrast UDP and TCP in terms of reliability, connection establishment, and overhead.
+    \item Explain why streaming applications often prefer UDP over TCP.
+    \item Describe the UDP checksum calculation process and its limitations.
+    \item What are the advantages of implementing reliability at the application layer rather than using TCP?
+\end{enumerate}
+
+\subsection{Technical Problems}
+\begin{enumerate}
+    \item Calculate the UDP checksum for a segment with source port 5200, destination port 53, length 32 bytes, and data "Hello".
+    \item Explain what happens when a UDP receiver detects a checksum error.
+    \item Design an application-layer protocol that adds reliability to UDP for file transfer.
+\end{enumerate}
+
+\subsection{Real-World Applications}
+\begin{enumerate}
+    \item Research and explain why HTTP/3 uses UDP instead of TCP.
+    \item Identify three real-world applications that use UDP and explain why it's appropriate for each.
+    \item Analyze the trade-offs between using raw UDP vs. building custom reliability vs. using TCP.
+\end{enumerate}
+
+\textcolor{teal}{[Concept Map: Transport Layer → UDP vs TCP → UDP: Connectionless + Best Effort + Applications (DNS, Streaming) + Checksum → Modern Uses (HTTP/3)]}
+
+
+
+\end{document}

@@ -1,0 +1,110 @@
+// {
+//     "latex-workshop.latex.tools": [
+//         {
+//             "name": "latexmk",
+//             "command": "/usr/local/texlive/2025/bin/universal-darwin/latexmk",
+//             "args": [
+//                 "-synctex=1",
+//                 "-interaction=nonstopmode",
+//                 "-file-line-error",
+//                 "-pdf",
+//                 "-outdir=./build",
+//                 "%DOC%"
+//             ],
+//             "env": {
+//                 "PATH": "/Users/andrewphotinakis/Documents/Fall2025/bit-to-brain/.venv/bin:/usr/local/texlive/2025/bin/universal-darwin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+//             }
+//         },
+//         {
+//             "name": "lualatex",
+//             "command": "/usr/local/texlive/2025/bin/universal-darwin/lualatex",
+//             "args": [
+//                 "-synctex=1",
+//                 "-interaction=nonstopmode",
+//                 "-file-line-error",
+//                 "-shell-escape",
+//                 "-output-directory=build",
+//                 "%DOC%"
+//             ],
+//             "env": {
+//                 "PATH": "/Users/andrewphotinakis/Documents/Fall2025/bit-to-brain/.venv/bin:/usr/local/texlive/2025/bin/universal-darwin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+//             }
+//         },
+//         // {
+//         //   "name": "copy-pdf",
+//         //   "command": "bash",
+//         //   "args": [
+//         //     "-c",
+//         //     "cp build/%DOCFILE%.pdf ../compiled/%DIR% && echo 'PDF copied to %DIR%'"
+//         //   ]
+//         // }
+//         {
+//             "name": "copy-pdf",
+//             "command": "bash",
+//             "args": [
+//                 "-c",
+//                 "cp build/%DOCFILE%.pdf %DIR%/../compiled && echo 'PDF copied to %DIR%../compiled'"
+//             ]
+//             // "args": [
+//             //   "-c",
+//             //   "cp build/%DOCFILE%.pdf notes/%DOCFOLDER%/compiled/ && echo 'PDF copied to notes/%DOCFOLDER%/compiled/'"
+//             // ]
+//         }
+//     ],
+//     "latex-workshop.latex.recipes": [
+//         {
+//             "name": "latexmk ➞ copy-pdf",
+//             "tools": [
+//                 "latexmk",
+//                 "copy-pdf"
+//             ]
+//         }
+//     ],
+//     "latex-workshop.latex.recipe.default": "latexmk ➞ copy-pdf",
+//     "latex-workshop.latex.outDir": "./build",
+//     "latex-workshop.view.pdf.viewer": "tab",
+//     "latex-workshop.chktex.path": "/usr/local/texlive/2025/bin/universal-darwin/chktex"
+// }
+{
+    "[latex]": {
+        "editor.wordWrap": "on"
+    },
+    "latex-workshop.latex.tools": [
+        {
+            "name": "latexmk",
+            "command": "/home/stu5/s0/acp7795/.texlive/2025/bin/x86_64-linux/latexmk",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-pdf",
+                "-outdir=./build",
+                "%DOC%"
+            ],
+            "env": {
+                "PATH": "/home/stu5/s0/acp7795/Documents/bit-to-brain/.venv/bin:/home/stu5/s0/acp7795/.texlive/2025/bin/x86_64-linux:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+            }
+        },
+        {
+            "name": "copy-pdf",
+            "command": "bash",
+            "args": [
+                "-c",
+                "cp build/%DOCFILE%.pdf \"$(dirname %DIR%)/compiled/\" && echo 'PDF copied to $(dirname %DIR%)/compiled/'"
+            ]
+        }
+    ],
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "latexmk ➞ copy-pdf",
+            "tools": [
+                "latexmk",
+                "copy-pdf"
+            ]
+        }
+    ],
+    "latex-workshop.latex.recipe.default": "latexmk ➞ copy-pdf",
+    "latex-workshop.latex.outDir": "./build",
+    "latex-workshop.view.pdf.viewer": "tab",
+    "latex-workshop.chktex.path": "/home/stu5/s0/acp7795/.texlive/2025/bin/x86_64-linux/chktex"
+}
