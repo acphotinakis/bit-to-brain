@@ -4,7 +4,7 @@
 # Intermediate artifacts go to builds/
 # Cleans build directories after successful compilation
 
-set -e  # Stop on first error
+set +e
 
 SOURCE_DIR="/home/stu5/s0/acp7795/Documents/bit-to-brain/latex-notes"
 BUILD_DIR="/home/stu5/s0/acp7795/Documents/bit-to-brain/builds"
