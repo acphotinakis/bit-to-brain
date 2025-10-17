@@ -47,6 +47,96 @@
 \tableofcontents
 \newpage
 
+\section{Transport Layer in Computer Networks}
+
+\subsection{Core Definitions}
+\begin{itemize}
+    \item \textbf{Transport Layer:} Layer 4 of the OSI model responsible for end-to-end communication and data delivery between hosts.
+    \item \textbf{Segment:} A unit of data encapsulated by the transport layer for transmission.
+    \item \textbf{Port:} Logical endpoint identifying specific applications/services on a host.
+    \item \textbf{Flow Control:} Mechanism to prevent sender from overwhelming the receiver.
+    \item \textbf{Error Control:} Mechanism to detect and correct errors in transmitted data.
+\end{itemize}
+
+\subsection{Keyword Breakdown}
+\begin{itemize}
+    \item \textbf{TCP (Transmission Control Protocol):} Connection-oriented, reliable, ensures ordered delivery.
+    \item \textbf{UDP (User Datagram Protocol):} Connectionless, faster, but unreliable and unordered.
+    \item \textbf{Three-Way Handshake:} Process to establish TCP connection (SYN, SYN-ACK, ACK).
+    \item \textbf{Checksum:} Field used for error detection in segments/datagrams.
+    \item \textbf{Sliding Window:} Technique for flow control and efficient data transmission.
+\end{itemize}
+
+\subsection{Stepwise Mechanism}
+\begin{enumerate}
+    \item \textbf{TCP Connection Establishment:}
+          \begin{itemize}
+              \item Client sends SYN.
+              \item Server responds with SYN-ACK.
+              \item Client sends ACK; connection established.
+          \end{itemize}
+    \item \textbf{Data Transmission:}
+          \begin{itemize}
+              \item Segmenting large messages.
+              \item Sending segments with sequence numbers.
+              \item Receiver acknowledges received segments.
+              \item Retransmit lost or corrupted segments.
+          \end{itemize}
+    \item \textbf{Connection Termination:}
+          \begin{itemize}
+              \item Four-way handshake: FIN, ACK, FIN, ACK.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Examples \& Applications}
+\begin{itemize}
+    \item \textbf{Web Browsing:} HTTP/HTTPS over TCP.
+    \item \textbf{Video Streaming:} UDP for live low-latency streams.
+    \item \textbf{Email:} SMTP, IMAP, POP3 over TCP.
+    \item \textbf{Gaming:} Real-time multiplayer using UDP.
+\end{itemize}
+
+\subsection{Comparisons / Contrasts}
+\begin{itemize}
+    \item \textbf{TCP vs UDP}
+          \begin{itemize}
+              \item TCP: Reliable, connection-oriented, slower.
+              \item UDP: Unreliable, connectionless, faster.
+          \end{itemize}
+    \item \textbf{Flow Control vs Congestion Control}
+          \begin{itemize}
+              \item Flow Control: Manages sender vs receiver speed.
+              \item Congestion Control: Manages network congestion to avoid packet loss.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Analogies}
+\begin{itemize}
+    \item Transport layer = postal service: ensures letters (data) reach the correct recipient (port) reliably (TCP) or quickly without guarantee (UDP).
+\end{itemize}
+
+\subsection{Visual / Diagram Description}
+\begin{itemize}
+    \item TCP Three-Way Handshake diagram:
+          \begin{itemize}
+              \item Client $\rightarrow$ SYN $\rightarrow$ Server
+              \item Server $\rightarrow$ SYN-ACK $\rightarrow$ Client
+              \item Client $\rightarrow$ ACK $\rightarrow$ Server
+          \end{itemize}
+    \item Optional figure: Segmentation and reassembly of a large message using sequence numbers.
+\end{itemize}
+
+\subsection{Concept Integration}
+\begin{itemize}
+    \item Interfaces with the Network Layer (IP) for addressing and routing.
+    \item Provides reliable delivery for Application Layer protocols.
+    \item Supports end-to-end communication across heterogeneous networks.
+\end{itemize}
+
+\subsection{Summary \& Study Aids}
+\textcolor{blue}{[Summary: The transport layer ensures end-to-end data delivery, providing reliability, flow control, and error management, mainly through TCP and UDP protocols.]}
+
+% \textcolor{orange}{[Mnemonic: \textbf{T.L. = TCP & UDP Learn}: Transport Layer manages \textbf{T}ransmission, \textbf{L}ogical ports, \textbf{U}dp, \textbf{D}elivery, \textbf{P}rotocols.]}
 
 
 
