@@ -14,6 +14,8 @@
 \geometry{margin=1in}
 \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
 
+\newcommand{\TOPICTITLE}{TCP\: Connection-Oriented Transport}
+
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\textbf{\TOPICTITLE}}
@@ -22,7 +24,6 @@
 % -------------------------------
 % Topic Metadata
 % -------------------------------
-\newcommand{\TOPICTITLE}{TCP\: Connection-Oriented Transport}
 \title{\TOPICTITLE\\\large Study-Ready Notes}
 \author{Compiled by Andrew Photinakis}
 \date{\today}
@@ -454,7 +455,7 @@ while True:
 
 \subsection{Practice Questions}
 \begin{enumerate}
-    \item \textbf{Calculate TCP timeout} given the following: EstimatedRTT = 200ms, DevRTT = 50ms, α = 0.125, β = 0.25. If the next SampleRTT is 180ms, what is the new TimeoutInterval?
+    \item \textbf{Calculate TCP timeout} given the following: EstimatedRTT = 200ms, DevRTT = 50ms, $\alpha = 0.125$, $\beta = 0.25$. If the next SampleRTT is 180ms, what is the new TimeoutInterval?
 
     \item \textbf{Trace the three-way handshake} between client (starting seq=1000) and server (starting seq=5000). Show the sequence and acknowledgment numbers in each segment.
 

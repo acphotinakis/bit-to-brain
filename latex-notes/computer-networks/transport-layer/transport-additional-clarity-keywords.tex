@@ -136,7 +136,94 @@
 \subsection{Summary \& Study Aids}
 \textcolor{blue}{[Summary: The transport layer ensures end-to-end data delivery, providing reliability, flow control, and error management, mainly through TCP and UDP protocols.]}
 
-% \textcolor{orange}{[Mnemonic: \textbf{T.L. = TCP & UDP Learn}: Transport Layer manages \textbf{T}ransmission, \textbf{L}ogical ports, \textbf{U}dp, \textbf{D}elivery, \textbf{P}rotocols.]}
+\section{Multiplexing in Computer Networks}
+
+\subsection{Core Definitions}
+\begin{itemize}
+    \item \textbf{Multiplexing:} Technique of combining multiple signals or data streams into one shared communication channel.
+    \item \textbf{Demultiplexing:} Reverse process of separating combined signals back into their original individual streams at the receiver.
+    \item \textbf{Channel:} A single communication path used to transmit multiple data flows.
+    \item \textbf{Bandwidth:} The total data capacity of a channel shared among multiple users.
+\end{itemize}
+
+\subsection{Keyword Breakdown}
+\begin{itemize}
+    \item \textbf{TDM (Time Division Multiplexing):} Allocates specific time slots to each data stream in sequence.
+    \item \textbf{FDM (Frequency Division Multiplexing):} Allocates distinct frequency bands to each signal.
+    \item \textbf{WDM (Wavelength Division Multiplexing):} Optical variant of FDM, using different light wavelengths.
+    \item \textbf{CDM (Code Division Multiplexing):} Each sender uses a unique code to transmit simultaneously on the same frequency band.
+\end{itemize}
+
+\subsection{Stepwise Mechanism}
+\begin{enumerate}
+    \item \textbf{Multiplexing Process:}
+    \begin{itemize}
+        \item Multiple data sources are encoded or modulated.
+        \item Multiplexer (MUX) combines them into one composite signal.
+        \item Signal transmitted through a shared physical medium.
+    \end{itemize}
+    \item \textbf{Demultiplexing Process:}
+    \begin{itemize}
+        \item Receiver uses a demultiplexer (DEMUX) to separate the composite signal.
+        \item Each original data stream is reconstructed and delivered to the correct application.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Examples \& Applications}
+\begin{itemize}
+    \item \textbf{Telecommunications:} Combining multiple voice calls on a single trunk line.
+    \item \textbf{Internet Links:} ISP backbone links use multiplexing to carry multiple data flows.
+    \item \textbf{Fiber Optics:} WDM enables terabit-scale data transmission using different light wavelengths.
+    \item \textbf{Satellite Communication:} TDM used for scheduling transmission times for multiple users.
+\end{itemize}
+
+\subsection{Comparisons / Contrasts}
+\begin{itemize}
+    \item \textbf{TDM vs FDM}
+    \begin{itemize}
+        \item TDM: Time-based sharing; all users use full bandwidth sequentially.
+        \item FDM: Frequency-based sharing; all users transmit simultaneously using separate frequencies.
+    \end{itemize}
+    \item \textbf{Synchronous vs Statistical TDM}
+    \begin{itemize}
+        \item Synchronous: Fixed time slots for each channel (can waste bandwidth).
+        \item Statistical: Slots assigned dynamically based on demand.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Analogies}
+\begin{itemize}
+    \item \textbf{TDM Analogy:} Like a round-robin conversation where each person speaks in turn.
+    \item \textbf{FDM Analogy:} Like multiple radio stations broadcasting on different frequencies.
+    \item \textbf{CDM Analogy:} Like multiple people speaking in different languages simultaneously; each listener understands only their language.
+\end{itemize}
+
+\subsection{Visual / Diagram Description}
+\begin{itemize}
+    \item Typical multiplexing system:
+    \begin{itemize}
+        \item Multiple sources $\rightarrow$ MUX $\rightarrow$ Shared Channel $\rightarrow$ DEMUX $\rightarrow$ Multiple Destinations.
+    \end{itemize}
+    \item Time or frequency bands can be shown as parallel blocks labeled for each user.
+\end{itemize}
+
+\subsection{Concept Integration}
+\begin{itemize}
+    \item Works closely with the \textbf{Physical Layer} for channel sharing.
+    \item Used in \textbf{Transport Layer} via port multiplexing (identifying processes).
+    \item Enables efficient utilization of bandwidth and scalability in communication systems.
+\end{itemize}
+
+\subsection{Formulas \& Performance Metrics}
+\begin{itemize}
+    \item \textbf{Bandwidth per User (FDM):} $B_u = \dfrac{B_{total}}{N}$ where $N$ is the number of channels.
+    \item \textbf{Efficiency (TDM):} $\eta = \dfrac{T_{useful}}{T_{frame}}$
+\end{itemize}
+
+\subsection{Summary \& Study Aids}
+\textcolor{blue}{[Summary: Multiplexing combines multiple data streams into one channel to optimize bandwidth and transmission efficiency; demultiplexing reverses the process at the receiver.]}
+
+\textcolor{orange}{[Mnemonic: \textbf{M.U.X. = Merge, Use, eXtract}: Merge signals → Use shared channel → eXtract original data at destination.]}
 
 
 
