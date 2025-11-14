@@ -1,0 +1,57 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted} 
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% -------------------------------
+% Topic Metadata
+% -------------------------------
+\newcommand{\TOPICTITLE}{Network Layer}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Chapter 4: The Network Layer — Data Plane}
+
+% Section 4.1
+\input{sections/4_1_overview_of_network_layer/4_1_overview_of_network_layer.tex}
+
+% Section 4.2
+\input{sections/4_2_whats_inside_a_router/4_2_whats_inside_a_router.tex}
+
+% Section 4.3
+\input{sections/4_3_the_internet_protocol_ip_ipv4_addressing_ipv6_and_more/4_3_the_internet_protocol_ip_ipv4_addressing_ipv6_and_more.tex}
+
+% Section 4.4
+\input{sections/4_4_generalized_forwarding_and_sdn/4_4_generalized_forwarding_and_sdn.tex}
+
+% Section 4.5
+\input{sections/4_5_middleboxes/4_5_middleboxes.tex}
+
+% Section 4.6
+\input{sections/4_6_summary/4_6_summary.tex}
+
+\end{document}

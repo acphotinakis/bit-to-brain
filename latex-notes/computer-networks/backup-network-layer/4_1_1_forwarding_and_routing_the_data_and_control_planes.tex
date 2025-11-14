@@ -1,0 +1,94 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted} 
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% -------------------------------
+% Topic Metadata
+% -------------------------------
+\newcommand{\TOPICTITLE}{4.1.1 Forwarding and Routing: The Data and Control Planes}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+
+
+\section{4.1.1 Forwarding and Routing: The Data and Control Planes}
+
+Two key functions of network layer, forwarding and routing, map directly to data and control planes respectively.
+
+\subsection{Forwarding}
+\begin{enumerate}
+    \item Definition
+          \begin{itemize}
+              \item Is the router-local action of transferring a packet from an input link interface to appropriate link interface within a single router.
+          \end{itemize}
+    \item Mechanism
+          \begin{itemize}
+              \item A packet arrives at a router's input link
+              \item Router examines one or more fields in packet's header
+              \item Uses header values to index into its forwarding table
+              \item Value found in forwarding table entry indicates router's output link interface to which packet should be forwarded
+          \end{itemize}
+    \item Timescale \& Implementation
+          \begin{itemize}
+              \item Forwarding is fast (nanosecond) action that must be performed for every packet
+              \item Therefore implemented in hardware
+          \end{itemize}
+    \item Analogy
+          \begin{itemize}
+              \item Forwarding is like a driver navigating a single highway interchange or roundabout
+              \item Driver's decision (which exit ramp to take) is a local one, based on signs at that specific interchange and must be made quickly.
+          \end{itemize}
+\end{enumerate}
+
+
+\subsection{Routing (Control Plane Function)}
+\begin{enumerate}
+    \item Definition
+          \begin{itemize}
+              \item Routing is network-wide process that determines end-to-end paths (or routes) that packets take from a soruce host to a destination host
+          \end{itemize}
+    \item Mechanism
+          \begin{itemize}
+              \item Routing is accomplished by routing algorithms
+              \item Such algos calculate paths that datagrams will follow
+          \end{itemize}
+    \item Timescale \& Implementation
+          \begin{itemize}
+              \item Routing is complex calculation that hapepns on much longer timescale (seconds)
+              \item Typically implemented in software
+          \end{itemize}
+    \item Analogy
+          \begin{itemize}
+              \item Routing is like planning the entire trip from PA to FL
+              \item Before driving, you consult a map (routing algo) to choose best path
+              \item Best path is sequence of road segments (links) connected by interchanges (routers)
+          \end{itemize}
+\end{enumerate}
+
+
+\end{document}

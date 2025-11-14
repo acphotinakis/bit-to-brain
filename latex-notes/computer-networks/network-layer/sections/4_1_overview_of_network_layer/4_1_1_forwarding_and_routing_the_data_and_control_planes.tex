@@ -1,0 +1,131 @@
+\section{4.1.1 Forwarding and Routing: The Data and Control Planes}
+
+Two key functions of the network layer, \textbf{forwarding} and \textbf{routing}, map directly to the \textbf{data plane} and \textbf{control plane}, respectively.
+
+\subsection{1. Concept Overview: The Two Core Functions}
+
+Welcome. In our last lecture, we completed our study of the transport layer, which provides a \emph{logical} communication service between \emph{processes} running on different hosts. Now, we move down the stack to examine the network layer, which provides the underlying \emph{host-to-host} communication service that the transport layer relies on.
+
+The network layer's primary role seems simple: to move packets, called \textbf{datagrams}, from a sending host to a receiving host. However, to accomplish this, the network layer must perform two distinct and critical functions: \textbf{forwarding} and \textbf{routing}.
+
+\begin{enumerate}
+    \item Forwarding
+          \begin{itemize}
+              \item Is a \emph{local} action.
+              \item The process of taking a packet that has arrived on one of a router's input links and moving it to the appropriate output link.
+          \end{itemize}
+    \item Routing (Control Plane Function)
+          \begin{itemize}
+              \item Is a \emph{network-wide} process that determines the end-to-end paths that packets take from a source host to a destination host.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Forwarding: The "Data Plane"}
+
+\begin{enumerate}
+    \item Definition
+          \begin{itemize}
+              \item Forwarding refers to the router-local action of transferring a packet from an input link interface to the appropriate output link interface.
+              \item Forwarding is the primary function of the network layer's \textbf{data plane}, which includes per-router operations performed on a packet as it moves through the router.
+          \end{itemize}
+    \item Mechanism
+          \begin{itemize}
+              \item A packet arrives at a router's input link.
+              \item Router examines one or more fields in the packet's header.
+              \item Uses header values to index into its forwarding table.
+              \item Value found in the forwarding table entry indicates the router's output link interface to which the packet should be forwarded.
+          \end{itemize}
+    \item Timescale \& Implementation
+          \begin{itemize}
+              \item Forwarding is a fast (nanosecond) action that must be performed for every packet.
+              \item Therefore, it is implemented in hardware.
+          \end{itemize}
+    \item Analogy
+          \begin{itemize}
+              \item Forwarding is like navigating a single highway interchange or roundabout: the driver makes a local, split-second decision based on signs.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Routing (Control Plane Function)}
+
+\begin{enumerate}
+    \item Definition
+          \begin{itemize}
+              \item Routing refers to the network-wide process of calculating and determining the end-to-end paths that datagrams follow from source to destination.
+              \item It is the primary function of the \textbf{control plane}, which governs network-wide routing logic.
+          \end{itemize}
+    \item Mechanism
+          \begin{itemize}
+              \item Routing is accomplished by routing algorithms that calculate paths for datagrams.
+              \item Routing decisions are installed in the forwarding tables of routers.
+          \end{itemize}
+    \item Timescale \& Implementation
+          \begin{itemize}
+              \item Routing computations occur on much longer timescales (seconds to minutes).
+              \item Typically implemented in software due to their complexity.
+          \end{itemize}
+    \item Analogy
+          \begin{itemize}
+              \item Routing is like planning an entire trip from Pennsylvania to Florida: the routing algorithm (driver) consults a map to select the best end-to-end path.
+              \item Each router on the path forwards packets according to the plan.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{4.1.1.1 The Forwarding Table}
+
+The routing (control plane) controls forwarding (data plane) via the \textbf{forwarding table}.
+
+\begin{itemize}
+    \item \textbf{Function:} Router examines header fields of incoming packets, indexes into the forwarding table, and forwards the packet according to the table entry.
+    \item \textbf{Origin:} Entries are computed and installed by the control plane. Changes in topology or costs trigger updates.
+\end{itemize}
+
+\begin{verbatim}
+                                 +---------------------+
+                                 |  Routing Algorithm  | (Control Plane)
+                                 +---------------------+
+                                           |
+                                           | (Computes & installs table)
+                                           v
++-------------------+            +---------------------+
+| Arriving Packet   |            | Local Forwarding    |
+| (Header: 0110)    |  --------> | Table               | (Data Plane)
++-------------------+  (Match)   |---------------------|
+                                 | 0100 | 3            |
+                                 | 0110 | 2  <--------+ (Action: Forward to 2)
+                                 | 0111 | 2            |
+                                 | 1001 | 1            |
+                                 +---------------------+
+                                           |
+                                           v
+                                 (Packet forwarded to output link 2)
+\end{verbatim}
+
+\subsection{4.1.1.2 Approaches to the Control Plane}
+
+\textbf{Approach 1: Traditional Per-Router Control}
+\begin{itemize}
+    \item Control plane runs in each router.
+    \item Routing components communicate via routing protocols to compute forwarding tables.
+    \item Distributed architecture.
+\end{itemize}
+
+\textbf{Approach 2: Software-Defined Networking (SDN)}
+\begin{itemize}
+    \item Control plane is physically separated from data plane.
+    \item A remote controller computes forwarding tables and installs them on all routers.
+    \item Routers act as pure data-plane devices.
+    \item Controller runs in software, typically on a reliable data center, and communicates with routers using protocols like OpenFlow.
+\end{itemize}
+
+\subsection{4.1.1 Summary}
+
+\begin{itemize}
+    \item \textbf{Forwarding:} Local, fast, hardware-level data-plane function.
+    \item \textbf{Routing:} Network-wide, slower, software-level control-plane function.
+    \item \textbf{Data Plane:} Handles forwarding using the forwarding table.
+    \item \textbf{Control Plane:} Computes paths and installs forwarding table entries.
+    \item \textbf{Forwarding Table:} Links control plane and data plane.
+    \item \textbf{Per-Router Control:} Traditional distributed routing model.
+    \item \textbf{Logically Centralized Control (SDN):} Centralized controller computes forwarding tables.
+\end{itemize}

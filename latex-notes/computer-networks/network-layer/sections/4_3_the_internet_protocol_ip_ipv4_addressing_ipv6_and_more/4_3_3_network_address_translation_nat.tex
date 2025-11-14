@@ -1,0 +1,118 @@
+
+\section{4.3.3 Network Address Translation (NAT)}
+
+\subsection{Concept Overview}
+
+DHCP and CIDR helped, but IPv4 address space still faced exhaustion
+
+\begin{itemize}
+    \item NAT
+          \begin{enumerate}
+              \item Designed for SOHO (Small Office/Home Office) networks where many internal devices share single public IP address
+          \end{enumerate}
+    \item NAT-enabled Router
+          \begin{enumerate}
+              \item To the Internet: Entire home network looks like single device with a single IP address
+              \item To the Home: Home network is a private network, using a private address space (e.g. 10.0.0.0/24)
+                    \begin{enumerate}
+                        \item These addresses are not routable on public internet and are reused by millions of homes
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+\subsection{Technical Mechanism: NAT Translation Table}
+
+How does NAT map one public address to many private addresses? Uses port numbers.
+
+NAT router maintains NAT Translation table. This table mapes (Private IP, Private Port) pairs to (Public IP, Public Port) pairs
+
+\begin{enumerate}
+    \item Step-by-Step Operations
+          \begin{enumerate}
+              \item Outbound packet
+                    \begin{enumerate}
+                        \item Your laptop (10.0.0.1) sends packet to google.com (128.119.40.186)
+                        \item Your OS picks a source port (e.g. 3345)
+                        \item Packet arriving at NAT router: (Src IP: 10.0.0.1, Src Port: 3345), (Dest IP: 128.119.40.186, Dest Port: 80)
+                        \item NAT Router
+                              \begin{enumerate}
+                                  \item Saves this mapping, then creates a new, unique public source port (e.g. 5001)
+                                  \item Adds it to table: (10.0.0.1, 3345) <--> (138.76.29.7, 5001)
+                              \end{enumerate}
+                        \item Router sends modified packet to Internet. Web server (google.com) thinks request came from (138.76.29.7)
+                        \item
+                    \end{enumerate}
+              \item Inbound Packet
+                    \begin{enumerate}
+                        \item google.come sends a replay, which is addressed to source of packet it received
+                        \item Packet arriving at NAT router
+                              \begin{enumerate}
+                                  \item Src IP: 128.119.40.186, Src Port: 80
+                                  \item Dest IP: 138.76.29.7, Dest Port: 5001
+                              \end{enumerate}
+                        \item NAT Router
+                              \begin{enumerate}
+                                  \item Looks up destination (138.76.29.7, 5001) in translation table.
+                                  \item Finds matching internal address: (10.0.0.1, 3345).
+                                  \item Rewrites the packet header again:
+                                        \begin{enumerate}
+                                            \item Src IP: 128.119.40.186, Src Port: 80
+                                            \item Dest IP: 10.0.0.1, Dest Port: 3345
+                                        \end{enumerate}
+                                  \item The router forwards this packet into the home network, and it arrives at your laptop (10.0.0.1) on the correct port (3345).
+                              \end{enumerate}
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsection{Practical and Intuitive View: Controversy}
+
+NAT is highly controversial among network purists
+
+\begin{itemize}
+    \item Pros
+          \begin{enumerate}
+              \item Saves IP Addresses: A single public IP can be shared by thousands of private IPs
+              \item Security:
+                    \begin{enumerate}
+                        \item Internal devices are not directly addressable from outside world
+                        \item Incoming packet is dropped unless there's an existing entry in translation table
+                    \end{enumerate}
+              \item Easy Management: Can add devices to home network without needing a new public IP from your ISP
+          \end{enumerate}
+    \item Cons
+          \begin{enumerate}
+              \item Breaks End-to-End Principle:
+                    \begin{enumerate}
+                        \item Port numbers are a Layer 4 (transport) concenpt meant to identify processes
+                        \item NAT is Layer 3 (network) device that is reading and rewriting Layer 4 fields
+                        \item Violation of layered architecture
+                    \end{enumerate}
+              \item Breaks P2P and Servers
+                    \begin{enumerate}
+                        \item External users can't connect to you since no public, routable address
+                        \item Breaks P2P apps (like file sharing or games) and makes it harder to run a server from home
+                        \item Requires special "NAT Traversal" techniques or manual "port forwarding" configurations
+                    \end{enumerate}
+              \item Middlebox
+                    \begin{enumerate}
+                        \item NAT is a "middlebox", a device that does more than just routing
+                        \item Is complex, stateful device in middle of network, which violdates original internet design of simple core and smart edges
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+% TEMPLATE EXAMPLE
+\subsection{Template Example}
+
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}

@@ -1,0 +1,51 @@
+
+\section{IPv6}
+
+\subsection{Concept Overview}
+
+IPv6 solves the IPv4 problem of address exhaustion
+
+
+\subsubsection{IPv6 Datagram Format}
+\begin{itemize}
+    \item Changes from IPv4
+          \begin{enumerate}
+              \item Expanded Addressing (128 bits)
+                    \begin{enumerate}
+                        \item Address size is quadrupled from 32 bits to 128 bits
+                        \item Provides 2^128 addresses
+                    \end{enumerate}
+              \item Streamlined 40-byte Fixed Header
+                    \begin{enumerate}
+                        \item Fixed at 40 bytes
+                    \end{enumerate}
+          \end{enumerate}
+    \item IPv6 Fields
+          \begin{enumerate}
+              \item Version (4 bits): Set to 6
+              \item Traffic class (8 bits): Like TOS field in IPv4, for QoS
+              \item Flow Label (20 bits): New field
+                    \begin{enumerate}
+                        \item Can be used to "label" all packets in a particular flow (e.g. a specific video stream)
+                        \item Allows routers to handle them as a group, potentially with special QoS or routing
+                    \end{enumerate}
+              \item Payload Length (16 bits): Length of data after 40-byte header
+              \item Next Header (8 bits):
+                    \begin{enumerate}
+                        \item Points to protocol of payload
+                        \item Is key to new, streamlined hear
+                        \item If Options, this field points to an "options header," which then has its own
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+
+% TEMPLATE EXAMPLE
+\subsection{Template Example}
+
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}

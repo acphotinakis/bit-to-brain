@@ -1,0 +1,57 @@
+\section{4.1.2 Network Service Model}
+
+\subsection{1. Concept Overview: The "Contract" of the Network Layer}
+
+The network service model defines the characteristics of end-to-end delivery of packets between sending and receiving hosts. It represents the "contract" between the network and transport layers:
+
+\begin{itemize}
+    \item Will the packet be delivered?
+    \item Will it arrive intact?
+    \item Will it arrive in order?
+    \item Will it arrive within a certain time?
+    \item Is there a minimum throughput guarantee?
+\end{itemize}
+
+\subsection{2. Technical Mechanism: A "Menu" of Possible Services}
+
+Potential services a network layer could offer:
+
+\begin{itemize}
+    \item \textbf{Guaranteed Delivery:} Every packet eventually arrives.
+    \item \textbf{Guaranteed Delivery with Bounded Delay:} Delivery occurs within a specified time.
+    \item \textbf{In-Order Packet Delivery:} Packets arrive in sending order.
+    \item \textbf{Guaranteed Minimal Bandwidth:} Network behaves like a dedicated link with a specified bit rate.
+    \item \textbf{Security:} Encrypt all datagrams for confidentiality.
+\end{itemize}
+
+\subsection{3. Practical and Intuitive View: The Internet's \emph{Actual} Service}
+
+The Internet provides a single service: \textbf{best-effort service}:
+
+\begin{itemize}
+    \item Delivery is not guaranteed; packets may be lost.
+    \item In-order delivery is not guaranteed; packets may arrive out of order.
+    \item Delay is not guaranteed; packets may experience long delays.
+    \item Bandwidth is not guaranteed.
+\end{itemize}
+
+Design philosophy: \emph{Keep the network core simple.} Reliability, ordering, and congestion control are pushed to the edges (transport/application layers).
+
+\subsection{4. Terminology Clarification: Switches vs. Routers}
+
+\begin{itemize}
+    \item \textbf{Packet Switch:} Generic device moving packets from input to output interfaces.
+    \item \textbf{Link-Layer Switch:} Layer 2 device forwarding based on MAC addresses.
+    \item \textbf{Router:} Layer 3 device forwarding based on network-layer addresses (IP addresses).
+\end{itemize}
+
+Focus of this chapter: \textbf{routers} (Layer 3 devices).
+
+\subsection{4.1.2 Summary}
+
+\begin{itemize}
+    \item \textbf{Network Service Model:} Defines network guarantees for transport layer.
+    \item \textbf{Best-Effort Service:} Internet's minimalist model with no delivery, order, delay, or bandwidth guarantees.
+    \item \textbf{Packet Switch, Link-Layer Switch, Router:} Key terminology distinctions.
+    \item Minimalist model pushes intelligence to end systems.
+\end{itemize}
