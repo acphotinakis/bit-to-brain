@@ -1,0 +1,50 @@
+\section{4.2.5 Packet Scheduling}
+
+
+\subsection{Overview}
+
+if an output port queue has mutliple packets waiting, packet schedulign discipline decides which packet to transmit next
+
+\begin{itemize}
+    \item FIFO
+          \begin{enumerate}
+              \item Simplest
+              \item packets are transmitted in exact ordert they arrived
+              \item FIFO provides no way to give priority to important packets (like VoIP) over less-important packets (like email)
+          \end{enumerate}
+    \item Priority Queueing
+          \begin{enumerate}
+              \item packets are classified into priority classes upon arrival, each class has its own queue
+              \item Scheduler always transmits a packet from highest priority queue that has packets in it
+              \item Packets within same priority class are served FIFO
+              \item Preemption: typically non-preemptive, once a packet has started transmitting, it's not interrupted
+              \item Problem: Starvation, high priority flow can completely block all low-priority flows
+          \end{enumerate}
+    \item Round Robin (RR) and Weighted Fair Queuing (WFQ)
+          \begin{enumerate}
+              \item "taking-turns" scheduler, packets are classified, schedular cycles through classes: send one packet from class 1, then one from class 2, then one from class 3, then back to class 1
+              \item Work conserving, if a class's queue is empty, scheduler doesn't wait, it just skips to next class
+              \item Weighted Fair Queueing
+                    \begin{enumerate}
+                        \item Each class i is assigned a weight, w_i
+                        \item scheduler is still work conserving and round-robin
+                        \item Service guarantee
+                              \begin{enumerate}
+                                  \item WFQ guarantees that each class i will receive a fractice of total bandwidth equal to: R * (w_i / \sigma(w_j)), where sum is over all classes that're currently active (have packets to send)
+                              \end{enumerate}
+                    \end{enumerate}
+          \end{enumerate}
+
+\end{itemize}
+
+
+
+% TEMPLATE EXAMPLE
+\subsection{Template Example}
+
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}

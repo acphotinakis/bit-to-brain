@@ -1,0 +1,75 @@
+\section{4.2.1 Input Port Processing and Destination-Based Forwarding}
+
+\subsection{TBD}
+
+Input port performs pipeline of functions
+
+    [Line Term] --> [Link-Layer Processing] --> [Lookup, Fwd, Queuing] --> [To Switch Fabric]
+
+\begin{itemize}
+    \item [Line Term] --> [Link-Layer Processing] --> [Lookup, Fwd, Queuing] --> [To Switch Fabric]
+          \begin{enumerate}
+              \item Y
+              \item Line Termination: physical layer function, plus that connects physical wire to router
+              \item Data link processing: link layer function, de-encapsulates network-layer datagram from link-layer frame
+              \item Lookup, forwarding, and queueing: Core data-plan and network-layer function, lookup stage is most critical
+          \end{enumerate}
+    \item Lookup Function and Shadow Copy
+          \begin{enumerate}
+              \item Concept: router needs to consult with forwarding table to decide output port for packet
+              \item Mechanism:
+                    \begin{enumerate}
+                        \item Routing processor computes forwarding table
+                        \item To avoid bottleneck, table is then copied to input ports
+                        \item input port hardwarse uses local "shadow copy" to perform lookup line speed
+                    \end{enumerate}
+          \end{enumerate}
+    \item Destination-Based Forwarding and Longest Prefix Matching
+          \begin{enumerate}
+              \item Problem: how do you implement this lookup? Brute-force forwarding table would need one entry for every possible 32-bit IP address (2^32 = 4,294,967,296), which is impossible
+              \item Solution: Prefix matching: Routers don't store entries for individual hosts, store entries for prefixes (subnets)
+          \end{enumerate}
+    \item Longest Prefix Matching:
+          A major subtlety arises, what is dest address matches multiple entries?
+          \begin{enumerate}
+              \item Conflict: Given destination address can match multiple prefixes in table (e.g. it might match a /21 prefix and more specific /24 prefix)
+              \item Rule: router must use long matching entry in table to determine appropriate output link
+              \item Intuition: longest prefix is most specific route available for such destination
+              \item Mechanism: search must be performed in nanoseconds
+                    \begin{enumerate}
+                        \item Special hardware like Ternary Content Addressable Memories (TCAMs) often used for constant-time lookup, or high-speed data structures like heaps are employed
+                    \end{enumerate}
+              \item Result: 24-bit match is longer than 21-bit match, so packet is forwarded to Interface 1
+          \end{enumerate}
+    \item "Match Plus Action" Abstraction
+          \begin{enumerate}
+              \item Input port processing is specific example of powerful, general abstraction called "match plus action"
+                    \begin{enumerate}
+                        \item Match: look at header fields (i.e. dest IP address)
+                        \item Action: do something (i.e. forward to an output port)
+                    \end{enumerate}
+              \item Same abstraction sued in many network devices
+                    \begin{enumerate}
+                        \item Routers: Match(dest ip) --> Action(forward)
+                        \item Switches: Match(dest MAC) --> Action(forward)
+                        \item Firewalls: Match(src ip, src port, dest ip, dest port) --> action(permit/deny)
+                        \item NAT: match(src ip, src port) --> action(rewrite ip/port)
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+
+
+% TEMPLATE EXAMPLE
+\subsection{Template Example}
+
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
