@@ -588,13 +588,13 @@ This is a critical topic in router performance. Packet queues form when the pack
               \item Too little buffer = high packet loss, too much buffer = high queueing delay
               \item Rule of Thumb 1 (tranditional)
                     \begin{enumerate}
-                        \item B = RTT * C, where B = buffer size, RTT = average round-trip time, C = link capacity
-                        \item Example: 250ms RTT, 10 Gbps Link --> B = 0.25s * 20 Gbps = 2.5 Gbits of buffer, which is huge and expensive amount of memory
+                        \item $B = RTT \cdot C$, where B = buffer size, RTT = average round-trip time, C = link capacity
+                        \item Example: 250ms RTT, 10 Gbps Link --> $B = 0.25s \cdot 20 \text{ Gbps} = 2.5 \text{ Gbits}$ of buffer, which is huge and expensive amount of memory
                         \item Purpose to fully utilize TCP conncetion pipeline without ricking premature packet drops
                     \end{enumerate}
               \item Rule of Thumb 2 (modern)
                     \begin{enumerate}
-                        \item B = (RTT * C) / sqrt(N), where N = number of indepdent TCP flows
+                        \item $B = (RTT \cdot C) / \sqrt{N}$, where N = number of indepdent TCP flows
                         \item When large number of flows (N) are passing through a link, their traffic bursts tend to average out (statistical multiplexing)
                         \item Required buffer size to achieve good throughput and loss performance scales down with square root of N
                     \end{enumerate}
@@ -634,11 +634,11 @@ if an output port queue has mutliple packets waiting, packet schedulign discipli
               \item Work conserving, if a class's queue is empty, scheduler doesn't wait, it just skips to next class
               \item Weighted Fair Queueing
                     \begin{enumerate}
-                        \item Each class i is assigned a weight, w_i
+                        \item Each class i is assigned a weight, $w_{i}$
                         \item scheduler is still work conserving and round-robin
                         \item Service guarantee
                               \begin{enumerate}
-                                  \item WFQ guarantees that each class i will receive a fractice of total bandwidth equal to: R * (w_i / \sigma(w_j)), where sum is over all classes that're currently active (have packets to send)
+                                  \item WFQ guarantees that each class i will receive a fractice of total bandwidth equal to: $R \cdot (w_i / \sigma(w_j))$, where sum is over all classes that're currently active (have packets to send)
                               \end{enumerate}
                     \end{enumerate}
           \end{enumerate}
@@ -977,10 +977,10 @@ NAT router maintains NAT Translation table. This table mapes (Private IP, Privat
                                   \item Looks up destination (138.76.29.7, 5001) in translation table.
                                   \item Finds matching internal address: (10.0.0.1, 3345).
                                   \item Rewrites the packet header again:
-                                        \begin{itemsize}
+                                        \begin{itemize}
                                             \item Src IP: 128.119.40.186, Src Port: 80
                                             \item Dest IP: 10.0.0.1, Dest Port: 3345
-                                        \end{itemsize}
+                                        \end{itemize}
                                   \item The router forwards this packet into the home network, and it arrives at your laptop (10.0.0.1) on the correct port (3345).
                               \end{enumerate}
                     \end{enumerate}
@@ -1091,13 +1091,13 @@ It solves the IPv4 address exhaustion problem by introducing 128-bit addressing 
 \subsubsection{IPv6 Datagram Format (Structured View)}
 
 \[
-    \begin{array}{c|c|c}
-        \text{Bits 0-3}                           & \text{Bits 4-11}     & \text{Bits 12-31} \\ \hline
-        \text{Version (6)}                        & \text{Traffic Class} & \text{Flow Label} \\ \hline
-        \multicolumn{2}{c}{\text{Payload Length}} & \text{Next Header}   & \text{Hop Limit}  \\ \hline
-        \multicolumn{4}{c}{\text{Source Address (128 bits)}}                                 \\ \hline
-        \multicolumn{4}{c}{\text{Destination Address (128 bits)}}                            \\ \hline
-        \multicolumn{4}{c}{\text{Data (Payload)}}                                            \\
+    \begin{array}{c|c|c|c}
+        \text{Bits 0-3}                            & \text{Bits 4-11}     & \text{Bits 12-31} & \\ \hline
+        \text{Version (6)}                         & \text{Traffic Class} & \text{Flow Label} & \\ \hline
+        \multicolumn{2}{c|}{\text{Payload Length}} & \text{Next Header}   & \text{Hop Limit}    \\ \hline
+        \multicolumn{4}{c}{\text{Source Address (128 bits)}}                                    \\ \hline
+        \multicolumn{4}{c}{\text{Destination Address (128 bits)}}                               \\ \hline
+        \multicolumn{4}{c}{\text{Data (Payload)}}                                               \\
     \end{array}
 \]
 
