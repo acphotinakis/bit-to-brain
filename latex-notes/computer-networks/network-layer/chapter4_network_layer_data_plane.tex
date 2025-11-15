@@ -6,7 +6,7 @@
 \usepackage{hyperref}
 \usepackage{fancyhdr}
 \usepackage{enumitem}
-\usepackage{minted} 
+\usepackage{minted}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usetikzlibrary{shapes, arrows, positioning}
@@ -19,9 +19,9 @@
 \fancyhead[L]{\textbf{\TOPICTITLE}}
 \fancyhead[R]{\thepage}
 
-% -------------------------------
+% ------------------------------- 
 % Topic Metadata
-% -------------------------------
+% ------------------------------- 
 \newcommand{\TOPICTITLE}{Network Layer}
 \title{\TOPICTITLE\\\large Study-Ready Notes}
 \author{Compiled by Andrew Photinakis}
@@ -36,10 +36,9 @@
 
 \section*{Chapter 4: The Network Layer — Data Plane}
 
-\subsection{4.1 Overview of Network Layer}
+\section{4.1 Overview of Network Layer}
 
-% Section 4.1
-\subsubsection{4.1.1 Forwarding and Routing: The Data and Control Planes}
+\subsection{4.1.1 Forwarding and Routing: The Data and Control Planes}
 
 Two key functions of the network layer, \textbf{forwarding} and \textbf{routing}, map directly to the \textbf{data plane} and \textbf{control plane}, respectively.
 
@@ -61,7 +60,7 @@ The network layer's primary role seems simple: to move packets, called \textbf{d
           \end{itemize}
 \end{enumerate}
 
-\subsection{Forwarding: The "Data Plane"}
+\subsubsection{Forwarding: The "Data Plane"}
 
 \begin{enumerate}
     \item Definition
@@ -87,7 +86,7 @@ The network layer's primary role seems simple: to move packets, called \textbf{d
           \end{itemize}
 \end{enumerate}
 
-\subsection{Routing (Control Plane Function)}
+\subsubsection{Routing (Control Plane Function)}
 
 \begin{enumerate}
     \item Definition
@@ -112,7 +111,7 @@ The network layer's primary role seems simple: to move packets, called \textbf{d
           \end{itemize}
 \end{enumerate}
 
-\subsection{4.1.1.1 The Forwarding Table}
+\subsubsection{4.1.1.1 The Forwarding Table}
 
 The routing (control plane) controls forwarding (data plane) via the \textbf{forwarding table}.
 
@@ -142,7 +141,7 @@ The routing (control plane) controls forwarding (data plane) via the \textbf{for
                                  (Packet forwarded to output link 2)
 \end{verbatim}
 
-\subsection{4.1.1.2 Approaches to the Control Plane}
+\subsubsection{4.1.1.2 Approaches to the Control Plane}
 
 \textbf{Approach 1: Traditional Per-Router Control}
 \begin{itemize}
@@ -159,7 +158,7 @@ The routing (control plane) controls forwarding (data plane) via the \textbf{for
     \item Controller runs in software, typically on a reliable data center, and communicates with routers using protocols like OpenFlow.
 \end{itemize}
 
-\subsection{4.1.1 Summary}
+\subsubsection{4.1.1 Summary}
 
 \begin{itemize}
     \item \textbf{Forwarding:} Local, fast, hardware-level data-plane function.
@@ -171,9 +170,9 @@ The routing (control plane) controls forwarding (data plane) via the \textbf{for
     \item \textbf{Logically Centralized Control (SDN):} Centralized controller computes forwarding tables.
 \end{itemize}
 
-\section{4.1.2 Network Service Model}
+\subsection{4.1.2 Network Service Model}
 
-\subsection{1. Concept Overview: The "Contract" of the Network Layer}
+\subsubsection{1. Concept Overview: The "Contract" of the Network Layer}
 
 The network service model defines the characteristics of end-to-end delivery of packets between sending and receiving hosts. It represents the "contract" between the network and transport layers:
 
@@ -185,7 +184,7 @@ The network service model defines the characteristics of end-to-end delivery of 
     \item Is there a minimum throughput guarantee?
 \end{itemize}
 
-\subsection{2. Technical Mechanism: A "Menu" of Possible Services}
+\subsubsection{2. Technical Mechanism: A "Menu" of Possible Services}
 
 Potential services a network layer could offer:
 
@@ -197,7 +196,7 @@ Potential services a network layer could offer:
     \item \textbf{Security:} Encrypt all datagrams for confidentiality.
 \end{itemize}
 
-\subsection{3. Practical and Intuitive View: The Internet's \emph{Actual} Service}
+\subsubsection{3. Practical and Intuitive View: The Internet's \emph{Actual} Service}
 
 The Internet provides a single service: \textbf{best-effort service}:
 
@@ -210,7 +209,7 @@ The Internet provides a single service: \textbf{best-effort service}:
 
 Design philosophy: \emph{Keep the network core simple.} Reliability, ordering, and congestion control are pushed to the edges (transport/application layers).
 
-\subsection{4. Terminology Clarification: Switches vs. Routers}
+\subsubsection{4. Terminology Clarification: Switches vs. Routers}
 
 \begin{itemize}
     \item \textbf{Packet Switch:} Generic device moving packets from input to output interfaces.
@@ -220,7 +219,7 @@ Design philosophy: \emph{Keep the network core simple.} Reliability, ordering, a
 
 Focus of this chapter: \textbf{routers} (Layer 3 devices).
 
-\subsection{4.1.2 Summary}
+\subsubsection{4.1.2 Summary}
 
 \begin{itemize}
     \item \textbf{Network Service Model:} Defines network guarantees for transport layer.
@@ -228,9 +227,6 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
     \item \textbf{Packet Switch, Link-Layer Switch, Router:} Key terminology distinctions.
     \item Minimalist model pushes intelligence to end systems.
 \end{itemize}
-
-
-\section{4.1 Overview of Network Layer}
 
 \subsection{Core Role and Architectural Placement}
 
@@ -289,11 +285,369 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
     \item Performs network-wide logic that controls how datagrams are routed along an end-to-end path from source to destination host
 \end{itemize}
 
+\section{4.2 What's Inside a Router?}
 
-% Section 4.2
-\input{sections/4_2_whats_inside_a_router/4_2_whats_inside_a_router.tex}
+\subsection{Concept Overview: Unboxing the Data Plane}
 
-% Section 4.3
+\begin{enumerate}
+    \item Primary function to transfer packets from incoming links to appropriate outgoing links
+    \item Task split smong four interconnected componenets
+          \begin{enumerate}
+              \item Input Ports (Hardware):
+                    \begin{enumerate}
+                        \item Perform physical, link, and data-plane lookup for incoming packets
+                        \item Is entry point for packets into router
+                        \item Physically terminates incoming link, performs link-layer tasks to "unwrap" the packet, and perform lookup function to determine packet output port using forwarding table
+                        \item Control packets are passed "up" to routing processor
+                    \end{enumerate}
+              \item Switching Fabric (Hardware):
+                    \begin{enumerate}
+                        \item "Heart" of router
+                        \item Purpose to connect input ports to output ports
+                    \end{enumerate}
+                    Internal mechanism that moves packets from input ports to output ports
+              \item Output Ports (Hardware):
+                    \begin{enumerate}
+                        \item Exit point for packets leaving router
+                        \item Receives packets from switching fabric, queues them, performs necessary link-layer and physical-layer functions to "wrap" packet into new frame and finally transmits frame onto outgoing link
+                    \end{enumerate}
+                    Store, queue, and transmit packets received from switching fabric onto outgoing link
+              \item Routing Processor (Software):
+                    \begin{enumerate}
+                        \item "Brain" of router
+                        \item Primary component of control plane.
+                        \item Implemented in software and runs on traditional CPU
+                        \item Is not directly involved with main forwarding path
+                              \begin{enumerate}
+                                  \item In traditional router, routing processor executes routing protocols, maintains routing tables, and uses info to compute and update forwarding table
+                                  \item In SDN router, routing processor is responsible for communicating with remote SDN controller, receiving forwarding table entries from it, and installing entriies into input ports
+                              \end{enumerate}
+
+                    \end{enumerate}
+                    Executes control-plane functions like routing protocols and maintains/computers forwarding table
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsection{The Four Components of a Router}
+\begin{verbatim}
+                                  +---------------------+
+                                  |  Routing Processor  |  (Control Plane)
+                                  | (Software)          |
+                                  +---------------------+
+                                            |
+                                            | (e.g., PCI Bus)
+                                            |
++------------+     +------------+     +------------+     +------------+
+| Input Port |     | Input Port |     | Output Port|     | Output Port|
+| (Hardware) |     | (Hardware) |     | (Hardware) |     | (Hardware) |
++------------+     +------------+     +------------+     +------------+
+       |                  |                  ^                  ^
+       +------------------+------------------+------------------+
+                          |   Switching Fabric |
+                          |     (Hardware)     |
+                          +--------------------+
+\end{verbatim}
+
+\subsection{Data Plane (Hardware) vs Control Plane (Software)}
+
+Essential to understand why such components are built the way they are
+\begin{itemize}
+    \item Data Plane
+          \begin{enumerate}
+              \item Reason: Speed, executes in nanosecond timescale
+              \item Example:
+                    \begin{enumerate}
+                        \item Consider 100 Gbps input link
+                        \item New packet can arrive every few nanoseconds
+                        \item For a min-sized 64-byte (512 bit) IP datagram, router only has 5.12 nanoseconds (512 bits / 100 Gbps) to process before next one arrives
+                    \end{enumerate}
+              \item Per-packet forwarding action far too fast for software-based implementation
+          \end{enumerate}
+    \item Control Plane
+          \begin{enumerate}
+              \item Reason: Complexity and Timescale, control-plane functions (like new route using Dijkstra's algo or commuinicating with SDN controller) are complex and happen on much slower timescale - milliseconds or even seconds
+              \item Well suited for standard CPU running a software program.
+          \end{enumerate}
+
+\end{itemize}
+
+
+\subsection{Roundabout Analogy}
+
+\begin{itemize}
+    \item Input Port: Entry road, which includes an attendant (lookup function)
+    \item Switching Fabric: roundabout itself
+    \item Output Port: exit ramp
+    \item Destination-based Forwarding: Tell attendant find destination (i.e. Florida) and attendant looks it up, tells you "take 3rd exit", and you're on the way
+    \item Generalized Forwarding: Attendants decision is more complex
+          \begin{enumerate}
+              \item "You're from NY? Take the slow road. You're from this state (license plate)? Take highway. Your car is not road-worthy? You're blocked"
+          \end{enumerate}
+
+    \item Bottlenecks: Analogy illustrates router's potential performance bottlenecks
+          \begin{enumerate}
+              \item Lookup bottleneck: Attendant is too slow. Cars pile up on entry road (input port)
+              \item Switching bottleneck: Roundabout is too small or slow. Cars get stuck in middle (switch fabric)
+              \item Output bottleneck: Too many cars want same exit ramp. Cars pil up on exit ramp (output port)
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+\subsection{4.2.1 Input Port Processing and Destination-Based Forwarding}
+
+\subsubsection{TBD}
+
+Input port performs pipeline of functions
+
+    [Line Term] --> [Link-Layer Processing] --> [Lookup, Fwd, Queuing] --> [To Switch Fabric]
+
+\begin{itemize}
+    \item [Line Term] --> [Link-Layer Processing] --> [Lookup, Fwd, Queuing] --> [To Switch Fabric]
+          \begin{enumerate}
+              \item Y
+              \item Line Termination: physical layer function, plus that connects physical wire to router
+              \item Data link processing: link layer function, de-encapsulates network-layer datagram from link-layer frame
+              \item Lookup, forwarding, and queueing: Core data-plan and network-layer function, lookup stage is most critical
+          \end{enumerate}
+    \item Lookup Function and Shadow Copy
+          \begin{enumerate}
+              \item Concept: router needs to consult with forwarding table to decide output port for packet
+              \item Mechanism:
+                    \begin{enumerate}
+                        \item Routing processor computes forwarding table
+                        \item To avoid bottleneck, table is then copied to input ports
+                        \item input port hardwarse uses local "shadow copy" to perform lookup line speed
+                    \end{enumerate}
+          \end{enumerate}
+    \item Destination-Based Forwarding and Longest Prefix Matching
+          \begin{enumerate}
+              \item Problem: how do you implement this lookup? Brute-force forwarding table would need one entry for every possible 32-bit IP address ( $2^{32} = 4{,}294{,}967{,}296$ ), which is impossible
+              \item Solution: Prefix matching: Routers don't store entries for individual hosts, store entries for prefixes (subnets)
+          \end{enumerate}
+    \item Longest Prefix Matching:
+          A major subtlety arises, what is dest address matches multiple entries?
+          \begin{enumerate}
+              \item Conflict: Given destination address can match multiple prefixes in table (e.g. it might match a /21 prefix and more specific /24 prefix)
+              \item Rule: router must use long matching entry in table to determine appropriate output link
+              \item Intuition: longest prefix is most specific route available for such destination
+              \item Mechanism: search must be performed in nanoseconds
+                    \begin{enumerate}
+                        \item Special hardware like Ternary Content Addressable Memories (TCAMs) often used for constant-time lookup, or high-speed data structures like heaps are employed
+                    \end{enumerate}
+              \item Result: 24-bit match is longer than 21-bit match, so packet is forwarded to Interface 1
+          \end{enumerate}
+    \item "Match Plus Action" Abstraction
+          \begin{enumerate}
+              \item Input port processing is specific example of powerful, general abstraction called "match plus action"
+                    \begin{enumerate}
+                        \item Match: look at header fields (i.e. dest IP address)
+                        \item Action: do something (i.e. forward to an output port)
+                    \end{enumerate}
+              \item Same abstraction sued in many network devices
+                    \begin{enumerate}
+                        \item Routers: Match(dest ip) --> Action(forward)
+                        \item Switches: Match(dest MAC) --> Action(forward)
+                        \item Firewalls: Match(src ip, src port, dest ip, dest port) --> action(permit/deny)
+                        \item NAT: match(src ip, src port) --> action(rewrite ip/port)
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+\subsection{4.2.2 Switching Fabric}
+
+
+\subsubsection{Three Switching Techniques}
+Switching fabric is component that actually moves packets from input to output ports via three ways below
+
+\begin{itemize}
+    \item Switching via Memory
+          \begin{enumerate}
+              \item How it works:
+                    \begin{enumerate}
+                        \item Packets would arrive at input port, which would trigger an interrupt
+                        \item CPU would copy packet into main system memory
+                        \item CPU would perform lookup, find output port, and copy packet from memory to output port's buffer
+                    \end{enumerate}
+              \item Bottleneck
+                    \begin{enumerate}
+                        \item Routers total forwarding throughput is limited by memory bandwidth
+                        \item Since packet must be written into memory and then read out, max throughput is B/2, where B is memory bus speed
+                        \item Only one packet processed at a time
+                    \end{enumerate}
+              \item How it works (modern)
+                    \begin{enumerate}
+                        \item CPU no longer used
+                        \item Instead, input port's hardware processor performs lookup and writes packet directory to output ports memory
+                    \end{enumerate}
+          \end{enumerate}
+    \item Switching via a Bus
+          \begin{enumerate}
+              \item How it works:
+                    \begin{enumerate}
+                        \item All input ports and output ports hsare single, common bus
+                        \item Input port receives a packet, performs lookup, and prepents a special "switch-internal label" to packet (like saying "this is for output 2"), and sents it onto the bus
+                    \end{enumerate}
+              \item All output ports receive packet, but only port that matches label will keep and transmit it
+              \item Bottlenecks
+                    \begin{enumerate}
+                        \item Bus is shared resource, only one packet can cross bus at a time
+                        \item Routers total throughput limited to bus speed
+                        \item Fine for small enterprice or home router, but not for high-speed core routers
+                    \end{enumerate}
+          \end{enumerate}
+    \item Switching via an Interconnection Network (Crossbar)
+          \begin{enumerate}
+              \item How it works:
+                    \begin{enumerate}
+                        \item This is highest-performance solution
+                        \item Crossbar switch is a grid of 2N buses (N horizontal, N vertical) connecting N input ports to N output ports
+                        \item A "crosspoint" (a transistor switch) exists at every intersection
+                    \end{enumerate}
+              \item When packet at input port A needs to go to output port Y, switch fabric controller closes crosspoint connecting A's horizontal bus to Y's vertical bus
+              \item Key Property (parallelism)
+                    \begin{enumerate}
+                        \item A packet from input B can simutaneously be forwarded to output X by closing (B, X) crosspoint
+                        \item Allows multiple packets to be transferred in parallel, as long as they are going to different output ports
+                    \end{enumerate}
+              \item Non-Blocking
+                    \begin{enumerate}
+                        \item Crossbar switch is non-blocking -- a packet detined for an idle output port is inever prevented from reaching it
+                        \item However, if two packets from A and B both want to go to port Y, one will have to wait
+                        \item This is output port contention, not a limitation of fabric itself
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+\subsection{4.2.3 Output Port Processing}
+
+\subsubsection{Overview}
+
+\begin{itemize}
+    \item Output port procesing is mirror image of input port procesing. Takes packets that have been transferred across switch fabric and stores them in its own output port queue. Functions are:
+          \begin{enumerate}
+              \item Queueing: Stores packets recevied from fabric. Where packet scheduling (FIFO, priority, etc.) is performed to decide which packet to send next
+              \item Link-Layer Processing: Encapsulate IP datagram into link-layer frame (i.e. add Ethernet header and trailer)
+              \item Line Termination: physical-layer function of transmitting bits onto outgoing link
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+\subsection{4.2.4 Where Does Queuing Occur?}
+
+\subsubsection{Overview}
+This is a critical topic in router performance. Packet queues form when the packet arrival rate exceeds the forwarding rate. This can happen at both input and output ports. These queues are where packet delay is incurred and packet loss (when a queue overflows) occurs.
+
+\begin{itemize}
+    \item Output Queueing
+          \begin{enumerate}
+              \item Occurs when switching fabric is fast, but rate of packets arriving at output port (from multiple input ports) exceeds line speed of single output port
+              \item Even a very fast switching fabric can feed packets to an output port faster than output link can transmit them, leading to a bottleneck at output port buffer
+              \item Packet Loss and Buffer Management
+                    \begin{enumerate}
+                        \item If arrival rate to toutput queue persists, buffer will fill up
+                              \begin{enumerate}
+                                  \item Drop-Tail: default policy, when queue is full, newly arriving packet is dropped
+                                  \item Active Queue Management (AQM)
+                                        \begin{enumerate}
+                                            \item More intelligent policy
+                                            \item Proactively drop or mark (e.g. with ECN) packets before buffer is full
+                                            \item Provides early congestion signal to senders (like TCP)
+                                            \item Random Early Detection is classic example
+                                        \end{enumerate}
+                              \end{enumerate}
+                    \end{enumerate}
+          \end{enumerate}
+    \item Input Queueing
+          \begin{enumerate}
+              \item Occurs when switching fabric is slower than combined speed of input ports (e.g. $R_{\text{switch}} < N \cdot R_{\text{line}}$)
+              \item Packets must wait in a queue at input port for their turn to cross fabric
+              \item Head-of-the-Line Blocking
+                    \begin{enumerate}
+                        \item Specific problem in input-queued switches
+                        \item Packet at head of an input queue is blocked from moving across fabric because desired output port is occupied by another packet (or because fabric is too slow)
+                        \item Forces all subsequent packets in that input queue to wait, even if their desired output port is free
+                        \item Can drastically limit throughput
+                    \end{enumerate}
+          \end{enumerate}
+    \item Route Buffer Sizing: "How much buffering is 'enough'"?
+          \begin{enumerate}
+              \item Too little buffer = high packet loss, too much buffer = high queueing delay
+              \item Rule of Thumb 1 (tranditional)
+                    \begin{enumerate}
+                        \item B = RTT * C, where B = buffer size, RTT = average round-trip time, C = link capacity
+                        \item Example: 250ms RTT, 10 Gbps Link --> B = 0.25s * 20 Gbps = 2.5 Gbits of buffer, which is huge and expensive amount of memory
+                        \item Purpose to fully utilize TCP conncetion pipeline without ricking premature packet drops
+                    \end{enumerate}
+              \item Rule of Thumb 2 (modern)
+                    \begin{enumerate}
+                        \item B = (RTT * C) / sqrt(N), where N = number of indepdent TCP flows
+                        \item When large number of flows (N) are passing through a link, their traffic bursts tend to average out (statistical multiplexing)
+                        \item Required buffer size to achieve good throughput and loss performance scales down with square root of N
+                    \end{enumerate}
+          \end{enumerate}
+
+\end{itemize}
+
+
+
+
+
+\subsection{4.2.5 Packet Scheduling}
+
+
+\subsubsection{Overview}
+
+if an output port queue has mutliple packets waiting, packet schedulign discipline decides which packet to transmit next
+
+\begin{itemize}
+    \item FIFO
+          \begin{enumerate}
+              \item Simplest
+              \item packets are transmitted in exact ordert they arrived
+              \item FIFO provides no way to give priority to important packets (like VoIP) over less-important packets (like email)
+          \end{enumerate}
+    \item Priority Queueing
+          \begin{enumerate}
+              \item packets are classified into priority classes upon arrival, each class has its own queue
+              \item Scheduler always transmits a packet from highest priority queue that has packets in it
+              \item Packets within same priority class are served FIFO
+              \item Preemption: typically non-preemptive, once a packet has started transmitting, it's not interrupted
+              \item Problem: Starvation, high priority flow can completely block all low-priority flows
+          \end{enumerate}
+    \item Round Robin (RR) and Weighted Fair Queuing (WFQ)
+          \begin{enumerate}
+              \item "taking-turns" scheduler, packets are classified, schedular cycles through classes: send one packet from class 1, then one from class 2, then one from class 3, then back to class 1
+              \item Work conserving, if a class's queue is empty, scheduler doesn't wait, it just skips to next class
+              \item Weighted Fair Queueing
+                    \begin{enumerate}
+                        \item Each class i is assigned a weight, w_i
+                        \item scheduler is still work conserving and round-robin
+                        \item Service guarantee
+                              \begin{enumerate}
+                                  \item WFQ guarantees that each class i will receive a fractice of total bandwidth equal to: R * (w_i / \sigma(w_j)), where sum is over all classes that're currently active (have packets to send)
+                              \end{enumerate}
+                    \end{enumerate}
+          \end{enumerate}
+
+\end{itemize}
+
+
+
+
 
 \section{4.3 The Internet Protocol (IP): IPv4, Addressing, IPv6, and More}
 
@@ -310,9 +664,10 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
     \item Is the "narrow waist" of the hourglass, the single protocol that everything else - every transport protocol (TCP, UDP) and every applciaiton (HTTP, DNS) - must run on top of
     \item In turn must be able to run over any link-layer technology (Ethernet, WiFi, 4G, etc)
 \end{itemize}
-\section{4.3.1 IPv4 Datagram Format}
 
-\subsection{Concept Overview}
+\subsection{4.3.1 IPv4 Datagram Format}
+
+\subsubsection{Concept Overview}
 
 \begin{description}
     \item[Datagram:]
@@ -333,7 +688,7 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
           \end{enumerate}
 \end{description}
 
-\subsection{Technical Mechanism: The Datagram Format}
+\subsubsection{Technical Mechanism: The Datagram Format}
 
 \begin{itemize}
     \item A textual representation of the IPv4 header:
@@ -437,19 +792,11 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
           \end{enumerate}
 \end{itemize}
 
-% TEMPLATE EXAMPLE
-\subsection{Template Example}
 
-\begin{itemize}
-    \item X
-          \begin{enumerate}
-              \item Y
-          \end{enumerate}
-\end{itemize}
-\section{4.3.2 IPv4 Addressing}
+\subsection{4.3.2 IPv4 Addressing}
 
 
-\subsection{Concept Overview: Interfaces and Subnets}
+\subsubsection{Concept Overview: Interfaces and Subnets}
 \begin{itemize}
     \item IP Addresses and Interfaces
           \begin{enumerate}
@@ -461,7 +808,7 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
           \end{enumerate}
 \end{itemize}
 
-\subsection{Technical Mechanism: The IP Subnet}
+\subsubsection{Technical Mechanism: The IP Subnet}
 
 \begin{itemize}
     \item IP addresses not assigned randomly
@@ -493,7 +840,7 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
 \end{itemize}
 
 
-\subsection{Concept: CIDR (Classless Inter-Domain Routing)}
+\subsubsection{Concept: CIDR (Classless Inter-Domain Routing)}
 
 \begin{enumerate}
     \item Is a flexible IP address assignment strategy that replaced older class-based system
@@ -524,7 +871,7 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
           \end{enumerate}
 \end{itemize}
 
-\subsection{Obtaining and Managing IP Addresses}
+\subsubsection{Obtaining and Managing IP Addresses}
 \begin{enumerate}
     \item Getting a block of addresses (for an ISP or large org)
           \begin{enumerate}
@@ -573,9 +920,276 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
 
 
 
+
+\subsection{4.3.3 Network Address Translation (NAT)}
+
+\subsubsection{Concept Overview}
+
+DHCP and CIDR helped, but IPv4 address space still faced exhaustion
+
+\begin{itemize}
+    \item NAT
+          \begin{enumerate}
+              \item Designed for SOHO (Small Office/Home Office) networks where many internal devices share single public IP address
+          \end{enumerate}
+    \item NAT-enabled Router
+          \begin{enumerate}
+              \item To the Internet: Entire home network looks like single device with a single IP address
+              \item To the Home: Home network is a private network, using a private address space (e.g. 10.0.0.0/24)
+                    \begin{enumerate}
+                        \item These addresses are not routable on public internet and are reused by millions of homes
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+\subsubsection{Technical Mechanism: NAT Translation Table}
+
+How does NAT map one public address to many private addresses? Uses port numbers.
+
+NAT router maintains NAT Translation table. This table mapes (Private IP, Private Port) pairs to (Public IP, Public Port) pairs
+
+\begin{enumerate}
+    \item Step-by-Step Operations
+          \begin{enumerate}
+              \item Outbound packet
+                    \begin{enumerate}
+                        \item Your laptop (10.0.0.1) sends packet to google.com (128.119.40.186)
+                        \item Your OS picks a source port (e.g. 3345)
+                        \item Packet arriving at NAT router: (Src IP: 10.0.0.1, Src Port: 3345), (Dest IP: 128.119.40.186, Dest Port: 80)
+                        \item NAT Router
+                              \begin{enumerate}
+                                  \item Saves this mapping, then creates a new, unique public source port (e.g. 5001)
+                                  \item Adds it to table: (10.0.0.1, 3345) <--> (138.76.29.7, 5001)
+                              \end{enumerate}
+                        \item Router sends modified packet to Internet. Web server (google.com) thinks request came from (138.76.29.7)
+                        \item
+                    \end{enumerate}
+              \item Inbound Packet
+                    \begin{enumerate}
+                        \item google.come sends a replay, which is addressed to source of packet it received
+                        \item Packet arriving at NAT router
+                              \begin{enumerate}
+                                  \item Src IP: 128.119.40.186, Src Port: 80
+                                  \item Dest IP: 138.76.29.7, Dest Port: 5001
+                              \end{enumerate}
+                        \item NAT Router
+                              \begin{enumerate}
+                                  \item Looks up destination (138.76.29.7, 5001) in translation table.
+                                  \item Finds matching internal address: (10.0.0.1, 3345).
+                                  \item Rewrites the packet header again:
+                                        \begin{itemsize}
+                                            \item Src IP: 128.119.40.186, Src Port: 80
+                                            \item Dest IP: 10.0.0.1, Dest Port: 3345
+                                        \end{itemsize}
+                                  \item The router forwards this packet into the home network, and it arrives at your laptop (10.0.0.1) on the correct port (3345).
+                              \end{enumerate}
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsubsection{Practical and Intuitive View: Controversy}
+
+NAT is highly controversial among network purists
+
+\begin{itemize}
+    \item Pros
+          \begin{enumerate}
+              \item Saves IP Addresses: A single public IP can be shared by thousands of private IPs
+              \item Security:
+                    \begin{enumerate}
+                        \item Internal devices are not directly addressable from outside world
+                        \item Incoming packet is dropped unless there's an existing entry in translation table
+                    \end{enumerate}
+              \item Easy Management: Can add devices to home network without needing a new public IP from your ISP
+          \end{enumerate}
+    \item Cons
+          \begin{enumerate}
+              \item Breaks End-to-End Principle:
+                    \begin{enumerate}
+                        \item Port numbers are a Layer 4 (transport) concenpt meant to identify processes
+                        \item NAT is Layer 3 (network) device that is reading and rewriting Layer 4 fields
+                        \item Violation of layered architecture
+                    \end{enumerate}
+              \item Breaks P2P and Servers
+                    \begin{enumerate}
+                        \item External users can't connect to you since no public, routable address
+                        \item Breaks P2P apps (like file sharing or games) and makes it harder to run a server from home
+                        \item Requires special "NAT Traversal" techniques or manual "port forwarding" configurations
+                    \end{enumerate}
+              \item Middlebox
+                    \begin{enumerate}
+                        \item NAT is a "middlebox", a device that does more than just routing
+                        \item Is complex, stateful device in middle of network, which violdates original internet design of simple core and smart edges
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+
+
+\subsection{4.3.4 IPv6}
+
+\subsubsection{Concept Overview}
+
+IPv6 was developed primarily to address the impending exhaustion of the 32-bit IPv4 address space.
+It solves the IPv4 address exhaustion problem by introducing 128-bit addressing and a simplified, fixed-length header.
+
+\subsubsection{IPv6 Datagram Format}
+
+\begin{itemize}
+    \item \textbf{Key Changes from IPv4}
+          \begin{enumerate}
+              \item \textbf{Expanded Addressing (128 bits)}
+                    \begin{enumerate}
+                        \item Address size increased from 32 to 128 bits.
+                        \item Provides $2^{128}$ possible addresses.
+                    \end{enumerate}
+
+              \item \textbf{Streamlined 40-byte Fixed Header}
+                    \begin{enumerate}
+                        \item IPv6 header is a fixed 40 bytes.
+                        \item Simplifies router processing.
+                    \end{enumerate}
+
+              \item \textbf{Flow Labeling}
+                    \begin{enumerate}
+                        \item New field for identifying flows (e.g., a video stream).
+                        \item Allows routers to provide special treatment (QoS/routing) to packets belonging to the same flow.
+                    \end{enumerate}
+          \end{enumerate}
+
+    \item \textbf{IPv6 Header Fields}
+          \begin{enumerate}
+              \item \textbf{Version (4 bits):} Always set to 6.
+              \item \textbf{Traffic Class (8 bits):} Like IPv4 TOS; supports priority/QoS.
+              \item \textbf{Flow Label (20 bits):}
+                    \begin{enumerate}
+                        \item Labels packets belonging to a specific flow.
+                        \item Routers can process these packets as a group.
+                    \end{enumerate}
+              \item \textbf{Payload Length (16 bits):} Length of data after the fixed 40-byte header.
+              \item \textbf{Next Header (8 bits):}
+                    \begin{enumerate}
+                        \item Identifies the protocol of the payload (e.g., TCP, UDP).
+                        \item Key to streamlined header structure.
+                        \item If IPv6 options are included, this field points to an \textit{options header}.
+                    \end{enumerate}
+              \item \textbf{Hop Limit (8 bits):}
+                    \begin{enumerate}
+                        \item Same as IPv4 TTL.
+                        \item Decrements at each router; packet dropped when it reaches 0.
+                    \end{enumerate}
+              \item \textbf{Source and Destination Addresses (128 bits each):}
+                    \begin{enumerate}
+                        \item Much larger address space.
+                        \item Supports unicast, multicast, and anycast addressing.
+                    \end{enumerate}
+              \item \textbf{Data (Payload)}
+          \end{enumerate}
+\end{itemize}
+
+\subsubsection{IPv6 Datagram Format (Structured View)}
+
+\[
+    \begin{array}{c|c|c}
+        \text{Bits 0-3}                           & \text{Bits 4-11}     & \text{Bits 12-31} \\ \hline
+        \text{Version (6)}                        & \text{Traffic Class} & \text{Flow Label} \\ \hline
+        \multicolumn{2}{c}{\text{Payload Length}} & \text{Next Header}   & \text{Hop Limit}  \\ \hline
+        \multicolumn{4}{c}{\text{Source Address (128 bits)}}                                 \\ \hline
+        \multicolumn{4}{c}{\text{Destination Address (128 bits)}}                            \\ \hline
+        \multicolumn{4}{c}{\text{Data (Payload)}}                                            \\
+    \end{array}
+\]
+
+\subsubsection{Fields Dropped or Changed from IPv4}
+
+\begin{itemize}
+    \item \textbf{Fragmentation/Reassembly}
+          \begin{itemize}
+              \item Routers no longer fragment packets.
+              \item If a packet is too large, router sends a \textit{Packet Too Big} ICMP message.
+              \item Sender performs Path MTU discovery.
+          \end{itemize}
+
+    \item \textbf{Header Checksum}
+          \begin{itemize}
+              \item Removed—redundant due to link-layer and transport checksums.
+              \item Removal speeds up per-hop processing (TTL/Hop Limit changes no longer require recalculating checksum).
+          \end{itemize}
+
+    \item \textbf{Options}
+          \begin{itemize}
+              \item Removed from base header.
+              \item Now included via extension headers pointed to by the Next Header field.
+          \end{itemize}
+\end{itemize}
+
+\subsubsection{Transitioning from IPv4 to IPv6}
+
+\paragraph{The Deployment Problem}
+
+IPv4-only systems cannot handle IPv6 datagrams.
+A global simultaneous “flag day” upgrade is impossible.
+
+\paragraph{Tunneling (Widely Used Transition Method)}
+
+\begin{itemize}
+    \item \textbf{Mechanism:} Encapsulate an IPv6 datagram inside an IPv4 datagram.
+    \item \textbf{Process:}
+          \begin{enumerate}
+              \item Node B sends an IPv6 datagram to node E.
+              \item If an IPv4 network lies in between, B encapsulates the IPv6 packet inside an IPv4 header.
+              \item Outer IPv4 header uses IPv4 addresses of the tunnel endpoints (B and E).
+              \item IPv4 routers forward normally, unaware of inner IPv6 datagram.
+              \item Tunnel endpoint E removes IPv4 header and processes the IPv6 packet.
+          \end{enumerate}
+    \item \textbf{Purpose:} Allows IPv6 connectivity through existing IPv4 infrastructure.
+\end{itemize}
+
+\subsubsection{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \textbf{Datagram:} Network-layer packet (IPv4 or IPv6).
+    \item \textbf{Prefix (Network Portion):} High-order bits of an IP address, specified by the /x mask.
+    \item \textbf{Subnet:} Devices sharing the same prefix and connected without a router.
+    \item \textbf{CIDR:} Classless Interdomain Routing—current addressing system using variable-length prefixes.
+    \item \textbf{DHCP:} Protocol for automatic assignment of IP addresses and configuration.
+    \item \textbf{NAT:} Translates private addresses to a public address using ports.
+    \item \textbf{Tunneling:} Encapsulation of one protocol inside another (e.g., IPv6 inside IPv4).
+    \item \textbf{TTL / Hop Limit:} Prevents loops by decrementing at each hop.
+    \item \textbf{IPv6:} Modern Internet Protocol using 128-bit addressing with simplified headers.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item \textbf{IP Address vs. Interface:} IP addresses are assigned to interfaces, not devices.
+    \item \textbf{IP Addressing vs. Fragmentation:} IPv4 allows fragmentation; IPv6 does not (sender must handle MTU).
+    \item \textbf{DHCP vs. NAT:}
+          \begin{itemize}
+              \item DHCP assigns local addresses.
+              \item NAT maps private addresses to a public one for external communication.
+          \end{itemize}
+\end{itemize}
+
+\subsubsection{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item IPv4 uses a 20-byte header with fields that require per-hop processing (TTL, checksum).
+    \item IP addressing is hierarchical to enable scalable routing via CIDR.
+    \item NAT conserves addresses but breaks the end-to-end principle.
+    \item IPv6 provides:
+          \begin{itemize}
+              \item vast address space (128 bits),
+              \item simplified 40-byte header,
+              \item no router fragmentation,
+              \item flow label support,
+              \item and relies on tunneling for transition from IPv4.
+          \end{itemize}
+\end{itemize}
+
 % TEMPLATE EXAMPLE
 \subsection{Template Example}
-
 \begin{itemize}
     \item X
           \begin{enumerate}
@@ -583,13 +1197,463 @@ Focus of this chapter: \textbf{routers} (Layer 3 devices).
           \end{enumerate}
 \end{itemize}
 
+\section{4.4 Generalized Forwarding and SDN}
+
+\subsection{Concept Overview}
+
+\begin{itemize}
+    \item Traditional Model of Fowarding
+          \begin{enumerate}
+              \item Router makes forwarding decision based on single field in packet header, dest IP address
+              \item Router sole job to perform lookup on dest IP address (using longest prefix matching) and send packet to correct output port
+          \end{enumerate}
+    \item Generalized Forwarding
+          \begin{enumerate}
+              \item Describes a "match-plus-action" paradigm where a packet switch (which could be a router or a switch) makes decision based on wide range of fields in packet header, spanning multiple protocol layers
+              \item Match-plus-action abstraction
+                    \begin{enumerate}
+                        \item Instead of just matching dest IP, switch can match on any combination of fields, such as src IP, dest port, source MAC addresses, VLAN tag, etc.
+                        \item Action:
+                              \begin{enumerate}
+                                  \item Instead of just forwarding, switch can perform variety of actions, such as
+                                        \begin{enumerate}
+                                            \item Forward packet to one or more output ports (e.g. unicast, multicast, or broadcast)
+                                            \item Load balance packet across mutliple output ports
+                                            \item Rewrite head values
+                                            \item Block/drop packet
+                                            \item Send packet to special server or controller for further processing (e.g. deep packet inspection)
+                                        \end{enumerate}
+                              \end{enumerate}
+                    \end{enumerate}
+              \item Flow Table
+                    \begin{enumerate}
+                        \item Generalizes simple forwarding table into a more complex flow table, flow table is "program" for packet switch's data plane
+                    \end{enumerate}
+              \item Connection to SDN
+                    \begin{enumerate}
+                        \item Generalized forwarding model is data-plane foundation of Software-Defined Networking
+                        \item Because "match" and "action" rules can be complex and interdepedent, they're not computed by switch itself
+                        \item Instead computed, installed, and updated by a remote, logically centralized controller
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+\subsection{OpenFlow Flow Table}
+
+\begin{itemize}
+    \item match plus action table is called flow table. Each entry in table has three key components
+
+          \begin{enumerate}
+              \item Set of header field values (the "match"): Patterns used to match against incoming packet. Matching performed very fast, by TCAMs
+              \item Set of counters (the "statistics"): Counters are updated as packets match rule. Crucial for network management and analystics. Coutners track number of packets matched by rule and time since rule was last updated
+              \item Set of Actions (the "action"): Instructiosn to execute when a packet matches a rule. Can be a list of actions (e.g. "rewrite source port to 80, then forward to port 3")
+          \end{enumerate}
+    \item If packet arrives and matches no entry in flow table, can either be dropped, or more commonly, forward to remote controller for a decision. Controller can decide what to do and potentially install a new flow rule for this packet's flow
+\end{itemize}
 
 
-% Section 4.4
-\input{sections/4_4_generalized_forwarding_and_sdn/4_4_generalized_forwarding_and_sdn.tex}
 
-% Section 4.5
-\input{sections/4_5_middleboxes/4_5_middleboxes.tex}
+
+
+\subsection{4.4.1 Match}
+
+\subsubsection{Concept Overview}
+
+\begin{itemize}
+    \item "Match" component of OpenFlow is what makes it powerful. Defines what parts of a packet switch can look at
+\end{itemize}
+
+
+\subsubsection{Technical Mechanism}
+
+\begin{verbatim}
++--------------+------------------+------------------+---------+---------+ ...
+| Ingress Port | Src MAC          | Dst MAC          | Eth Typ | VLAN ID | ...
++--------------+------------------+------------------+---------+---------+ ...
+  (Switch Port) <---------- Link Layer (Layer 2) ------------------>
+
+... +---------+---------+---------+---------+---------+-----------+-----------+
+... | VLAN Pri| IP Src  | IP Dst  | IP Proto| IP TOS  | TCP/UDP Src| TCP/UDP Dst|
+... +---------+---------+---------+---------+---------+-----------+-----------+
+    (L2) <----------- Network Layer (Layer 3) ---------> <--- Transport (L4) -->
+\end{verbatim}
+
+\begin{itemize}
+    \item OpenFlow 1.0 defines 11 header fields (plus ingress port) that can be matched
+          \begin{enumerate}
+              \item Ingress Port: physical port on which packet arrived at swtich
+              \item Link-layer (L2) fields:
+                    \begin{enumerate}
+                        \item Src and Dest MAC Address: allows switch to operate as a Layer 2 switch
+                        \item Ethernet Type: identifies protocol in payload
+                        \item VLAN fields: allows for handling of Virtual LANs
+                    \end{enumerate}
+              \item Network-Layer (L3) Fields:
+                    \begin{enumerate}
+                        \item IP Src and Dest Address: allows switch to operate as a Layer 3 router
+                        \item IP Protocol: Identifies transport protocol
+                        \item IP TOS: allows matching on quality-of-service bits
+                    \end{enumerate}
+              \item Transport-Layer (L4) Fields
+                    \begin{enumerate}
+                        \item TCP/UDP Src and Dst Port: Allows for fine-grained, application aware rules (e.g. trading port 80 traffic differently from port 25 traffic)
+                    \end{enumerate}
+          \end{enumerate}
+\end{itemize}
+
+\subsubsection{Practical and Intuitive View: Wildcards and Priorities}
+
+Made even more flexible by two additional features
+
+\begin{itemize}
+    \item Wildcards
+          \begin{enumerate}
+              \item Flow table entries can have wildcards for any field
+              \item Example: a match entry with IP Dst = 128.119.*.* and TCP Dst Port = 80, would match all web traffic destined for any host on 128.119.0.0/16 subnet
+          \end{enumerate}
+    \item Priority
+          \begin{enumerate}
+              \item Packet might match multiple rules
+              \item Example: one rule might match IP Dst = 128.119.*.*, while a second, more specific rule matches IP Dst = 128.119.40.1
+              \item Flow table includes a priority field for each entry, and switch must apply action correspeonding to highest-priority matching rule
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+\subsection{4.4.2 Action}
+
+
+\subsubsection{Concept Overview}
+
+\begin{itemize}
+    \item Action is a list of zero or more operations that're applied to matched packet in sequence.
+    \item Once a packet has been "matched" to a high-priority rule, switch executes "action" associated with rule
+\end{itemize}
+
+\subsubsection{Technical Mechanism: Key Actions}
+Most important actions defined in OpenFlow
+\begin{itemize}
+    \item Forwarding
+          \begin{enumerate}
+              \item Forward to specific physical output port
+              \item Broadcast: foward to all output ports (except ingress port)
+              \item Multicast: forward to a select set of output ports
+              \item Forward to controller: encapsulate packet and send it up to SDN controller for decision. How control plane learns about new, unknown flows
+          \end{enumerate}
+    \item Dropping
+          \begin{enumerate}
+              \item Rule has no specified action, so packet is dropped. Basic mechanism for a firewall
+          \end{enumerate}
+    \item Modify-Field
+          \begin{enumerate}
+              \item Switch can rewrite values in any of 10 header fields
+              \item Basic mechanism for a NAT or Layer 3 router
+          \end{enumerate}
+\end{itemize}
+
+
+
+
+
+\subsection{4.4.3 OpenFlow Examples of Match-plus-action in Action}
+
+\begin{verbatim}
+         +-------------+
+         | Controller  |
+         +-------------+
+             /   |   \
+            /    |    \
++------+   1/    |     \3   +------+
+|  h1  |----(s1)----(s3)----|  h5  |
+| 10.1 |   2\ 4  |  4 /2    | 10.3 |
++------+     \   |   /     +------+
+             |   |   |
++------+     | 3 | 1 |
+|  h2  |----(s2)----+     +------+
+| 10.1 |   3/ 4  |         |  h6  |
++------+     /   |         | 10.3 |
+             |   |         +------+
++------+     |   |
+|  h3  |-----+   |
+| 10.2 |         |
++------+         |
+                 |
++------+         |
+|  h4  |--------+
+| 10.2 |
++------+        
+\end{verbatim}
+
+This section illustrates how combining matches and actions implements core network functionality using the sample network in Figure~4.30 (hosts $h1$ through $h6$ connected via switches $s1$, $s2$, and $s3$, under the control of a central controller).
+
+\subsubsection{Example 1: Simple Forwarding (Policy-Based Routing)}
+
+\begin{itemize}
+    \item Goal: Forward packets from subnet $10.3.*.*$ (hosts $h5, h6$) to subnet $10.2.*.*$ (hosts $h3, h4$) along the policy-selected path $s3 \rightarrow s1 \rightarrow s2$.
+    \item Resulting switch behavior:
+          \begin{enumerate}
+              \item \textbf{s3}: Match packets with IP Src $=10.3.*.*$ and IP Dst $=10.2.*.*$; action: \emph{Forward(3)}.
+              \item \textbf{s1}: Match packets arriving on port 1 with IP Src $=10.3.*.*$ and IP Dst $=10.2.*.*$; action: \emph{Forward(4)}.
+              \item \textbf{s2}:
+                    \begin{itemize}
+                        \item If IP Dst = $10.2.0.3$, action: \emph{Forward(3)} (toward $h3$).
+                        \item If IP Dst = $10.2.0.4$, action: \emph{Forward(4)} (toward $h4$).
+                    \end{itemize}
+          \end{enumerate}
+    \item Insight: Matching on both ingress port and multiple IP fields enables forwarding behavior more specific than destination-based IP routing.
+\end{itemize}
+
+\subsubsection{Example 2: Load Balancing (Source-Specific Forwarding)}
+
+\begin{itemize}
+    \item Goal: Load-balance traffic from subnet $10.2.*.*$ (hosts $h3, h4$) destined to $10.1.*.*$ by splitting paths:
+          \begin{itemize}
+              \item Traffic from $h3$ uses path $s2 \rightarrow s1$.
+              \item Traffic from $h4$ uses path $s2 \rightarrow s3 \rightarrow s1$.
+          \end{itemize}
+
+    \item Resulting switch behavior at \textbf{s2}:
+          \begin{enumerate}
+              \item Match: Ingress Port $= 3$ (from $h3$), IP Dst $=10.1.*.*$; action: \emph{Forward(2)} (toward $s1$).
+              \item Match: Ingress Port $= 4$ (from $h4$), IP Dst $=10.1.*.*$; action: \emph{Forward(1)} (toward $s3$).
+          \end{enumerate}
+
+    \item Insight: This demonstrates source-specific routing, impossible with traditional destination-only forwarding.
+\end{itemize}
+
+\subsubsection{Example 3: Firewalling (Policy Enforcement)}
+
+\begin{itemize}
+    \item Goal: At switch $s2$, only allow packets originating from subnet $10.3.*.*$ (hosts $h5, h6$) to reach $h3$ or $h4$.
+    \item Resulting switch behavior at \textbf{s2}:
+          \begin{enumerate}
+              \item Match: IP Src $=10.3.*.*$, IP Dst $=10.2.0.3$; action: \emph{Forward(3)}.
+              \item Match: IP Src $=10.3.*.*$, IP Dst $=10.2.0.4$; action: \emph{Forward(4)}.
+              \item No other rules: default action = \emph{Drop}.
+          \end{enumerate}
+
+    \item Insight: Switch $s2$ effectively acts as a firewall, blocking all traffic from $h1, h2$ destined for $h3, h4$.
+\end{itemize}
+
+\subsubsection{Connection to Programmable Hardware}
+
+\begin{itemize}
+    \item OpenFlow provides a fixed match-plus-action abstraction.
+    \item Next-generation systems such as \textbf{P4} allow defining new header formats and custom match-action logic, enabling protocol-independent programmability of the data plane.
+\end{itemize}
+
+\subsubsection{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \textbf{Generalized Forwarding}: Forwarding based on matching multiple header fields across layers, not only destination IP.
+    \item \textbf{Flow Table}: Data structure containing match fields, counters, and actions.
+    \item \textbf{OpenFlow}: Standard API enabling centralized controller-managed flow tables.
+    \item \textbf{Modify-Field}: Action modifying packet headers (e.g., VLAN, IP, port).
+    \item \textbf{P4}: Language for protocol-independent programmable data-plane processing.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item SDN uses generalized forwarding to implement controller-driven network-wide behavior.
+    \item Flow tables combine cross-layer match fields (port, MAC, IP, transport).
+    \item Forward/Drop/Modify actions enable routing, firewalling, NAT, QoS, and load balancing in one device.
+\end{itemize}
+
+\subsubsection{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item Generalized forwarding enables rich, policy-driven behavior far beyond traditional IP routing.
+    \item SDN relies on centralized controllers to ensure coherent network-wide configurations.
+    \item Matching on source fields enables source-specific paths, load balancing, and security policies.
+\end{itemize}
+
+
+\subsubsection{4.4 Section-Wide Summary}
+
+\paragraph*{Key Terms}
+
+\begin{itemize}
+    \item \textbf{Generalized Forwarding}: A ``match-plus-action'' paradigm where forwarding decisions are based on multiple fields across multiple protocol layers (L2, L3, L4).
+
+    \item \textbf{Match-Plus-Action}: The core abstraction of SDN data planes. First match on header fields, then apply an action (forward, drop, modify, send to controller).
+
+    \item \textbf{Flow Table}: The data structure inside an SDN switch holding the match-plus-action rules.
+
+    \item \textbf{SDN (Software-Defined Networking)}: An architecture that separates the data plane (switch hardware) from the control plane (remote controller software).
+
+    \item \textbf{OpenFlow}: The standard protocol defining the match-plus-action abstraction and how an SDN controller programs a switch.
+
+    \item \textbf{Match Fields}: The 11+ OpenFlow header fields (MAC addresses, IP addresses, TCP/UDP ports, etc.) used for matching.
+
+    \item \textbf{Action Types}: The operations a switch can perform (Forward, Drop, Modify-Field, Send-to-Controller).
+
+    \item \textbf{P4}: A domain-specific language for protocol-independent definition of packet-processing logic.
+\end{itemize}
+
+\paragraph*{Core Relationships}
+
+\begin{itemize}
+    \item Generalized Forwarding is the enabling data-plane mechanism for SDN.
+
+    \item OpenFlow implements the generalized forwarding abstraction, letting the SDN controller program flow tables in switches.
+
+    \item The \emph{match} component allows a single device to function simultaneously as a switch (L2), router (L3), firewall (L3/L4), and NAT (L3/L4).
+
+    \item The \emph{action} component (forward, drop, rewrite) makes the device truly programmable and policy-driven.
+\end{itemize}
+
+\paragraph*{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item ``Match-plus-action'' is the unifying abstraction that merges routing, switching, firewalling, and NAT into one programmable device.
+
+    \item SDN breaks the traditional monolithic router by separating the ``brain'' (control plane) from the ``brawn'' (data plane), placing the brain in a logically centralized controller.
+
+    \item The abstraction crosses layers: By matching on L2, L3, and L4 fields, SDN can implement holistic network-wide logic that traditional layered architectures could not support.
+
+    \item SDN makes the network programmable: network-wide behaviors (load balancing, access control, traffic engineering) are implemented via controller software that automatically installs the appropriate low-level match-plus-action rules throughout the network.
+\end{itemize}
+
+\section{4.5 Middleboxes}
+
+\subsection{Concept Overview: Beyond the Router}
+
+\begin{itemize}
+    \item Middlebox defined as "any intermediary box performing functions apart from normal, standard functions of an IP router on data path between source host and destination host"
+    \item Sit on forwarding path but modify, inspect, or filter packets based on policies often related to security, performance, op application-specific reqs
+    \item Often violate end-to-end principle by processing information up to application layer (layer 7)or modifying network layer (layer 3) headers, thereby breaking strict separation of layers
+\end{itemize}
+
+
+\subsection{A Taxonomy of Middlebox Services}
+
+Functions categorized into three categories
+
+\begin{itemize}
+    \item NAT Translation
+          \begin{enumerate}
+              \item NAT boxes are middleboxes that perform private network addressing
+              \item Rewrite datagrams header's source/dest IP addresses and, transport-layers src/dest port numbers
+          \end{enumerate}
+    \item Security Services
+          \begin{enumerate}
+              \item Firewalls
+                    \begin{enumerate}
+                        \item Most common security middlebox
+                        \item Block traffic based on wide range of header-field values (IP addresses, port numbers, protocol type)
+                    \end{enumerate}
+              \item Instrusion Detection/Prevention System (IDS/IPS)
+                    \begin{enumerate}
+                        \item Devices perform "deep packet inspection", examining packets payload
+                        \item Can redirect packets for further analysis, detect known attack patterns ("signatures"), and filter malicious packets
+                    \end{enumerate}
+              \item Application-Level Filters
+                    \begin{enumerate}
+                        \item Email gateways are prime example
+                        \item Set on email delivery path and filter messags based on content, blocking spam, phishing attempts, and security threats
+                    \end{enumerate}
+          \end{enumerate}
+    \item Performance Enhancement
+          \begin{enumerate}
+              \item Load Balancers: Devices intercept incoming service requests and distribute them across a farm of backend servers to balance computational load
+              \item Content Caches: Devices store copies of popular content close to users to reduce latency and save network bandwidth
+              \item Traffic Compressors: Compress data streams on the fly to save bandwidth, especially over expensive or slow links
+          \end{enumerate}
+\end{itemize}
+
+
+\subsection{The Problem with Middleboxes: Cost and Complexity}
+
+\begin{itemize}
+    \item Capital Cost: each new function (firewall, NAT, load balancer) has required its own specialized, often proprietary, hardware "box"
+    \item Operational Cost: each box runs its own separate software stack and requires separate management, configuration, and upgrades. Admin needs special skills to manage such
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
+
+
+\subsection{The Solution: Network Function Virtualization (NFV)}
+
+\begin{itemize}
+    \item NFV's goal is to "unbundle" function from dedicated hardware
+    \item Mechanism
+          \begin{enumerate}
+              \item Instead of buying firewall appliance, network operator buys commodity hardware (standard servers, switches, and storage)
+              \item Run middlebox functions as software on top of generic hardware, using virtual machines or containers
+          \end{enumerate}
+
+    \item Conenction to SDN
+          \begin{enumerate}
+              \item NFV is logical extension of SDN
+              \item SDN unbundles router, separating control-plane software from data-plan hardware
+              \item NFV unbundles all other network functions (middleboxes) in same way
+          \end{enumerate}
+\end{itemize}
+
+
+\subsection{Architectural Principles of the Internet (A Sidebar)}
+
+\begin{itemize}
+    \item The "Architectural Abomination" View
+          \begin{enumerate}
+              \item Original Sin: Middleboxes violate clean separation between network layer and layers above/below it
+              \item Layer-Breakers
+                    \begin{enumerate}
+                        \item Original Internet had a "simple" network core (routers just forward IP packets) and "smart" edges (hosts run transport and application logic)
+                        \item NAT box is a router (L3) that peeks into and rewrites port numbers (L4)
+                        \item Firewall is a router (L3) that blocks packets based on TCP flags (L4) or even HTTP URLs (L7)
+                        \item Email gateway (L3) filters packets based on application-layer content (email body)
+                    \end{enumerate}
+          \end{enumerate}
+    \item The "Pragmatic" View
+          \begin{enumerate}
+              \item Counter argument is middleboxes "exist for important and permanent reasons"
+              \item Fill critical needs (security, address translation) that original architecture failed to provide
+              \item Argument from this camp is that we will ahve more, not fewer, middleboxes in future, so must learn how to build and manage them properly (e.g. using NFV and SDN)
+          \end{enumerate}
+    \item The IP Hourglass (The "Narrow Waist")
+          \begin{enumerate}
+              \item Concept: Internet protocol stack has narrow waist at network layer
+              \item Above Waist: Innumerable application-layer protocols and transport protocols
+              \item Below Waist: Innumerable link-layer technologies
+              \item Wait: One single, universisal protocol: IP
+          \end{enumerate}
+\end{itemize}
+
+
+\subsection{4.5 Section-Wide Summary}
+
+\subsubsection*{Key Terms}
+
+\begin{itemize}
+    \item \textbf{Middlebox}: In-network device performing non-standard IP forwarding functions such as NAT, firewalling, load balancing.
+    \item \textbf{Network Function Virtualization (NFV)}: Implementing middlebox functions in software on commodity hardware.
+    \item \textbf{IP Hourglass}: The Internet architecture with a narrow waist at the IP layer.
+    \item \textbf{End-to-End Argument}: Idea that intelligence should reside at end hosts, while the network core remains simple.
+\end{itemize}
+
+\subsubsection*{Core Relationships}
+
+\begin{itemize}
+    \item Middleboxes address practical needs (security, address scarcity) that original Internet architecture did not solve.
+    \item NFV improves cost, flexibility, and deployment by separating middlebox software from hardware.
+    \item Middleboxes challenge the IP Hourglass (by adding complexity to the core) and the End-to-End Argument.
+\end{itemize}
+
+\subsubsection*{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item The IP core is no longer simple: it is filled with middleboxes essential for modern networking.
+    \item SDN (match-plus-action) provides a way to program and manage middlebox-like behaviors centrally.
+    \item The tension between architectural purity (End-to-End) and practical necessity (Middleboxes) will define the future of networking.
+\end{itemize}
+
+
 
 
 \end{document}
