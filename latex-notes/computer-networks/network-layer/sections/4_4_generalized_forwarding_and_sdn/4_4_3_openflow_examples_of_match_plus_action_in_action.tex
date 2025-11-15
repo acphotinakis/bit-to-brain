@@ -110,3 +110,50 @@ This section illustrates how combining matches and actions implements core netwo
     \item SDN relies on centralized controllers to ensure coherent network-wide configurations.
     \item Matching on source fields enables source-specific paths, load balancing, and security policies.
 \end{itemize}
+
+
+\section{4.4 Section-Wide Summary}
+
+\subsection*{Key Terms}
+
+\begin{itemize}
+    \item \textbf{Generalized Forwarding}: A ``match-plus-action'' paradigm where forwarding decisions are based on multiple fields across multiple protocol layers (L2, L3, L4).
+
+    \item \textbf{Match-Plus-Action}: The core abstraction of SDN data planes. First match on header fields, then apply an action (forward, drop, modify, send to controller).
+
+    \item \textbf{Flow Table}: The data structure inside an SDN switch holding the match-plus-action rules.
+
+    \item \textbf{SDN (Software-Defined Networking)}: An architecture that separates the data plane (switch hardware) from the control plane (remote controller software).
+
+    \item \textbf{OpenFlow}: The standard protocol defining the match-plus-action abstraction and how an SDN controller programs a switch.
+
+    \item \textbf{Match Fields}: The 11+ OpenFlow header fields (MAC addresses, IP addresses, TCP/UDP ports, etc.) used for matching.
+
+    \item \textbf{Action Types}: The operations a switch can perform (Forward, Drop, Modify-Field, Send-to-Controller).
+
+    \item \textbf{P4}: A domain-specific language for protocol-independent definition of packet-processing logic.
+\end{itemize}
+
+\subsection*{Core Relationships}
+
+\begin{itemize}
+    \item Generalized Forwarding is the enabling data-plane mechanism for SDN.
+
+    \item OpenFlow implements the generalized forwarding abstraction, letting the SDN controller program flow tables in switches.
+
+    \item The \emph{match} component allows a single device to function simultaneously as a switch (L2), router (L3), firewall (L3/L4), and NAT (L3/L4).
+
+    \item The \emph{action} component (forward, drop, rewrite) makes the device truly programmable and policy-driven.
+\end{itemize}
+
+\subsection*{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item ``Match-plus-action'' is the unifying abstraction that merges routing, switching, firewalling, and NAT into one programmable device.
+
+    \item SDN breaks the traditional monolithic router by separating the ``brain'' (control plane) from the ``brawn'' (data plane), placing the brain in a logically centralized controller.
+
+    \item The abstraction crosses layers: By matching on L2, L3, and L4 fields, SDN can implement holistic network-wide logic that traditional layered architectures could not support.
+
+    \item SDN makes the network programmable: network-wide behaviors (load balancing, access control, traffic engineering) are implemented via controller software that automatically installs the appropriate low-level match-plus-action rules throughout the network.
+\end{itemize}
