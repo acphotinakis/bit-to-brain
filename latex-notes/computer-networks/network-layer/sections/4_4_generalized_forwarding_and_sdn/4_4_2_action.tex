@@ -9,24 +9,25 @@
 \end{itemize}
 
 \subsection{Technical Mechanism: Key Actions}
-
+Most important actions defined in OpenFlow
 \begin{itemize}
-    \item X
+    \item Forwarding
           \begin{enumerate}
-              \item Y
+              \item Forward to specific physical output port
+              \item Broadcast: foward to all output ports (except ingress port)
+              \item Multicast: forward to a select set of output ports
+              \item Forward to controller: encapsulate packet and send it up to SDN controller for decision. How control plane learns about new, unknown flows
+          \end{enumerate}
+    \item Dropping
+          \begin{enumerate}
+              \item Rule has no specified action, so packet is dropped. Basic mechanism for a firewall
+          \end{enumerate}
+    \item Modify-Field
+          \begin{enumerate}
+              \item Switch can rewrite values in any of 10 header fields
+              \item Basic mechanism for a NAT or Layer 3 router
           \end{enumerate}
 \end{itemize}
-
-
-\subsection{Practical and Intuitive View}
-
-\begin{itemize}
-    \item X
-          \begin{enumerate}
-              \item Y
-          \end{enumerate}
-\end{itemize}
-
 
 
 
