@@ -1,7 +1,7 @@
 INFO:  latexindent version 3.24.7, 2025-08-15, a script to indent .tex files
        latexindent lives here: /home/stu5/s0/acp7795/.texlive/2025/texmf-dist/scripts/latexindent/
-       Tue Nov 11 18:10:56 2025
-       Filename: /home/stu5/s0/acp7795/Documents/bit-to-brain/latex-notes/computer-networks/network-layer/sections/4_3_the_internet_protocol_ip_ipv4_addressing_ipv6_and_more/__latexindent_temp_4_3_1_ipv4_datagram_format.tex
+       Fri Nov 14 14:12:47 2025
+       Filename: /home/stu5/s0/acp7795/Documents/bit-to-brain/latex-notes/computer-networks/network-layer/sections/4_2_whats_inside_a_router/__latexindent_temp_4_2_whats_inside_a_router.tex
 INFO:  Processing switches:
        -y|--yaml: YAML settings specified via command line
        -c|--cruft: cruft directory
