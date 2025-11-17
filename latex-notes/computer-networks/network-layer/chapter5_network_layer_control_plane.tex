@@ -1,0 +1,506 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Network Layer}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Chapter 5: The Network Layer — Control Plane}
+
+\section{5.1 Introduction}
+
+\section{5.2 Routing Algorithms}
+
+\subsection{Concept Overview}
+
+\begin{enumerate}
+    \item Logic of how packets forwarded is done in control plane, implemented by routing algorithms
+    \item A good path is synonymous with "least-cost", such path populates forwarding table in each router
+\end{enumerate}
+
+
+\subsection{Graph Abstraction: Modeling the Network}
+\begin{enumerate}
+    \item Assume graph G = (N , E)
+    \item N = nodes in graph that represent routers in network, are points where packet-forwarding decisions are made
+    \item E = edges, represent physical links that connect routers
+    \item Costs c(x, y) = each edge (x, y) is assigned a numerical cost
+          \begin{enumerate}
+              \item Cost is typically set by network admin, is a piece of policy
+              \item 3 types of costs
+                    \begin{enumerate}
+                        \item Physical distance, a trans-oceanic link has a higher cost than a short link
+                        \item Link speed, a 1 Gbps link might have a cost of 10, while a 100 Gbps link has a cost of 1. Often inversely proportional to bandwidth
+                        \item Monetary cost, leasing a link from another provider may be more "costly"
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Taxonomy of Routing Algorithms}
+\begin{enumerate}
+    \item Centralized
+          \begin{enumerate}
+              \item Algo computes least-cost path using complete, global knowledge of network
+              \item Has complete map of all nodes and all edge costs
+              \item Can be done at a single site (like an SDN controller) or replicated on every router, butkey is that the input is the global network state
+              \item Approach is known as a Link-State algorithm
+          \end{enumerate}
+    \item Decentralized
+          \begin{enumerate}
+              \item Calculation distributed among routers
+              \item Each node begins with only local knowldge (cost of its own directly attached links)
+              \item Iterative process of communication only with neighbors, a node gradually learns least-cost paths to other nodes
+              \item Approach know as Distance-Vector algorithm
+          \end{enumerate}
+    \item Static vs Dynamic
+          \begin{enumerate}
+              \item Static: routes are changed very slowly, often by human admin manually editing costs or forwarding tables
+              \item Dynamic: routes cahnge automatically as network topology or link costs change.
+          \end{enumerate}
+    \item Load-Sensitive vs Load-Insentive
+          \begin{enumerate}
+              \item Load-Sensitive: link costs dynamically change to reflect current level of congestion on link. Idea to route around congestion
+              \item Load-Insensitive: link costs are fixed and do not reflect current load
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{5.2.1 Link State Routing Algorithm}
+
+\begin{enumerate}
+    \item Centralized approach that uses complete, global knowledge of network and lnk costs to compute least-cost paths
+    \item Each node in network responsible for a simple task
+          \begin{enumerate}
+              \item Discover neighbors and link costs
+              \item Broadcast this info to all other nodes in network
+              \item Receive link-state packets from all other nodes and build a complete, identical map of entire network
+              \item Compute least-cost paths from itself to all other nodes using map
+          \end{enumerate}
+    \item Dijkstras Algorithm
+          \begin{enumerate}
+              \item Iterative algo, finds least-cost paths in increasing order of cost
+              \item After k-th iteration, algo has found least-cost path to kndoes that are closest to source
+              \item Sicne each router computes its own table independently based on received global info, a malfunctioning router can only broadcast an incorrect cost for its attached links, and cannot directly corrupt entire network's routing knowledge
+              \item Variables
+                    \begin{enumerate}
+                        \item N: set of nodes to which least-cost path is definitively known
+                        \item D(u): current cost of least-cost path from source (u) to node v. value updated as new, shorter paths found
+                        \item p(u): predecessor node neighbor of v along current least-cost path from source. Used to build forwarding table
+                    \end{enumerate}
+                    \begin{verbatim}
+                        // Initialization
+                    1.  N' = {u}  // The source node is the only member
+                    2.  for all nodes v
+                    3.      if v is a neighbor of u
+                    4.          then D(v) = c(u,v)
+                    5.          else D(v) = infinity
+                    6.
+                    // Loop
+                    7.  loop
+                    8.      find w not in N' such that D(w) is a minimum
+                    9.      add w to N'
+                    10.     update D(v) for each neighbor v of w and not in N':
+                    11.         // Does the path through w to v offer a shorter cost?
+                    12.         D(v) = min( D(v), D(w) + c(w,v) )
+                    13.         // If D(v) was updated, set p(v) = w
+                    14. until N' = N
+                    \end{verbatim}
+              \item Pathological Oscillations
+                    \begin{enumerate}
+                        \item Problem arises if link costs are load-sensitive, that is if cost of a link depends on amount of traffic it is carrying
+                        \item Cost of link equals traffic it carries
+                        \item Solution is to not use load sensitive costs and ensure routers don't run algorithm at same time. Done by randomizing when link state updates are sent or when algorithm is run
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{5.2.2 Distance Vector Routing Algorithm}
+
+\begin{enumerate}
+    \item Distance vector algorithm is decentralized approach
+    \item Code is it "tell your neighbors what you know about the world"
+    \item Algorithm is:
+          \begin{enumerate}
+              \item Distributed, each node communicates only with direct neighbors
+              \item Iterative, process repreats until no more information is exchanged and calcualtions stabilized
+              \item Async, nodes don't need to operate in lock step
+              \item Self-Terminating, algorithm stops when calculations converge
+          \end{enumerate}
+    \item In DV, a node knows cost to its neighbors, and receives it "distance vectors" from its neighbors. A distance vector is a list of cost estimates from that neighbor to all other nodes in network
+\end{enumerate}
+
+\subsubsection{Bellman-Ford Algorithm}
+
+\begin{enumerate}
+    \item \textbf{Definitions of variables:}
+          \begin{itemize}
+              \item $d_x(y)$: Node $x$'s estimate of the least-cost path from $x$ to destination $y$.
+              \item $c(x,v)$: The cost of the direct link from node $x$ to neighbor $v$.
+              \item $N(x)$: The set of neighbors of node $x$.
+              \item $d_v(y)$: Node $v$'s estimate of the least-cost path from $v$ to destination $y$.
+          \end{itemize}
+
+    \item \textbf{Bellman--Ford update formula:}
+          \[
+              d_x(y)
+              =
+              \min_{v \in N(x)} \left\{ c(x,v) + d_v(y) \right\}
+          \]
+
+          \begin{itemize}
+              \item Node $x$ considers every neighbor $v \in N(x)$.
+              \item For each neighbor, it computes:
+                    \[
+                        c(x,v) + d_v(y)
+                    \]
+              \item It chooses the neighbor $v$ that yields the smallest total cost.
+          \end{itemize}
+
+    \item \textbf{Intuition:}
+          The cost from node $x$ to destination $y$ is the minimum, over all neighbors $v$, of the cost to reach $v$ plus the cost (as advertised by $v$) for $v$ to reach $y$.
+
+    \item \textbf{Distance Vector at each node:}
+          Each node $x$ maintains a distance vector
+          \[
+              D_x = \big[ D_x(y) : y \in \mathcal{N} \big]
+          \]
+          representing its current estimates of $d_x(y)$ for all destinations $y$.
+
+    \item \textbf{Update behavior:}
+          When node $x$ receives a distance vector $D_v$ from neighbor $v$, it recomputes its own distance vector using the Bellman--Ford formula.
+          If any entry changes, node $x$ sends its updated distance vector $D_x$ to all neighbors.
+
+    \item \textbf{Distance Vector Algorithm (Pseudo-Code):}
+
+          \begin{verbatim}
+At each node x:
+
+1. Initialization:
+2.     for all destinations y in N:
+3.         D_x(y) = c(x,y)       // If y not a direct neighbor: c(x,y) = infinity
+4.     for each neighbor w:
+5.         send distance vector D_x to w
+
+6. loop
+7.     wait until a distance vector D_v is received from neighbor v
+
+8.     for each destination y in N:
+9.         // Bellman-Ford update
+10.        D_x(y) = min over all neighbors u { c(x,u) + D_u(y) }
+
+11.    if any D_x(y) changed:
+12.        send updated distance vector D_x to all neighbors
+
+13. forever
+\end{verbatim}
+
+    \item Pathological Dynamics
+          \begin{enumerate}
+              \item Complexity of DV is when link costs change
+              \item Cases to consider:
+                    \begin{enumerate}
+                        \item Link cost decreases
+                        \item Link cost increases at \& count to infinity problem
+                    \end{enumerate}
+              \item Solution
+                    \begin{enumerate}
+                        \item Poisoned Reverse
+                        \item A simple fix for 2-node loops
+                              \begin{enumerate}
+                                  \item if z routes to x through y, z will "lie" to y and advertise its distance to x to inifinity
+                              \end{enumerate}
+                        \item
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsubsection{Comparison of Link-State vs Distance-Vector Algorithms}
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|p{3.5cm}|p{5.5cm}|p{5.5cm}|}
+        \hline
+        \textbf{Feature}                                                                                                                 & \textbf{Link-State (LS) Algorithm} & \textbf{Distance-Vector (DV) Algorithm} \\ \hline
+
+        Information Shared                                                                                                               &
+        Each node broadcasts the cost of its directly attached links to all other nodes (flooding).                                      &
+        Each node sends its distance vector (its current cost estimates to all destinations) only to its immediate neighbors.                                                                                           \\ \hline
+
+        Knowledge                                                                                                                        &
+        \textbf{Global}: Every node builds a complete map of the network topology.                                                       &
+        \textbf{Local}: A node knows only its neighbors and the information received from them.                                                                                                                         \\ \hline
+
+        Message Complexity                                                                                                               &
+        High. Each link-state update is flooded across the entire network: typically $O(N\,E)$ messages.                                 &
+        Lower. Only neighbor-to-neighbor exchanges; typically $O(N^2)$ over time depending on convergence.                                                                                                              \\ \hline
+
+        Speed of Convergence                                                                                                             &
+        Fast. Once link-state information propagates, each node runs Dijkstra in $O(N^2)$ or $O(N \log N)$. No loops during convergence. &
+        Slower. Can suffer from routing loops and the \textit{count-to-infinity} problem.                                                                                                                               \\ \hline
+
+        Robustness                                                                                                                       &
+        High. A node computes its own routes independently; a faulty node can only report incorrect local link costs.                    &
+        Lower. Incorrect distance vectors can propagate from one node to another and corrupt the entire network state.                                                                                                  \\ \hline
+
+        Used By                                                                                                                          &
+        OSPF, IS-IS                                                                                                                      &
+        RIP, BGP (path vector variant)                                                                                                                                                                                  \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{5.2 Section-Wide Summary}
+
+\textbf{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \textbf{Routing Algorithm}: The control-plane process for finding ``good'' (least-cost) paths through a network of routers.
+    \item \textbf{Graph} ($G = (N, E)$): Abstract model of a network where nodes $N$ are routers and edges $E$ are links with associated costs.
+    \item \textbf{Least-Cost Path}: The path between two nodes with the minimum sum of edge costs.
+    \item \textbf{Centralized Algorithm}: Requires complete, global network state (a full map) as input.
+    \item \textbf{Decentralized Algorithm}: Nodes compute paths iteratively using only local information from neighbors.
+    \item \textbf{Link-State (LS) Algorithm}: Canonical centralized approach (e.g., Dijkstra’s). Each node floods its local link information to all others.
+    \item \textbf{Dijkstra’s Algorithm}: Greedy, iterative algorithm used in LS to compute shortest paths from a source to all other nodes.
+    \item \textbf{Distance-Vector (DV) Algorithm}: Canonical decentralized approach (e.g., Bellman–Ford). Each node sends its distance vector to its neighbors.
+    \item \textbf{Bellman–Ford Equation}:
+          \[
+              d_x(y) = \min_{v \in N(x)} \{ c(x,v) + d_v(y) \}
+          \]
+    \item \textbf{Count-to-Infinity}: A pathological DV behavior where a link cost increase causes slow propagation of “bad news,” leading to routing loops and repeatedly increasing distance estimates.
+    \item \textbf{Poisoned Reverse}: A mitigation for 2-node loops in DV; a node advertises an infinite distance to a destination through the neighbor it routes through.
+\end{itemize}
+
+\textbf{Core Relationships}
+
+\begin{itemize}
+    \item Routing algorithms compute the paths that populate the forwarding tables in the data plane.
+    \item Centralized algorithms correspond to LS (e.g., Dijkstra’s).
+    \item Decentralized algorithms correspond to DV (e.g., Bellman–Ford).
+    \item The Bellman–Ford equation defines shortest paths recursively; DV implements this recursively and distributively.
+    \item Count-to-Infinity is the major weakness of DV and results from slow propagation of link-cost increases.
+\end{itemize}
+
+\textbf{Key Insights and Takeaways}
+
+\begin{itemize}
+    \item All routing algorithms model the network as a graph and attempt to solve the least-cost path problem.
+    \item \textbf{Fundamental tradeoff:}
+          \begin{itemize}
+              \item LS (centralized): robust, fast convergence, but high message overhead (flooding).
+              \item DV (decentralized): low message overhead (neighbor-only), but slow convergence and vulnerable to loops.
+          \end{itemize}
+    \item Pathological behaviors matter:
+          \begin{itemize}
+              \item LS can oscillate when link costs depend on load.
+              \item DV can count to infinity when link costs increase.
+          \end{itemize}
+    \item The Internet uses both approaches:
+          \begin{itemize}
+              \item OSPF $\rightarrow$ LS
+              \item BGP $\rightarrow$ DV-like (path vector)
+          \end{itemize}
+    \item No single algorithm is universally superior—both excel in different contexts.
+\end{itemize}
+
+
+
+\section{5.3 Intra-AS Routing in the Internet: OSPF}
+
+\subsection{Need for Routing Hierarchy: Scale and Autonomy}
+
+A "flat" network where every router runs same algorithm doesn't work for global internet for 2 reasons
+
+\begin{enumerate}
+    \item Scale
+          \begin{enumerate}
+              \item Storage and Computation
+                    \begin{enumerate}
+                        \item Internet has hundreds of millions of routers
+                        \item A link-state algorithm like Dijkstra's, which requires each router to store a map of the entire network and run an $O(N^2)$ or $O(N \log N)$ computation, is completely unfeasible at this scale.
+                    \end{enumerate}
+              \item COmmunication Overhead
+                    \begin{enumerate}
+                        \item a link-state algo requires link-state 'advertisements' (LSAs) to be flooded to every other router
+                        \item Communication overheard would be overwhelming.
+                        \item Distance vector would never converge
+                    \end{enumerate}
+          \end{enumerate}
+    \item Administrative Autonomy
+          \begin{enumerate}
+              \item Internet is not one network, it's composed of thousands of individual ISPs, universities, and corporate networks
+              \item An ISP is its own administrative domain. It wants and needs to run its network as it sees fit. SHould be able to choose its own internal routing algo and manage its network for its own performance and economic goals.
+              \item Furthermore, an ISP has no desire to "broadcast" details of its internal network topology and link costs to its competitors
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Solution: Autonomous Systems (ASs)}
+
+\begin{enumerate}
+    \item Is a group of routers that are all under same admin control, typically a single ISP or a large organization
+    \item Each AS identified by a globally unique Autonomous System Number (ASN), which is assigned by ICANN regional registries
+    \item Two-level hierarchy
+          \begin{enumerate}
+              \item Intra-AS Routing (Interior Gateway Protocol - IGP)
+                    \begin{enumerate}
+                        \item Routing algorithm that runs within a single AS
+                        \item ALl routes in AS are teammates and run samw intra-AS protocol
+                        \item Focus is on performance, finding best path within network
+                    \end{enumerate}
+              \item Inter-AS Routing (Exterior Gateway Protocol - EGP)
+                    \begin{enumerate}
+                        \item routing algorithm that runs between ASs
+                        \item Protocol is used to route traffic across different ISPs
+                        \item Focus is on policy, enforcing economic and security rules (e.g. "I will not carry traffic from this competitor for free")
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{OSPF: Canonical Intra-AS Protocol}
+
+\begin{enumerate}
+    \item Open Shortest Path First
+    \item is a link-state protocol that uses Dijkstras algo to compute shortest paths
+    \item How it works
+          \begin{enumerate}
+              \item Construct map: each router in AS constructs a complete, identical topological map of entire AS
+              \item Flood Information: To build map, each router broadcasts its link-state information (i.e. its list of directly connected neighbors and costs of those links) to all other routers in AS.
+              \item Run Dijkstras: Once router has complete map, it runs Dijkstras alg using itself as root node. Finds least-cost path from itself to every other node (and subnet) in AS
+              \item Install Routes: router uses results of Dijkstras to build forwarding table
+          \end{enumerate}
+    \item Practical View: Link Costs
+          \begin{enumerate}
+              \item Cost of a link is not standard, its a configured parameter set by network admin
+              \item OSPF provides mechanism to find least-cost path, but policy of what "cost" means is up to admin
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{OSPF Link-State Broadcasts}
+
+Detail of OSPF is how it manages its link-state advertisements (LSAs)
+
+\begin{enumerate}
+    \item Transport: messages are not sent over TCP or UDP, sent directly inside IP datagrams, using IP protocol number 89
+    \item Implication: Doesn't use a transport protocol, must implement its own reliability. Checks that links are operational (using HELLO messages sent to neighbors), and allows routers to get a neighbors link-state database
+    \item When to broadcast
+          \begin{enumerate}
+              \item On Change: A router broadcasts its link-state information whenever one of its links changes state (e.g. goes down, comes up, or its cost is unchanged)
+              \item Periodically: for robustness, router also re-broadcasts its link state at a regular interval even if there has been no change
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Advanced Features in OSPFv2}
+
+is not just a simple implementation of Dijkstras. [RFC 2328] specifies several advances features that are critical in real-world networks
+
+\begin{enumerate}
+    \item Security
+          \begin{enumerate}
+              \item How do you stop a malicious router from joining AS and injecting false link-state advertisements?
+              \item OSPF allows for authenticaion of OSPF messages
+                    \begin{enumerate}
+                        \item Simple Auth: clear-text password, which is weak
+                        \item MD5 Auth
+                              \begin{enumerate}
+                                  \item All routers configured with a shared secret key
+                                  \item Router computes an MD5 hash of OSPF packet (including key) and sends hash with packet
+                                  \item Receiver does same computation and verifies hash
+                                  \item Provides message integrity and authentication, and sequence numbers are used to prevent replay attacks
+                              \end{enumerate}
+                    \end{enumerate}
+          \end{enumerate}
+    \item Multiple Same-Cost Paths
+          \begin{enumerate}
+              \item What if Dijkstra's finds two paths to a destination with exact same cost?
+              \item Instead of just picking one, OSPF allows router to install both paths in its forwarding table
+              \item Traffic destined for that node can then be split across both paths
+              \item Simple and effective form of load balancing
+          \end{enumerate}
+    \item Support for Hierarchy (Areas)
+          \begin{enumerate}
+              \item For a very large AS, flooding LSAs to every touer is too much overhead
+              \item Solution: AS can be partitioned into areas
+              \item Inra-Area routing: routers within an area run their own OSPF algorithm. THey flood LSAs only to other routers in same area. Each router in area has a complete map of only its area
+              \item Backbone area (Area 0): One special area is designated as backbone. Primary role of backbone is to route traffic between different areas
+              \item Area Border Routers (ABRs): Routers that sit at edge of an area. They're in backbone and in one or more other areas. Summarize routing information from their area and advertise it to the backbone, and vice-versa
+          \end{enumerate}
+    \item Multicast support: OSPF extended by Multicast OSPF (MOSPF), which uses same link-state database and flooding mechanism to compute multicast paths
+\end{enumerate}
+
+
+\subsection{Section-Wide Summary}
+
+\textbf{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \textbf{Autonomous System (AS):} A group of routers under a single administrative control.
+    \item \textbf{Intra-AS Routing (IGP):} Routing protocol used within an AS; focus is on performance.
+    \item \textbf{Inter-AS Routing (EGP):} Routing protocol used between ASs; focus is on policy.
+    \item \textbf{OSPF (Open Shortest Path First):} A widely used, open-standard, link-state, intra-AS routing protocol.
+    \item \textbf{Link-State Advertisement (LSA):} A broadcast packet containing the state and cost of a router's links, used by OSPF.
+    \item \textbf{Traffic Engineering:} Setting link costs to achieve network-wide performance goals (e.g., minimize congestion).
+    \item \textbf{OSPF Area:} A sub-domain within a large AS used to create hierarchy and limit LSA flooding.
+    \item \textbf{Backbone Area (Area 0):} The central area in a hierarchical OSPF network connecting all other areas.
+    \item \textbf{Area Border Router (ABR):} A router that connects one or more areas to the backbone area.
+\end{itemize}
+
+\textbf{Core Relationships}
+
+\begin{itemize}
+    \item The Internet is divided into ASs to address issues of scale and administrative autonomy.
+    \item This leads to a two-tier routing system: Intra-AS (e.g., OSPF) and Inter-AS (e.g., BGP).
+    \item OSPF is a practical implementation of the Link-State algorithm (using Dijkstra’s).
+    \item Routers flood LSAs to build an identical network map, then compute shortest paths independently.
+    \item Large ASs use OSPF hierarchy (Areas + Backbone) to limit LSA flooding and reduce computation.
+\end{itemize}
+
+\textbf{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item Internet routing is fundamentally hierarchical: Intra-AS and Inter-AS levels enable global scalability.
+    \item OSPF is the canonical Intra-AS protocol, relying on the Link-State approach.
+    \item OSPF offers robustness: authentication, multi-path load balancing, and hierarchical scalability.
+    \item OSPF link costs are policy tools—not purely physical measurements—and can be tuned for Traffic Engineering.
+\end{itemize}
+
+
+
+% TEMPLATE
+\begin{enumerate}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{enumerate}
+
+
+
+
+
+\end{document}
