@@ -490,6 +490,501 @@ is not just a simple implementation of Dijkstras. [RFC 2328] specifies several a
 \end{itemize}
 
 
+\section{5.4 Routing Among the ISPs: BGP}
+
+With OSPF, a link-state protocol, is designed for scalability and performance within a single administrative domain. All routes within AS are teammates, running the same protocol with the shared goal of finding the best-performing, least-cost paths.
+
+\begin{enumerate}
+    \item BGP
+          \begin{enumerate}
+              \item Fundamentally different from OSPF
+              \item OSPF goal is performance, BGP's goal is policy
+              \item Is a decentralized, async protocol that is similar in many ways to Distance-Vector algo
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{5.4.1 Role of BGP}
+
+\begin{enumerate}
+    \item Why do we need a separate protocol for inter-AS routing?
+          \begin{enumerate}
+              \item Reasons are scale and autonomy
+              \item OSPF's 'everyone knows the full map' approach won't scale to hundreds of millions of routers on global internet
+              \item Furthermore, an AS doesn't want to share its internal topology with competitors
+          \end{enumerate}
+    \item Fundamentals of BGP
+          \begin{enumerate}
+              \item Within an AS, a router uses its intra-AS protocol (OSPF) to find best path to any other router inside of AS1 (let's say router 1a in AS1), but what about a destination outside its AS, say a prefix x located in AS3?
+              \item Router 1a's OSPF built forwarding table is useless for this. It needs mechanisms to:
+                    \begin{enumerate}
+                        \item Discover that prefix x even exists
+                        \item Learn a path to prefix x
+                        \item Choose best path from potentially many options, based on its AS's policies
+                    \end{enumerate}
+          \end{enumerate}
+    \item Routing to Prefixes
+          \begin{enumerate}
+              \item Key distinction with BGP is that it doesn't route individual host IP addresses
+              \item Routes to prefices, which are CIDRized blocks of addresses (e.g. 138.16.18/22) that represent a subnet or a collection of subnets
+              \item Every router forwarding tbale is thus a combination of routes learned from two different sources
+                    \begin{enumerate}
+                        \item Intra-AS routes (from OSPF): typically for destiantions inside the AS
+                        \item Inter-AS routes (from BGP): for destinations outside AS
+                    \end{enumerate}
+              \item BGP provides each router with means to:
+                    \begin{enumerate}
+                        \item Obtain prefix reachability information. BGP allows an AS to advertise its prefixes to rest of internet and ensures this advertisement propogates to all other ASs
+                        \item Determine best route: a router might learn multiple paths to same prefix. For example, AS1 might learn it can reach x via AS2, or via direct link to AS3
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsection{5.4.2 Advertising BGP Route Information}
+
+\begin{enumerate}
+    \item \textbf{Concept Overview: iBGP and eBGP}
+
+          How does a prefix advertisement (e.g., ``AS3 has x'') get from a router deep inside AS3 to a router deep inside AS1?
+
+          The process involves two ``flavors'' of BGP:
+
+          \begin{itemize}
+              \item \textbf{External BGP (eBGP):} Used to communicate between routers in different ASs.
+              \item \textbf{Internal BGP (iBGP):} Used to communicate between routers within the same AS.
+          \end{itemize}
+
+          Before we see how they work, we must define two types of routers:
+
+          \begin{itemize}
+              \item \textbf{Gateway Router:} A router at the ``edge'' of an AS that has a direct physical link to a router in another AS (e.g., router 1c in Figure 5.8).
+              \item \textbf{Internal Router:} A router that is connected only to other hosts and routers within its own AS (e.g., router 1b in Figure 5.8).
+          \end{itemize}
+
+    \item \textbf{Technical Mechanism: BGP Connections}
+
+          Unlike OSPF, BGP does not send its messages raw over IP. BGP runs over TCP on port 179.
+
+          A BGP connection (or BGP session) is the semi-permanent TCP connection between two routers running BGP.
+
+          An eBGP connection is a BGP session that spans two ASs (e.g., between router 1c in AS1 and router 2a in AS2).
+
+          An iBGP connection is a BGP session between routers in the same AS (e.g., between 1c and 1b in AS1).
+
+          This is a critical point: iBGP connections are logical connections, not necessarily physical. As shown in Figure 5.9, the iBGP session between 1c and 1b runs over the AS1 network. The TCP packets that carry the BGP message from 1c to 1b are themselves routed by AS1's intra-AS protocol (OSPF).
+
+          \textbf{Textual Representation of Figure 5.9: BGP Connections}
+
+          \begin{verbatim}
+         <--eBGP-->         <--eBGP-->
+ (AS1) 1c ========= 2a (AS2) 2c ========= 3a (AS3)
+   | \               |          |               |
+   |  \ <--iBGP-->   |          | <--iBGP-->    |
+   |   \             |          |               |
+   |    1b           |          |      3b       |
+   .    .            .          .      .       .
+   .    .            .          .      .       .
+(Full iBGP mesh inside each AS)
+\end{verbatim}
+
+    \item \textbf{Practical View: The Advertisement Propagation Chain}
+
+          Let's trace the advertisement for prefix x from AS3 to all routers in AS1 (Figure 5.8/5.9):
+
+          \begin{enumerate}
+              \item \textbf{Start:} Router 3a (gateway) in AS3 advertises x to router 2c (gateway) in AS2 via an eBGP connection. The message is effectively: ``I can reach x''.
+              \item \textbf{Internal Propagation (AS2):} Router 2c receives this advertisement. It must now inform all other routers in its own AS (AS2) about this new prefix. It sends an iBGP message to all its iBGP peers (e.g., 2a, 2b, 2d) saying ``I can reach x via 3a''.
+              \item \textbf{Cross-AS Propagation:} Router 2a (gateway) now knows it can reach x. It advertises this fact to router 1c (gateway) in AS1 via their eBGP connection. The message is now: ``I can reach x, and the path is (AS2, AS3)''.
+              \item \textbf{Internal Propagation (AS1):} Router 1c receives this advertisement. It uses iBGP to inform all its internal peers (1a, 1b, 1d) of this new route: ``I can reach x via the path (AS2, AS3)''.
+          \end{enumerate}
+
+          \textbf{End State:} Now, every router in AS1 and AS2 knows about prefix x and also knows the path of ASs required to get there.
+\end{enumerate}
+
+\subsection{5.4.3 Determining the Best Routes}
+
+\begin{enumerate}
+
+    \item \textbf{Concept Overview: BGP Routes and Attributes}
+
+          In the previous example, AS1 learned one path to x. But in the real Internet (as in Figure 5.10), AS1 might learn multiple paths to x. For example, if AS1 also has a direct link to AS3, it might learn two paths:
+
+          Path 1: (AS2, AS3, x)
+
+          Path 2: (AS3, x)
+
+          How does a router in AS1 choose? It uses BGP's route-selection algorithm.
+
+          A route in BGP is more than just a prefix; it's the prefix plus its associated attributes. Two of the most important attributes are AS-PATH and NEXT-HOP.
+
+    \item \textbf{Technical Mechanism: AS-PATH and NEXT-HOP Attributes}
+
+          \textbf{AS-PATH:}
+
+          \begin{itemize}
+              \item \textbf{What it is:} This attribute contains the list of ASs that the advertisement has traversed.
+              \item \textbf{How it's built:} When a prefix is advertised outside an AS, the AS prepends its own ASN to the list.
+                    \begin{itemize}
+                        \item 3a advertises (AS3, x) to 2c.
+                        \item 2c propagates this internally.
+                        \item 2a advertises to 1c, prepending its own AS: (AS2, AS3, x).
+                    \end{itemize}
+              \item \textbf{Function 1 (Loop Detection):} This is BGP's primary loop-detection mechanism. If a router receives an advertisement where its own AS is already in the AS-PATH, it rejects the route.
+              \item \textbf{Function 2 (Metric):} The length of the AS-PATH (number of ASs) is used as a routing metric. Shorter paths are preferred.
+          \end{itemize}
+
+          \textbf{NEXT-HOP:}
+
+          \begin{itemize}
+              \item \textbf{What it is:} This is the IP address of the router interface that begins the AS-PATH.
+              \item \textbf{Crucial Role:} This attribute is the critical link that connects the inter-AS (BGP) routing logic to the intra-AS (OSPF) forwarding logic.
+          \end{itemize}
+
+          Example (Figure 5.10):
+
+          Router 1c learns the route (AS2, AS3, x) from router 2a. The NEXT-HOP for this route is the IP address of 2a's interface.
+
+          Router 1d learns the route (AS3, x) from 3d. The NEXT-HOP for this route is the IP address of 3d's interface.
+
+          When 1c and 1d advertise these routes internally via iBGP to router 1b, they include the original NEXT-HOP attribute.
+
+          Router 1b's (internal) view:
+
+          Route 1 for x: AS-PATH = (AS2, AS3), NEXT-HOP = \textless IP of 2a\textgreater
+
+          Route 2 for x: AS-PATH = (AS3), NEXT-HOP = \textless IP of 3d\textgreater
+
+    \item \textbf{Technical Mechanism: Hot Potato Routing}
+
+          Given these two routes, how does 1b choose? The simplest policy is Hot Potato Routing.
+
+          \textbf{Concept:} This is a ``selfish'' algorithm. The AS wants to get the packet ``off its network'' (like a hot potato) as quickly and cheaply as possible. It doesn't care about the cost outside its own network.
+
+          Mechanism (Figure 5.11):
+
+          \begin{itemize}
+              \item Router 1b looks at the two routes it knows for x.
+              \item It examines their NEXT-HOP attributes: \textless IP of 2a\textgreater{} and \textless IP of 3d\textgreater{}.
+              \item 1b then consults its intra-AS (OSPF) routing table to find the internal cost to reach \textless IP of 2a\textgreater{} and the internal cost to reach \textless IP of 3d\textgreater{}.
+              \item It selects the route whose NEXT-HOP is ``closer'' based on its internal OSPF costs.
+          \end{itemize}
+
+          If 2a is 2 hops away and 3d is 3 hops away, 1b chooses Route 1. It then looks at its OSPF forwarding table to find the local interface I that is on the shortest path to 2a, and it installs (x, I) in its forwarding table.
+
+          \textbf{Key Insight:} Hot Potato Routing highlights the symbiosis of BGP and OSPF. BGP provides the external path options, and OSPF provides the internal costs to reach those external paths.
+
+    \item \textbf{Technical Mechanism: The Full BGP Route-Selection Algorithm}
+
+          Hot Potato Routing is just one step in the full algorithm. BGP routers are driven by policy. The full algorithm is a sequential list of rules. A router takes all known routes for a prefix and applies these rules in order until only one route is left.
+
+          \begin{itemize}
+              \item \textbf{Local Preference (POLICY):} Each route is assigned a local\_pref value by the router that learns it. This is a policy decision. The router must select the route with the highest local preference value, regardless of any other attribute.
+              \item \textbf{Shortest AS-PATH (PERFORMANCE):} From the remaining routes (which are tied for the highest local\_pref), select the route with the shortest AS-PATH length.
+              \item \textbf{Hot Potato Routing (COST):} From the remaining routes (which are tied on local\_pref and AS-PATH length), select the route with the closest NEXT-HOP router (based on intra-AS (OSPF) costs).
+              \item \textbf{BGP Identifiers:} If still tied, use other BGP attributes (like router IDs) as a final tie-breaker.
+          \end{itemize}
+
+          Example Revisited: In Figure 5.10, 1b learns (AS2, AS3, x) and (AS3, x).
+
+          Assume local\_pref is the same for both (Rule 1 tie).
+
+          Rule 2 (Shortest AS-PATH) is applied. (AS3, x) has length 1. (AS2, AS3, x) has length 2.
+
+          Router 1b selects the route (AS3, x).
+
+          Notice that Hot Potato Routing (Rule 3) is not even used in this case, because the AS-PATH lengths were different. This shows BGP is not a purely selfish protocol; it does prefer shorter AS-level paths, unless policy (Rule 1) dictates otherwise.
+
+\end{enumerate}
+
+\subsection{5.4.4 IP-Anycast}
+
+BGP's ``best path'' selection logic enables a powerful service called IP-Anycast, which is heavily used by the DNS system.
+
+\textbf{Concept:} Replicate a service (like a DNS root server) in many different geographical locations, but assign the exact same IP address to all of them.
+
+\textbf{Mechanism (Figure 5.12):}
+\begin{itemize}
+    \item The CDN server in AS1 advertises 212.21.21.21 via BGP.
+    \item The CDN server in AS4 also advertises the same prefix 212.21.21.21 via BGP.
+    \item A router in AS3 will receive two different routes for 212.21.21.21: one via AS1 and one via AS4.
+    \item The router in AS3 simply runs its standard BGP route-selection algorithm. It will pick the ``best'' path (e.g., the one with the shortest AS-PATH) and install that route in its forwarding table.
+\end{itemize}
+
+\textbf{Result:} When a client in AS3 sends a packet to 212.21.21.21, the BGP-built forwarding tables will automatically route the packet to the ``closest'' server instance. This provides incredible robustness and low latency for critical services like DNS.
+
+\subsection{5.4.5 Routing Policy}
+
+As we've stressed, policy is the primary driver of BGP. The examples in Figure 5.13 illustrate the two most common policy relationships: provider-customer and peer-peer.
+
+\textbf{Policy Example 1: Stub Networks (Customer/Provider)}
+\begin{itemize}
+    \item \textbf{Scenario:} X is a customer of B and C. W and Y are customers of A and C, respectively.
+    \item \textbf{Goal:} X is a ``stub'' network. It should originate and terminate traffic, but it should never be a transit AS. That is, B should not send traffic destined for C through X.
+    \item \textbf{Implementation (Policy):} X does not advertise routes learned from one provider (C) to its other provider (B).
+    \item \textbf{Result:} Since B never learns a path to Y or C via X, it will never route traffic through X to get there. Policy is enforced by selectively choosing what routes to advertise.
+\end{itemize}
+
+\textbf{Policy Example 2: Peering (No ``Free Rides'')}
+\begin{itemize}
+    \item \textbf{Scenario:} B and C are peers. A is a customer of B.
+    \item \textbf{Goal:} B and C agree to exchange traffic between their respective customers. B does not want to carry traffic from C to the rest of the Internet (e.g., to A) for free.
+    \item \textbf{Implementation (Policy):}
+          \begin{itemize}
+              \item B learns a route to W via its customer A (path A-W).
+              \item B will advertise this route (B-A-W) to its customer X (because X pays B for Internet transit).
+              \item B will \emph{not} advertise this route (B-A-W) to its peer C.
+          \end{itemize}
+    \item \textbf{Result:} C never learns a path to W via B. C cannot use B as a ``free ride'' to get to A's customers.
+\end{itemize}
+
+\textbf{Rule of Thumb:} An ISP only carries traffic if it originates from or is destined to one of its own customers.
+
+\paragraph{Sidebar: Why Different Inter-AS and Intra-AS Protocols?}
+
+\textbf{Policy:} Inter-AS (BGP) is all about policy. It allows an AS to control what traffic it carries and what routes it advertises based on business relationships (customer, peer). Intra-AS (OSPF) has no concept of this; its only goal is to find the best technical path.
+
+\textbf{Scale:} OSPF's ``everyone-knows-the-map'' (link-state flooding) approach does not scale to the hundreds of thousands of networks on the Internet. BGP (a DV-like protocol) scales by only advertising paths of ASs, not individual router links.
+
+\textbf{Performance:} Intra-AS (OSPF) can be finely tuned for performance, using link costs to optimize latency or bandwidth. Inter-AS (BGP) often sacrifices performance for policy. A longer, more expensive path that satisfies a business agreement will be chosen over a shorter one that doesn't.
+
+
+\subsection{5.4.6 Putting the Pieces Together: Obtaining Internet Presence}
+
+This section provides a perfect case study integrating everything from Chapter 2, 4, and 5.
+
+\textbf{Goal:} Your new company, Xanadu Inc., wants to connect its network (Web, mail, DNS servers) to the global Internet.
+
+\textbf{The Protocol Checklist:}
+
+\begin{itemize}
+    \item \textbf{Get Physical:} Contract with a local ISP. You get a physical link and a block of IP addresses (a CIDR prefix, e.g., /24) from your ISP.
+    \item \textbf{Configure Local Network (IP/DHCP):} You assign IP addresses from your block to your gateway router and your servers. You might use DHCP (Chapter 4) to assign addresses to your internal employee hosts.
+    \item \textbf{Get a Name (DNS):} You register your domain name (e.g., xanadu.com) with a DNS registrar.
+    \item \textbf{Register Your DNS Server (DNS):} You must tell the registrar the name and IP address of your company's authoritative DNS server. The registrar then inserts an NS record (Name Server record) into the .com TLD servers, ``delegating'' xanadu.com to your server's IP address.
+    \item \textbf{Populate Your DNS Server (DNS):} In your own DNS server, you create the resource records for your company:
+          \begin{itemize}
+              \item An A record mapping \texttt{www.xanadu.com} to your Web server's IP address.
+              \item An MX record mapping \texttt{xanadu.com} to your mail server's name.
+          \end{itemize}
+    \item \textbf{Get Global Reachability (BGP):} This is the final, essential step. Your ISP's gateway router must advertise your prefix (your /24 block) to its upstream providers using eBGP. This advertisement then propagates via BGP across the entire Internet.
+\end{itemize}
+
+\textbf{The Result (A Day in the Life):}
+
+\begin{itemize}
+    \item When a user types \texttt{www.xanadu.com}:
+          \begin{itemize}
+              \item Their DNS query (Chapter 2) goes to a root server, then a .com TLD server.
+              \item The TLD server sees the NS record (Step 4) and directs the query to your DNS server.
+              \item Your DNS server replies with the A record (Step 5), giving the user your Web server's IP.
+          \end{itemize}
+    \item When the user's browser sends a TCP SYN (Chapter 3) to that IP:
+          \begin{itemize}
+              \item Every router on the Internet uses its forwarding table—built by BGP (Step 6)—to find the AS-PATH toward your ISP, and ultimately, to your network.
+              \item The packet arrives at your gateway router.
+              \item Your gateway router uses its internal (e.g., OSPF) forwarding table to send the packet to the final destination: your Web server.
+          \end{itemize}
+\end{itemize}
+
+\subsection{5.4 Section-Wide Summary}
+
+\textbf{Key Terms and Definitions:}
+
+\begin{itemize}
+    \item \textbf{BGP (Border Gateway Protocol):} The de facto inter-AS (inter-domain) routing protocol for the global Internet.
+    \item \textbf{Inter-AS vs. Intra-AS:} Inter-AS is between autonomous systems (policy-driven); Intra-AS is within an autonomous system (performance-driven).
+    \item \textbf{Gateway Router:} An AS-edge router that connects to a router in another AS.
+    \item \textbf{Internal Router:} A router that only connects to devices within its own AS.
+    \item \textbf{eBGP:} The BGP session between two different ASs. Used to advertise external routes.
+    \item \textbf{iBGP:} The BGP session within an AS. Used to propagate external routes to all internal routers.
+    \item \textbf{BGP Connection:} A logical session running on TCP port 179.
+    \item \textbf{Route:} In BGP, a route is a prefix + attributes.
+    \item \textbf{AS-PATH Attribute:} The list of ASs an advertisement has traversed. Used for loop detection and as a metric (shorter is better).
+    \item \textbf{NEXT-HOP Attribute:} The IP address of the next router on the external path. This is the crucial link between BGP (inter-AS) and OSPF (intra-AS).
+    \item \textbf{Hot Potato Routing:} A ``selfish'' routing policy where an AS forwards a packet to the internally closest exit point (NEXT-HOP), regardless of the external path cost.
+    \item \textbf{Route Selection Algorithm:} The 4-step process BGP uses to select a single ``best'' route: 1. Highest Local Preference (Policy), 2. Shortest AS-PATH, 3. Closest NEXT-HOP (Hot Potato), 4. Tie-breakers.
+    \item \textbf{IP-Anycast:} A service (used by DNS) where a single IP address is assigned to multiple, geographically dispersed servers, and BGP's route selection automatically directs clients to the ``closest'' one.
+\end{itemize}
+
+\textbf{Core Relationships:}
+
+\begin{itemize}
+    \item BGP is the ``glue'' of the Internet, connecting all the ASs.
+    \item BGP uses eBGP to talk to other ASs and iBGP to inform its own internal routers.
+    \item The BGP Route Selection Algorithm shows the priority of Policy (Local Preference) over Performance (AS-PATH, Hot Potato).
+    \item A router's final forwarding table is built using both BGP (to find the exit gateway/NEXT-HOP for external prefixes) and OSPF (to find the internal path to that NEXT-HOP).
+\end{itemize}
+
+\textbf{Key Insights / Takeaways:}
+
+\begin{itemize}
+    \item Inter-domain routing (BGP) is not about finding the best path; it's about finding a policy-compliant path that works. Business relationships (customer/provider, peer/peer) dictate routing, not just link speeds.
+    \item BGP is a Path Vector protocol, a ``DV-like'' protocol. Instead of just advertising a cost (distance), it advertises the entire path (the AS-PATH attribute). This is what allows it to implement policy and detect loops robustly.
+    \item A router in an AS makes its ``best'' choice based on the information it has. Hot Potato Routing is the classic example of this ``selfish'' behavior: minimize my cost, and let the next AS worry about its cost.
+    \item The Internet is a ``network of networks.'' To ``join'' the Internet, you need more than a physical link and an IP address; your AS must participate in BGP so the rest of the world can learn a route to your prefixes.
+\end{itemize}
+
+
+\section{5.5 The SDN Control Plane}
+
+Logically centralized control, which is foundation of Software-Defined Networking (SDN)
+\begin{enumerate}
+    \item Control plan is physically removed from routers and implemented in a separate, remote controller
+    \item Unbundling of network has implications for how networks are designed, managed, and programmed.
+\end{enumerate}
+
+\section{The Four Key Characteristics of an SDN Architecture}
+
+SDN is not a single protocol but an architectural appraoched defined by the following
+
+\subsection{Flow-based Forwarding}
+
+This is the data plane mechanism that SDN controls. We studied this in Chapter 4 as ``generalized forwarding.''
+
+Unlike traditional routing, which forwards packets based only on the destination IP address, SDN-controlled switches (which we call ``packet switches'') use a flow table.
+
+This flow table implements the ``match-plus-action'' paradigm. A ``match'' can be made on numerous header fields across multiple layers (e.g., L2 MAC address, L3 IP address, L4 TCP/UDP port).
+
+The ``action'' is also general: it can be to forward, drop, modify, or send the packet to the controller. It is the SDN control plane's job to compute, install, and manage these flow table entries.
+
+\subsection{Separation of Data Plane and Control Plane}
+
+This is the core philosophy of SDN.
+
+The data plane consists of the network's switches. These are now ``dumb'' (but fast) hardware devices whose only job is to execute the match-plus-action rules in their flow tables.
+
+The control plane consists of the remote servers and software (the ``brain'') that determine and manage these flow tables.
+
+\subsection{Network Control Functions are External to Data-Plane Switches}
+
+This highlights that the control plane is physically separate from the data-plane switches.
+
+As shown in Figure 5.14, the control plane itself is composed of two parts:
+
+\begin{itemize}
+    \item \textbf{The SDN Controller (or Network Operating System)}: This is the core platform. It maintains a centralized view of the network's state (links, switches, hosts) and provides an API for applications to interact with it.
+    \item \textbf{Network-Control Applications}: These are the ``apps'' that run on the controller. They contain the actual logic for network functions like routing, load balancing, or firewalling. They use the controller's API to specify the desired behavior.
+\end{itemize}
+
+The controller is ``logically centralized,'' meaning it presents a single, unified view of the network. In practice, it's a physically distributed system (run on multiple servers) for fault tolerance and scalability.
+
+\subsection{A Programmable Network}
+
+This is the payoff of the first three characteristics. The network becomes programmable via the network-control applications.
+
+Analogy (The PC vs. Mainframe): The textbook correctly likens this to the ``unbundling'' of the PC from the monolithic mainframe.
+
+Old Model (Mainframe/Traditional Router): A single vendor sold you a ``vertically integrated'' box containing the hardware, the operating system, and the applications.
+
+New Model (PC/SDN): The architecture is ``unbundled'' and open. You can get data-plane switch hardware from one vendor, an SDN controller OS from another, and network-control apps from a third vendor, or write them yourself.
+
+\section{5.5.1 The SDN Control Plane: Controller and Applications}
+
+\subsection*{Textual Representation of Figure 5.15: SDN Controller Architecture}
+
+\begin{verbatim}
++-------------------------------------------------+
+|        Network-Control Applications             |
++-------------------------------------------------+
+|              NORTHBOUND API                     |
++=================================================+
+|          SDN Controller (Network OS)            |
+|                                                 |
+|    [ Network-Wide State Management Layer ]      |
+|                                                 |
+|-------------------------------------------------|
+|             Communication Layer                 |
++=================================================+
+|              SOUTHBOUND API                     |
++-------------------------------------------------+
+|       SDN-Controlled Network Devices            |
++-------------------------------------------------+
+\end{verbatim}
+
+\subsection{The Communication Layer (Southbound Interface)}
+
+Purpose: This layer provides the communication channel between the SDN controller and the network's data-plane switches.
+
+Mechanism: Requires a standardized protocol for two-way communication.
+
+Example Protocol: The most prominent southbound protocol is OpenFlow.
+
+\subsection{The Network-Wide State-Management Layer}
+
+Purpose: This is the controller's ``single source of truth.'' It maintains a real-time, comprehensive view of the entire network's state.
+
+Mechanism: A distributed database storing host, link, switch state, flow tables, and a topology graph.
+
+\subsection{The Interface to Applications (Northbound Interface)}
+
+Purpose: This is the API that applications use to interact with the controller.
+
+Mechanism: Applications can read state, write state, and register for notifications.
+
+Example APIs: Many controllers expose a RESTful API.
+
+\subsection{Practical Implementation: ODL and ONOS}
+
+\subsubsection*{The OpenDaylight (ODL) Controller}
+Key Component: The Service Abstraction Layer (SAL) is the central ``message bus.''
+
+Southbound: Supports OpenFlow, SNMP, NETCONF.
+
+Northbound: AD-SAL (REST) and MD-SAL (YANG-based).
+
+\subsubsection*{The ONOS Controller}
+Key Component: The ONOS Distributed Core is a distributed system.
+
+Northbound (Intent Framework): Applications specify high-level intents, and ONOS converts them into flow rules.
+
+\section{5.5.2 OpenFlow Protocol}
+
+\subsection{Concept Overview}
+OpenFlow defines the communication between an SDN controller and switch over TCP (port 6653).
+
+\subsection{Technical Mechanism: Key Message Types}
+
+\textbf{Controller-to-Switch:}
+Configuration, Modify-State, Read-State, Send-Packet.
+
+\textbf{Switch-to-Controller:}
+Flow-Removed, Port-status, Packet-in.
+
+\subsection{Practical View: Google's B4 Network}
+
+A global SDN WAN connecting Google data centers. Uses OpenFlow switches, distributed controllers, and a Traffic Engineering application.
+
+\section{5.5.3 Data and Control Plane Interaction: An Example}
+
+Scenario: A link between s1 and s2 fails.
+
+Sequence of events:
+Data-plane failure → Port-status message → state update → application notified → Dijkstra recomputation → new flow rules installed → Modify-State messages sent → switches update tables.
+
+\section{5.5.4 SDN: Past and Future}
+
+\subsection{Past: The Origins of SDN}
+Earlier proposals separated planes; Ethane (2007) led directly to OpenFlow.
+
+\subsection{Future: Network Functions Virtualization (NFV)}
+NFV replaces hardware middleboxes with software on commodity hardware.
+
+\subsection{Future: Inter-AS SDN}
+Research attempts to extend SDN to multi-ISP environments.
+
+\section{5.5 Section-Wide Summary}
+
+\subsection{Key Terms and Definitions}
+SDN, Flow-Based Forwarding, SDN Controller, Network-Control Application, Southbound API, Northbound API, OpenFlow, NFV.
+
+\subsection{Core Relationships}
+SDN separates planes; generalized forwarding is the data-plane model; OpenFlow is the southbound protocol; applications use the northbound API; NFV applies unbundling to middleboxes.
+
+\subsection{Key Insights / Takeaways}
+SDN unbundles the router; controller is logically centralized but physically distributed; control plane is layered; intelligence moves to applications; Packet-in and Modify-State form the core reactive loop.
+
+
+
 
 % TEMPLATE
 \begin{enumerate}
