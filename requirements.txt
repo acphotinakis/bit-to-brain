@@ -1,0 +1,37 @@
+# Python Version
+Python 3.11.2
+
+# Packages
+alabaster==1.0.0
+babel==2.17.0
+black==25.9.0
+certifi==2025.10.5
+charset-normalizer==3.4.3
+click==8.3.0
+docutils==0.21.2
+idna==3.10
+imagesize==1.4.1
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+mypy_extensions==1.1.0
+packaging==25.0
+pathspec==0.12.1
+platformdirs==4.5.0
+pockets==0.9.1
+Pygments==2.19.2
+pytokens==0.2.0
+requests==2.32.5
+roman-numerals-py==3.1.0
+six==1.17.0
+snowballstemmer==3.0.1
+Sphinx==8.2.3
+sphinx-rtd-theme==3.0.2
+sphinxcontrib-applehelp==2.0.0
+sphinxcontrib-devhelp==2.0.0
+sphinxcontrib-htmlhelp==2.1.0
+sphinxcontrib-jquery==4.1
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-napoleon==0.7
+sphinxcontrib-qthelp==2.0.0
+sphinxcontrib-serializinghtml==2.0.0
+urllib3==2.5.0
