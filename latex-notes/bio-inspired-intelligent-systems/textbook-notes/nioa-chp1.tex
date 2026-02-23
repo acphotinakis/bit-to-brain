@@ -1,0 +1,249 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Metaheuristic Optimization and Local Search}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Introduction to Algorithms}
+
+\section{Key Concepts and Terminology}
+
+\section{Algorithmic Foundation}
+
+\begin{enumerate}
+    \item Step by step procedure of providing calcualtions or instructions to solve a problem
+    \item Primarily iterative procedures
+\end{enumerate}
+
+\subsection{Deterministic vs Stochastic Algos}
+\begin{enumerate}
+    \item Deterministic
+          \begin{enumerate}
+              \item Follow rigorous, repeatable procedure
+              \item Given starting point, algo will always follw exact same path and produce same result
+          \end{enumerate}
+    \item Stochastic
+          \begin{enumerate}
+              \item Possess inherent randomness
+              \item Different runs from same start point will yield different paths and results
+              \item Randomization helps avoid local optima
+          \end{enumerate}
+    \item Hybrid
+          \begin{enumerate}
+              \item Mix of both, such as Hill Climbing with Random Restarts
+          \end{enumerate}
+\end{enumerate}
+
+
+\begin{enumerate}
+    \item Convergence
+          \begin{enumerate}
+              \item Refers to tendency of iterative algorithm to reach stable state
+              \item For optimization algo, this stable state is optimal solution $x^*$
+          \end{enumerate}
+\end{enumerate}
+
+
+\section{Optimization Formulation}
+
+
+\subsection{Standard Mathematical Formulation}
+General optimization problem aims to find a design vector x that minimizes or maximizes specific functions
+under given constraints. Generic form is:
+
+\begin{enumerate}
+    \item Minimize: \[
+              \begin{aligned}
+                  \text{Minimize:} \quad & f_i(x), \quad (i = 1, 2, \ldots, M)       \\
+                  \text{Subject to:} \quad
+                                         & h_j(x) = 0, \quad (j = 1, 2, \ldots, J)   \\
+                                         & g_k(x) \le 0, \quad (k = 1, 2, \ldots, K)
+              \end{aligned}
+          \]
+\end{enumerate}
+
+\subsection{Key Term}
+\begin{enumerate}
+    \item \textbf{Decision Variables ($x$):} The vector $x = (x_1, x_2, \ldots, x_d)^T$ represents the unknowns or parameters to be tuned. They span the Design Space ($\mathbb{R}^d$).
+
+    \item \textbf{Objective Function ($f(x)$):} Also called the cost function or fitness function. It maps the design space to the Solution Space (or response space), representing the quality of the solution.
+
+    \item \textbf{Constraints:} Limitations on the design space.
+          \begin{itemize}
+              \item \textbf{Feasibility:} A solution is feasible if it satisfies all equality and inequality constraints. If no objective function exists, finding a feasible solution is called a feasibility problem.
+          \end{itemize}
+
+    \item \textbf{Multiobjective Optimization:} When $M > 1$, the problem involves optimizing multiple, often conflicting, criteria simultaneously.
+\end{enumerate}
+
+
+\section{Classical Optimization Methods}
+
+\subsection{Newton-Raphson Method}
+
+Originally Designed to find roots ($f(x) = 0$) of a nonlinear function
+
+\begin{enumerate}
+    \item Derivation: Uses Taylor expansion about $x_t: f(x_t+1) = f(x_t) + f'(x_t)(x_{t+1} - x_t)$
+    \item Iteative Formula: $x_{t+1} = x_t - \frac{f(x_t)}{f'(x_t)}$
+    \item Convergence: Offers quadratic convergence near root but requires good initial guess
+\end{enumerate}
+
+\subsection{Optimization via Newton's Method}
+
+To optimize a function $f(x)$, seek points where gradient is zero ($f'(x) = 0$)
+
+\begin{enumerate}
+    \item 1D: $x_{t+1} = x_t - \frac{f'(x_t)}{f''(x_t)}$
+    \item Multivariate Formula
+          \begin{enumerate}
+              \item Uses gradient vector $\delta_f$ and Hessian Matrix H (matrix of second partial derivatives)
+
+                    $x_{t+1} = x_t - H^{x_t}\delta_f(x_t)$
+
+          \end{enumerate}
+    \item Limits: Calculating inverse of Hessian Matrix is expensive for high dimensional problems
+\end{enumerate}
+
+\subsection{Gradient Descent (Steepest Descent)}
+A first-order iterative optimization algorithm for finding a local minimum.
+\begin{enumerate}
+    \item \textbf{Mechanism:} Moves in the direction of the negative gradient (steepest descent).
+
+    \item \textbf{Update Rule:}
+          \[
+              x_{t+1} = x_t - \alpha \nabla f(x_t)
+          \]
+          where $\alpha$ is the step size (or learning rate).
+
+    \item \textbf{Step Size ($\alpha$):} Critical parameter. If too small, convergence is slow; if too large, the algorithm may oscillate or diverge.
+\end{enumerate}
+
+
+\subsection{Hill Climbing}
+A local search algo analogous to climbing a hill in fog
+\begin{enumerate}
+    \item \textbf{Strategy:} Evaluates neighbors of the current state. If a neighbor is better (higher fitness), move there.
+
+    \item \textbf{Flaws:} Easily trapped in \textbf{Local Optima} (peaks lower than the highest peak), \textbf{Ridges}, or \textbf{Plateaux}.
+\end{enumerate}
+
+
+\subsection{Search Dynamics: The Core Trade-off}
+\begin{enumerate}
+    \item \textbf{Intensification (Exploitation)}
+          \begin{itemize}
+              \item \textbf{Definition:} Focusing the search on a local region where a good solution has typically already been found.
+              \item \textbf{Mechanism:} Uses local information (like gradients) to refine the current solution.
+              \item \textbf{Risk:} Premature convergence to a local optimum.
+          \end{itemize}
+
+    \item \textbf{Diversification (Exploration)}
+          \begin{itemize}
+              \item \textbf{Definition:} Generating diverse solutions to explore the global scale of the search space.
+              \item \textbf{Mechanism:} Randomization (e.g., random walks, mutation).
+              \item \textbf{Goal:} To escape local optima and discover new, promising regions of the design space.
+          \end{itemize}
+
+    \item \textbf{Random Walks}
+
+          A fundamental mechanism for exploration in metaheuristics. The next position $S_N$ is the sum of the current position and a random step $X_N$:
+          \[
+              S_N = S_{N-1} + X_N
+          \]
+
+          \begin{itemize}
+              \item \textbf{Lévy Flights:} A specific type of random walk where step lengths follow a heavy-tailed power-law distribution, allowing for occasional long-distance jumps (efficient exploration) mixed with local search.
+          \end{itemize}
+\end{enumerate}
+
+\Section{Metaheuristics}
+\begin{enumerate}
+    \item \textbf{Definition}
+          \begin{itemize}
+              \item \textbf{Heuristic:} ``To find'' or ``to discover'' by trial and error.
+              \item \textbf{Metaheuristic:} A higher-level algorithmic framework designed to solve intractable optimization problems where exact methods fail.
+          \end{itemize}
+
+    \item \textbf{Classification}
+          \begin{enumerate}
+              \item \textbf{Trajectory-based vs.\ Population-based}
+                    \begin{itemize}
+                        \item \textbf{Trajectory-based (Single Agent):} Uses a single agent tracing a path through the search space (e.g., Simulated Annealing, Hill Climbing).
+                        \item \textbf{Population-based:} Uses multiple agents interacting to share information (e.g., Genetic Algorithms, Particle Swarm Optimization). Generally better for exploration.
+                    \end{itemize}
+
+              \item \textbf{Nature-Inspired vs.\ Non-Nature Inspired}
+                    \begin{itemize}
+                        \item \textbf{Nature-Inspired:} Bio-inspired methods (e.g., Swarm Intelligence, Evolutionary Algorithms).
+                        \item \textbf{Non-Nature Inspired:} Physics-based methods (e.g., Simulated Annealing) or heuristic-based methods (e.g., Tabu Search).
+                    \end{itemize}
+          \end{enumerate}
+
+    \item \textbf{Swarm Intelligence (SI)}
+
+          The collective behavior of decentralized, self-organized systems (e.g., ant colonies, bird flocks). Swarm Intelligence algorithms use multiple agents that follow simple rules and interact locally, leading to the emergence of global intelligent behavior.
+\end{enumerate}
+
+
+\subsection{Theoretical Limits: No Free Lunch (NFL)}
+\begin{enumerate}
+
+    \begin{enumerate}
+        \item \textbf{The Theorem}
+
+              Proved by Wolpert and Macready (1997), the No Free Lunch (NFL) theorems state:
+              \begin{itemize}
+                  \item If algorithm $A$ outperforms algorithm $B$ on one class of problems, then algorithm $B$ will outperform algorithm $A$ on another class of problems.
+                  \item Averaged over all possible objective functions, all search algorithms perform equally well (equivalent to random search).
+              \end{itemize}
+
+        \item \textbf{Implications}
+              \begin{itemize}
+                  \item There is no universally ``best'' optimization algorithm.
+                  \item Algorithm efficacy is strictly tied to specific problem domains.
+                  \item Success requires incorporating domain-specific knowledge into the algorithm rather than relying on a ``magic bullet''.
+              \end{itemize}
+
+    \end{enumerate}
+\end{enumerate}
+
+% template
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
+
+\end{document}

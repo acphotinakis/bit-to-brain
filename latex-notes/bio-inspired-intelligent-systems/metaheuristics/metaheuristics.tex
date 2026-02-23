@@ -1,0 +1,71 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Metaheuristic Optimization and Local Search}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Metaheuristic Optimization and Local Search}
+
+\section{Metaheuristic Optimization and Local Search}
+
+\begin{itemize}
+    \item Optimization
+          \begin{enumerate}
+              \item Formulate such problems mathematically as finding a vector x that minimizes or maximizes objective function
+              \item Visualization
+                    \begin{enumerate}
+                        \item Location: coordinates (state variables)
+                        \item Elevatiion: Value of objective function (fitness)
+                    \end{enumerate}
+          \end{enumerate}
+    \item Local Search: Hill Climbing
+          \begin{enumerate}
+              \item Algo type keeps only a single "current" state and move to neighboring states
+              \item Are memory efficient but "short-sighted"
+          \end{enumerate}
+\end{itemize}
+
+
+\subsection{Conceptual Framework: The Node-to-Node Perspective}
+
+
+
+% template
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
+
+\end{document}

@@ -1,5 +1,4 @@
-# Python Version
-Python 3.11.2
+
 
 # Packages
 alabaster==1.0.0

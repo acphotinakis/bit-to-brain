@@ -1,0 +1,1556 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Link Layer}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Chapter 6 - Link Layer}
+
+\section{Introduction to the Link Layer (Section 6.1)}
+
+\subsection{Conceptual Framework: The Node-to-Node Perspective}
+
+\subsubsection{Core Terminology and Abstraction}
+
+While the network layer (IP) is responsible for routing a datagram from the \emph{source} host to the \emph{final destination}, the link layer is concerned with a more localized task: moving that datagram across a \textbf{single physical link} between two adjacent nodes.
+
+To describe link-layer behavior precisely, we introduce several key terms:
+
+\begin{itemize}
+    \item \textbf{Nodes}: Devices that implement link-layer protocols (hosts, routers, switches, WiFi access points).
+    \item \textbf{Links}: Communication channels connecting adjacent nodes. These may be wired (copper, fiber) or wireless (WiFi, satellite).
+    \item \textbf{Frame}: The link-layer packet. A network-layer datagram is encapsulated into a frame before transmission.
+\end{itemize}
+
+\paragraph{Heterogeneity of Links.}
+A fundamental concept is that as a datagram travels end-to-end, it typically traverses \emph{multiple, heterogeneous link types}. Each individual link may provide different service guarantees.
+
+\begin{itemize}
+    \item A datagram might begin its journey on an Ethernet LAN, traverse a fiber backbone, and conclude on a WiFi hop.
+    \item Each link-layer protocol independently determines its own reliability and error-handling procedures.
+\end{itemize}
+
+\noindent The implication is that link-layer protocols are \emph{not uniform} across the network path; each operates autonomously on its specific link.
+
+% ----------------------------------------------------------------------
+\subsection{The Transportation Analogy}
+
+To develop intuition for the relationship between the network and link layers, consider a tourist traveling from Princeton, NJ to Lausanne, Switzerland.
+
+\paragraph{Scenario Overview.}
+A tourist (representing the \textbf{datagram}) wishes to travel internationally. A travel agent (the \textbf{routing protocol}) plans the itinerary:
+
+\begin{enumerate}
+    \item Limousine from Princeton to JFK Airport
+    \item Plane from JFK to Geneva
+    \item Train from Geneva to Lausanne
+\end{enumerate}
+
+\paragraph{Mapping to Networking Concepts.}
+
+\begin{center}
+    \begin{tabular}{|l|l|p{7cm}|}
+        \hline
+        \textbf{Transportation Analogy}          & \textbf{Networking Concept} & \textbf{Function}                       \\ \hline
+        Tourist                                  & Datagram                    & Payload being transported               \\ \hline
+        Travel Agent                             & Routing Protocol            & Determines end-to-end path              \\ \hline
+        Leg of Trip                              & Link                        & Adjacent-node physical connection       \\ \hline
+        Transportation Mode (Limo, Plane, Train) & Link-Layer Protocol         & Controls per-link transmission behavior \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent \textbf{Key Insight:}
+Just as the tourist is successively encapsulated within different transportation modes, the datagram is encapsulated in different link-layer frames as it moves across different links. Each protocol operates independently on its own ``leg’’ of the journey.
+
+% ----------------------------------------------------------------------
+\subsection{Services Provided by the Link Layer}
+
+The link layer supplies a set of services to the network layer. The specific services depend on the protocol used on a particular link.
+
+\subsubsection{Framing}
+
+\begin{itemize}
+    \item \textbf{Definition}: Encapsulation of a datagram inside a link-layer frame.
+    \item \textbf{Mechanism}: A header and (often) a trailer are added:
+          \[
+              \text{Frame} = [\text{Header} \mid \text{Datagram} \mid \text{Trailer}]
+          \]
+    \item \textbf{Intuition}: Similar to enclosing a letter in an envelope with a standardized address format.
+\end{itemize}
+
+\subsubsection{Link Access (Medium Access Control, MAC)}
+
+\begin{itemize}
+    \item \textbf{Definition}: Rules governing which node transmits on a shared medium.
+    \item \textbf{Point-to-Point Links}: Simple protocols where one sender communicates with one receiver.
+    \item \textbf{Broadcast Links}: Require \textbf{MAC protocols} (e.g., Ethernet CSMA/CD, WiFi CSMA/CA) to coordinate access and reduce collisions.
+    \item \textbf{MAC Addressing}: Frames contain physical (MAC) addresses which are distinct from IP addresses and identify specific network interfaces.
+\end{itemize}
+
+\subsubsection{Reliable Delivery}
+
+\begin{itemize}
+    \item \textbf{Definition}: Ensuring a datagram is delivered across a link without errors.
+    \item \textbf{Mechanism}: Utilizes ARQ (ACKs and retransmissions).
+    \item \textbf{Graduate-Level Trade-Off}:
+          Even though TCP provides end-to-end reliability, local per-link reliability is useful on \emph{high-error links} (e.g., wireless). Local retransmission avoids expensive global retransmission.
+    \item \textbf{Optimization}: Links with very low bit-error rates (e.g., fiber) typically omit reliable delivery to avoid unnecessary overhead.
+\end{itemize}
+
+\subsubsection{Error Detection and Correction}
+
+\begin{itemize}
+    \item \textbf{Definition}: Detecting or correcting bit-level corruption.
+    \item \textbf{Mechanisms}:
+          \begin{itemize}
+              \item \emph{Error Detection}: CRC, checksums in the trailer.
+              \item \emph{Error Correction}: Forward Error Correction (FEC) enables correction without retransmission.
+          \end{itemize}
+    \item \textbf{Implementation}: Usually hardware-accelerated for speed.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\subsection{Implementation of the Link Layer}
+
+\subsubsection{Location: The Network Adapter (NIC)}
+
+Most link-layer functionality is implemented in specialized hardware known as the \textbf{Network Interface Controller (NIC)}.
+
+\paragraph{Host Architecture Overview.}
+
+\begin{verbatim}
+      [ Host Architecture ]
+               |
+[ CPU / Memory / OS (Software) ]
+      ^        |
+      | (Bus)  |
+      v        v
+[ Network Adapter (NIC) ]
+      |  - Link-layer controller chip
+      |  - Local RAM buffer
+      |  - DSP / modem components
+      |
+      v
+[ Physical Link ]
+\end{verbatim}
+
+\subsubsection{Hardware–Software Interface}
+
+\begin{itemize}
+    \item \textbf{Hardware (Controller)}:
+          Performs framing, error detection, MAC logic, and timing-sensitive operations at line rate (10~Gbps--100~Gbps).
+    \item \textbf{Software (Driver)}:
+          \begin{enumerate}
+              \item Prepares link-layer addressing information.
+              \item Activates and manages NIC hardware.
+              \item Handles interrupts to pass received datagrams to upper layers.
+          \end{enumerate}
+\end{itemize}
+
+\subsubsection{Data Flow}
+
+\paragraph{Sending Side.}
+\begin{enumerate}
+    \item OS passes the datagram to the NIC.
+    \item NIC encapsulates it in a frame, computes error-check bits.
+    \item Bits are transmitted onto the physical medium.
+\end{enumerate}
+
+\paragraph{Receiving Side.}
+\begin{enumerate}
+    \item NIC receives raw bits and reconstructs the frame.
+    \item Performs error detection and discards or accepts the frame.
+    \item If valid, NIC extracts the datagram and interrupts the OS to pass it upward.
+\end{enumerate}
+
+% ----------------------------------------------------------------------
+\subsection{Summary and Reinforcement}
+
+\paragraph{Key Terms.}
+
+\begin{itemize}
+    \item \textbf{Frame}: Link-layer protocol data unit.
+    \item \textbf{Node}: Device implementing link-layer logic.
+    \item \textbf{MAC Protocol}: Rules for shared-medium access.
+    \item \textbf{NIC}: Hardware interface implementing link-layer operations.
+\end{itemize}
+
+\paragraph{Core Relationships.}
+
+\begin{itemize}
+    \item \textbf{Link vs.\ Network Layer}: Link layer = node-to-node; network layer = end-to-end.
+    \item \textbf{Software vs.\ Hardware}: Link-layer boundary marks the shift from OS software to NIC hardware.
+\end{itemize}
+
+\paragraph{Key Takeaways.}
+
+\begin{itemize}
+    \item Link-layer protocols are independent across different links.
+    \item Services vary: wireless often requires reliability; fiber typically does not.
+    \item High-speed hardware implementations (ASICs, FPGAs) are required for error checking and MAC functions.
+\end{itemize}
+
+\section{Error-Detection and -Correction Techniques (Section 6.2)}
+
+\subsection{The Fundamental Problem: Bit Errors}
+
+\subsubsection{Concept Overview}
+
+At the physical layer, data is transmitted as analog signals that are vulnerable to
+\textbf{attenuation}, \textbf{thermal noise}, and \textbf{electromagnetic interference (EMI)}.
+These disturbances may cause the receiver to misinterpret a transmitted bit, such as reading a
+``0'' as a ``1''.
+
+The Link Layer must therefore provide mechanisms to \emph{detect} and, in some cases,
+\emph{correct} these bit errors locally, rather than forcing upper layers such as IP or TCP
+to repeatedly handle corrupted payloads. This is achieved by introducing \textbf{redundancy}
+into the transmitted frame.
+
+\subsubsection{The Error-Detection Model}
+
+Let:
+\begin{itemize}
+    \item $D$: Data protected by error checking, may include header fields
+    \item $EDC$: Error-detection/-correction bits (redundancy).
+\end{itemize}
+
+The sender transmits the bit pattern:
+\[
+    [\, D \ | \ EDC \,].
+\]
+
+The receiver obtains:
+\[
+    [\, D' \ | \ EDC' \,],
+\]
+where $D'$ and $EDC'$ may differ from $D$ and $EDC$ due to bit flips.
+
+The receiver computes a function $f(D')$ and compares it with $EDC'$.
+
+\begin{itemize}
+    \item If they match: accept the frame.
+    \item If they differ: an error is detected.
+\end{itemize}
+
+\paragraph{Error-Detection Scenario (Conceptual Diagram)}
+
+\begin{verbatim}
+      Sender                                       Receiver
+   Datagram D                                 Datagram D'
+        |                                          ^
+        v                                          |
+   [Compute EDC]                           [Check for Errors]
+        |                                          ^
+        v                                          |
+   [Frame: D | EDC] --(Bit Errors on Link)--> [Frame: D' | EDC']
+\end{verbatim}
+
+\subsubsection{Key Limitation: Undetected Errors}
+
+No error-detection method is perfect. There is always a small probability that
+bit flips occur in such a way that the corrupted data $D'$ produces a check value
+matching the corrupted $EDC'$. Such cases are called \textbf{undetected errors}.
+
+% ---------------------------------------------------------------------
+\subsection{Parity Checks}
+
+\subsubsection{Single-Bit Parity}
+
+\paragraph{Mechanism.}
+\begin{itemize}
+    \item \textbf{Even parity}: append a bit so total \# of 1s is even.
+    \item \textbf{Odd parity}: append a bit so total \# of 1s is odd.
+\end{itemize}
+
+\paragraph{Detection Capability.}
+\begin{itemize}
+    \item Detects \textbf{any odd number} of bit flips.
+    \item Fails for \textbf{even-numbered} bit flips (e.g., 2 flipped bits).
+\end{itemize}
+
+\paragraph{Intuition.}
+Simple and cheap but weak, especially for \emph{burst errors} where multiple adjacent bits corrupt.
+
+\subsubsection{Two-Dimensional Parity}
+
+\paragraph{Mechanism.}
+\begin{itemize}
+    \item Organize data $D$ into an $i \times j$ bit matrix.
+    \item Compute parity for each row and each column.
+    \item Add a possible overall parity bit.
+\end{itemize}
+
+\paragraph{Correction Capability.}
+A single flipped bit causes a parity error in:
+\begin{itemize}
+    \item its \textbf{row}, and
+    \item its \textbf{column}.
+\end{itemize}
+
+The intersection identifies the erroneous bit, enabling
+\textbf{Forward Error Correction (FEC)} by flipping it back.
+
+\paragraph{Two-Dimensional Parity Illustration}
+
+\begin{verbatim}
+          Data Columns         Row Parity
+       +-------------------+
+Row 1: | 1 0 1 0 1 | 1 |
+Row 2: | 1 0 1 1 1 | 0 |
+Row 3: | 0 1 1 1 0 | 1 |
+       +-------------------+
+Col    | 1 0 1 1 1 | 0 |
+Parity
+\end{verbatim}
+
+If, for example, the bit at (Row 2, Col 2) flips from 1 to 0, both Row 2 and Col 2 show parity errors.
+\textbf{Intersection = correctable bit position}.
+
+% ---------------------------------------------------------------------
+\subsection{Checksumming Methods}
+
+\subsubsection{Concept Overview}
+
+Checksums are lightweight, software-friendly error-detection methods predominantly used in the
+Network (IP) and Transport (TCP/UDP) layers, where performance must be balanced with acceptable detection strength.
+
+\subsubsection{The Internet Checksum (RFC 1071)}
+
+\paragraph{Sender Algorithm.}
+\begin{enumerate}
+    \item Treat the segment as a sequence of 16-bit integers.
+    \item Sum them using \textbf{1's complement arithmetic} (wraparound carry).
+    \item Take the 1's complement of the final sum to form the checksum.
+\end{enumerate}
+
+\paragraph{Receiver Algorithm.}
+\begin{enumerate}
+    \item Compute the 1's complement sum of all 16-bit words, including the checksum.
+    \item If the result is all 1s (i.e., $1111\ldots1111$), no errors are detected.
+    \item Otherwise, an error is detected.
+\end{enumerate}
+
+\paragraph{Intuition.}
+1's complement arithmetic allows uniform behavior across different byte-order conventions.
+
+% ---------------------------------------------------------------------
+\subsection{Cyclic Redundancy Check (CRC)}
+
+\subsubsection{Concept Overview}
+
+CRC is the dominant error-detection technique in the Link Layer (Ethernet, WiFi).
+It relies on \textbf{polynomial arithmetic modulo 2}.
+Hardware implementations (e.g., linear feedback shift registers) make CRC extremely fast and robust.
+
+\subsubsection{Mathematical Framework}
+
+\begin{itemize}
+    \item Treat data $D$ as a polynomial $D(x)$ over GF(2).
+    \item Let $G(x)$ (generator polynomial) be a publicly defined $(r+1)$-bit pattern.
+    \item Goal: append an $r$-bit residue $R$ so that:
+\end{itemize}
+
+\[
+    \frac{D \cdot 2^r \oplus R}{G} = n, \qquad \text{remainder } 0.
+\]
+
+\subsubsection{Sender Algorithm}
+
+\begin{enumerate}
+    \item Append $r$ zeros to $D$ to form $D \cdot 2^r$.
+    \item Divide ($D \cdot 2^r$) by $G$ using modulo-2 division.
+    \item The remainder is the CRC value $R$.
+    \item Transmit $[\, D \ | \ R \,]$.
+\end{enumerate}
+
+\subsubsection{Receiver Algorithm}
+
+\begin{enumerate}
+    \item Receive $[\, D' \ | \ R' \,]$.
+    \item Divide the whole bitstring by $G$.
+    \item If the remainder is zero, frame is assumed uncorrupted; otherwise, error detected.
+\end{enumerate}
+
+\subsubsection{Example: Polynomial Division}
+
+Let $D = 101110$ and $G = 1001$ (so $r=3$).
+
+\paragraph{Step 1:} Append 3 zeros:
+\[
+    101110000.
+\]
+
+\paragraph{Step 2:} Perform modulo-2 division:
+
+\begin{verbatim}
+              101011   <-- Quotient (unused)
+         ___________
+ 1001 ) 101110000
+        1001
+        ----
+         0101
+         0000
+         ----
+          1010
+          1001
+          ----
+           0110
+           0000
+           ----
+            1100
+            1001
+            ----
+             1010
+             1001
+             ----
+              011   <-- Remainder R
+\end{verbatim}
+
+\paragraph{Result.}
+Sender transmits:
+\[
+    [\,101110\ 011\,].
+\]
+
+\subsubsection{Practical Power of CRC}
+
+CRC-32 (Ethernet) detects:
+\begin{itemize}
+    \item All burst errors of length $< r+1$.
+    \item Any odd number of bit errors.
+\end{itemize}
+
+Probability of undetected error is typically $<10^{-12}$ for real-world frames.
+
+% ---------------------------------------------------------------------
+\subsection{Summary and Reinforcement}
+
+\subsubsection{Key Terms}
+
+\begin{itemize}
+    \item \textbf{BER (Bit Error Ratio)}: Probability a bit is received incorrectly.
+    \item \textbf{FEC (Forward Error Correction)}: Receiver-based correction without retransmission.
+    \item \textbf{Modulo-2 Arithmetic}: XOR-based arithmetic with no carries.
+    \item \textbf{Generator Polynomial $G(x)$}: Divisor used for CRC.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item Parity: simplest but weakest.
+    \item Checksums: software-efficient but moderate detection capability.
+    \item CRC: hardware-efficient, extremely strong detection.
+\end{itemize}
+
+\subsubsection{Key Insights}
+
+\begin{itemize}
+    \item Reliability is probabilistic; no method guarantees perfect detection.
+    \item FEC reduces latency on noisy or high-latency links (e.g., wireless, satellite).
+    \item CRC hardware uses XOR gates and LFSRs for high-speed computation.
+\end{itemize}
+
+
+\section{Multiple Access Links and Protocols (Section 6.3)}
+
+\subsection{The Multiple Access Problem}
+
+\subsubsection{Concept Overview}
+
+Up to this point, we have examined \emph{point-to-point} links (e.g., a dedicated wire between two routers).
+However, many networks rely on a \textbf{broadcast link}, where \emph{multiple nodes share a common communication medium}. Examples include:
+\begin{itemize}
+    \item Traditional shared-medium Ethernet,
+    \item WiFi (802.11),
+    \item Satellite networks,
+    \item Shared coaxial cable systems.
+\end{itemize}
+
+\paragraph{Cocktail Party Analogy.}
+If multiple people in a room speak at the same time, no one is understood. Similarly, nodes on a broadcast channel must coordinate \emph{who transmits when}.
+
+\subsubsection{Collisions}
+
+When two or more nodes transmit simultaneously, their signals interfere, producing a \textbf{collision}.
+\begin{itemize}
+    \item Result: the signal becomes garbled and the frame is lost.
+    \item Consequence: channel bandwidth is wasted during corrupted transmission.
+\end{itemize}
+
+\subsubsection{The Multiple Access Protocol}
+
+A \textbf{Multiple Access Protocol} is a distributed algorithm that determines how nodes share a broadcast channel.
+
+\paragraph{Ideal Characteristics.}
+For a channel of rate $R$ with $M$ nodes, a good protocol should:
+\begin{enumerate}
+    \item Provide throughput $R$ when one node transmits and $R/M$ per node at full load,
+    \item Be decentralized (no master node),
+    \item Be simple and inexpensive to implement.
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\subsection{Taxonomy of Multiple Access Protocols}
+
+Multiple access protocols fall into three broad families:
+
+\begin{enumerate}
+    \item \textbf{Channel Partitioning Protocols}:
+          \begin{enumerate}
+              \item divide channel into sections (time/frequency) and assign exclusively.
+              \item allocate piece to node for exclusive use
+          \end{enumerate}
+    \item \textbf{Random Access Protocols}: allow nodes to transmit at will; detect/recover from collisions.
+          \begin{enumerate}
+              \item allow nodes to transmit at will; detect/recover from collisions.
+          \end{enumerate}
+    \item \textbf{Taking-Turns Protocols}:
+          \begin{enumerate}
+              \item nodes transmit in a coordinated sequence.
+          \end{enumerate}
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\subsection{Channel Partitioning Protocols}
+
+\subsubsection{TDMA (Time Division Multiple Access)}
+
+\paragraph{Mechanism.}
+\begin{itemize}
+    \item Channel divided into frames with $N$ fixed time slots.
+    \item Each node transmits only in its assigned slot.
+    \item Slots that're unused go idle
+\end{itemize}
+
+\paragraph{Analysis.}
+\begin{itemize}
+    \item \textbf{Pro}: No collisions; perfect fairness.
+    \item \textbf{Con}: Highly inefficient at low load—many slots may be idle.
+\end{itemize}
+
+\subsubsection{FDMA (Frequency Division Multiple Access)}
+
+\paragraph{Mechanism.}
+\begin{itemize}
+    \item The total bandwidth $R$ is divided into $N$ frequency bands of width $R/N$.
+    \item Each node transmits on its dedicated band.
+    \item Unused transmission time in frequency bands go idle.
+\end{itemize}
+
+\paragraph{Analysis.}
+Similar pros and cons as TDMA: high efficiency at heavy load but wasteful at light load.
+
+% ---------------------------------------------------------------------
+\subsection{Random Access Protocols}
+
+Optimized for \textbf{bursty} traffic. Nodes transmit at the full channel rate $R$.
+If a collision occurs, the node waits for a random delay and retransmits.
+
+% -----------------------------
+\subsubsection{Slotted ALOHA}
+
+\paragraph{Mechanism.}
+\begin{itemize}
+    \item Time is divided into fixed-size slots of duration $L/R$.
+    \item Nodes are synchronized to slot boundaries.
+    \item A node transmits at the \emph{beginning} of the next slot when it has a frame.
+    \item On collision, nodes retransmit with probability $p$ in future slots.
+\end{itemize}
+
+\paragraph{Efficiency Analysis.}
+Let each of $N$ nodes attempt transmission with probability $p$:
+\[
+    \Pr(\text{Node A succeeds}) = p(1-p)^{N-1},
+\]
+\[
+    \Pr(\text{Any node succeeds}) = Np(1-p)^{N-1}.
+\]
+
+Maximizing with respect to $p$ gives:
+\[
+    \text{Maximum Efficiency} = \frac{1}{e} \approx 0.37.
+\]
+
+\paragraph{Intuition.}
+About 37\% of slots carry a successful transmission; the rest are idle or suffer collisions.
+
+% -----------------------------
+\subsubsection{Pure ALOHA (Unslotted)}
+
+\paragraph{Mechanism.}
+Nodes transmit immediately when a frame is ready—no slot synchronization.
+
+\paragraph{Collision Window.}
+A transmission at time $t_0$ collides with any transmission in $(t_0 - 1,\, t_0 + 1)$.
+
+\paragraph{Efficiency.}
+\[
+    \text{Max Efficiency} = \frac{1}{2e} \approx 0.18.
+\]
+
+% -----------------------------
+\subsubsection{CSMA (Carrier Sense Multiple Access)}
+
+\paragraph{Philosophy.}
+``Listen before transmitting.''
+
+\paragraph{Mechanism.}
+\begin{enumerate}
+    \item If the channel is idle, transmit.
+    \item If the channel is busy, wait until idle.
+\end{enumerate}
+
+\paragraph{Why Collisions Still Occur?}
+\textbf{Propagation delay}.
+A node may sense the channel idle because another node’s signal has not yet arrived.
+
+% -----------------------------
+\subsubsection{CSMA/CD (Carrier Sense Multiple Access with Collision Detection)}
+
+\paragraph{Philosophy.}
+``Listen while transmitting.''
+
+\paragraph{Mechanism.}
+\begin{enumerate}
+    \item If channel idle → transmit.
+    \item During transmission, monitor channel energy.
+    \item If a collision is detected:
+          \begin{itemize}
+              \item Abort transmission.
+              \item Send a 48-bit jam signal.
+          \end{itemize}
+    \item Use \textbf{binary exponential backoff}:
+          \[
+              K \in \{0,1,\dots,2^n - 1\},
+          \]
+          where $n$ is the number of collisions so far. Wait $K \cdot 512$ bit-times.
+\end{enumerate}
+
+\paragraph{Efficiency.}
+\[
+    \text{Efficiency} = \frac{1}{1 + 5(d_{prop}/d_{trans})}.
+\]
+
+\paragraph{Insight.}
+Efficiency increases when:
+\begin{itemize}
+    \item propagation delay $\to 0$,
+    \item frame size $\to \infty$.
+\end{itemize}
+
+Thus CSMA/CD is most effective on short links with large frames.
+
+% ---------------------------------------------------------------------
+\subsection{Taking-Turns Protocols}
+
+\subsubsection{Polling}
+
+\paragraph{Mechanism.}
+A master node polls each slave node in turn:
+``Do you have data to send?''
+
+\paragraph{Trade-offs.}
+\begin{itemize}
+    \item No collisions.
+    \item Polling overhead and single point of failure.
+\end{itemize}
+
+\subsubsection{Token Passing}
+
+\paragraph{Mechanism.}
+A token frame circulates among nodes.
+A node may transmit only when holding the token.
+
+\paragraph{Trade-offs.}
+\begin{itemize}
+    \item Highly efficient at high load.
+    \item Token recovery is complex if a node crashes while holding it.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{DOCSIS: Multiple Access for Cable Internet}
+
+DOCSIS divides communication into downstream and upstream paths:
+
+\paragraph{Downstream (CMTS → Cable Modems).}
+Broadcast channel—no contention.
+
+\paragraph{Upstream (Cable Modems → CMTS).}
+Multiple modems contend for access:
+\begin{itemize}
+    \item Uses \textbf{TDMA} for actual data slots.
+    \item Uses \textbf{Slotted ALOHA} for request messages.
+\end{itemize}
+
+\paragraph{Process.}
+\begin{enumerate}
+    \item Modems send MAP requests via Slotted ALOHA.
+    \item The CMTS assigns specific TDMA slots for collision-free data transmission.
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\subsection{Summary and Reinforcement}
+
+\subsubsection{Key Terms}
+
+\begin{itemize}
+    \item \textbf{Collision}: simultaneous transmissions causing interference.
+    \item \textbf{Carrier Sense}: checking whether the channel is idle.
+    \item \textbf{Exponential Backoff}: dynamic waiting time based on congestion.
+    \item \textbf{Propagation Delay}: physical travel time of a signal.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item \textbf{ALOHA}: efficient at low load, collapses at high load.
+    \item \textbf{TDMA/FDMA}: inefficient at low load, ideal at high load.
+    \item \textbf{CSMA/CD}: robust across medium–high loads.
+\end{itemize}
+
+\subsubsection{Key Insights}
+
+\begin{itemize}
+    \item No protocol is universally best—performance depends on traffic patterns.
+    \item Longer physical links reduce CSMA/CD efficiency (delayed collision detection).
+    \item Exponential backoff is essential to avoid congestion collapse in random-access systems.
+\end{itemize}
+
+
+\section{Switched Local Area Networks (Section 6.4)}
+
+\subsection{Link-Layer Addressing and ARP (6.4.1)}
+
+\subsubsection{MAC Addresses: The Physical Identity}
+
+\paragraph{Concept Overview.}
+
+IP addresses are hierarchical and location-dependent (like a postal address), whereas
+\textbf{MAC addresses} are flat, permanent identifiers (like a fingerprint or Social Security Number).
+A MAC address is burned into the NIC ROM and remains constant regardless of network location; a device moved from New York to Tokyo receives a new IP address but retains the same MAC address.
+
+\paragraph{Technical Mechanism.}
+
+\begin{itemize}
+    \item \textbf{Format:} 48 bits (6 bytes), written in hexadecimal (e.g., \texttt{1A:2B:3C:4D:5E:6F}).
+    \item \textbf{Allocation:} IEEE assigns Organizationally Unique Identifiers (OUIs) for the first 24 bits; vendors assign the remaining 24 bits.
+    \item \textbf{Broadcast Address:} \texttt{FF:FF:FF:FF:FF:FF}. Frames sent to this address are processed by \emph{all} devices on the LAN.
+\end{itemize}
+
+\paragraph{Why Two Addresses (IP and MAC)?}
+
+\begin{itemize}
+    \item \textbf{Layering Abstraction:}
+          Network-layer routing must be independent of the underlying link technology.
+          Using MAC-only addressing would require global flat routing tables of size proportional to the number of hosts.
+    \item \textbf{Modularity:}
+          Using IP addresses exclusively at the link layer would require every link protocol to understand IP addressing.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsubsection{ARP: Address Resolution Protocol}
+
+\paragraph{The Problem.}
+
+A sender knows the destination's \emph{IP address} but requires the \emph{MAC address} to send a frame on a LAN.
+ARP solves:
+\[
+    192.168.1.5 \longrightarrow 00:13:49:AE:F2:10.
+\]
+
+\paragraph{Mechanism: The ARP Protocol.}
+
+\begin{itemize}
+    \item \textbf{ARP Table:} A cache stored in RAM containing entries of the form:
+          \[
+              \langle \text{IP Address}, \text{MAC Address}, \text{TTL} \rangle.
+          \]
+          TTL ensures entries expire (commonly after 20 minutes).
+
+    \item \textbf{ARP Query (Broadcast):}
+          If an IP address is unknown, the host broadcasts an ARP request:
+          \[
+              \text{Dest MAC} = \texttt{FF:FF:FF:FF:FF:FF}.
+          \]
+
+    \item \textbf{ARP Response (Unicast):}
+          The owner of the requested IP replies directly with its MAC address.
+
+    \item \textbf{Caching:}
+          Sender stores the discovered mapping in its ARP table.
+\end{itemize}
+
+\paragraph{ARP Operation Diagram.}
+
+\begin{verbatim}
+      [Node A]                                         [Node B]
+ (IP: A.A.A.A, MAC: 11-11)                       (IP: B.B.B.B, MAC: 22-22)
+       |                                                 |
+       |  1. Check ARP Table (Miss)                      |
+       |------------------------------------------------>|
+       |  2. ARP Query (Broadcast Frame)                 |
+       |     [Src: 11-11, Dst: FF-FF, TargetIP: B.B.B.B] |
+       |                                                 |
+       |                                                 | 3. B identifies its IP
+       |<------------------------------------------------|
+       |  4. ARP Response (Unicast Frame)                |
+       |     [Src: 22-22, Dst: 11-11, MyMAC: 22-22]      |
+       |                                                 |
+       |  5. Update ARP Table                            |
+       v
+\end{verbatim}
+
+\subsubsection{Sending a Packet Off-Subnet}
+
+If Node A sends to a destination Node Z on a remote subnet, \emph{Node A never ARPs for Node Z's MAC}.
+Instead, Node A ARPs for the \textbf{First-Hop Router's MAC}.
+
+\begin{itemize}
+    \item \textbf{Destination MAC:} Router’s interface MAC.
+    \item \textbf{Destination IP:} Node Z’s ultimate IP address.
+\end{itemize}
+
+The router removes the link-layer header, examines the IP packet, forwards to the next hop, and constructs a new link-layer frame for the next link.
+
+% ---------------------------------------------------------------------
+\subsection{Ethernet (6.4.2)}
+
+\subsubsection{Overview and History}
+
+Ethernet became the dominant wired LAN technology, surpassing Token Ring and ATM due to:
+\begin{enumerate}
+    \item \textbf{Simplicity:} No tokens or complex control mechanisms.
+    \item \textbf{Evolution:} Speed increases (10M $\rightarrow$ 100M $\rightarrow$ 1G $\rightarrow$ 10G $\rightarrow$ 400G) without changing the frame structure.
+\end{enumerate}
+
+\paragraph{Topology.}
+\begin{itemize}
+    \item \textbf{Legacy:} Bus topology, coaxial cable, collisions common.
+    \item \textbf{Modern:} Star topology, switches, full-duplex, no collisions.
+\end{itemize}
+
+\subsubsection{Ethernet Frame Structure}
+
+\begin{verbatim}
++----------+----------+-----------+-----------+----------------+-------+
+| Preamble | Dest MAC | Source MAC|   Type    | Data (Payload) |  CRC  |
+| (8 Bytes)| (6 Bytes)| (6 Bytes) | (2 Bytes) | (46-1500 Bytes)|(4 B)  |
++----------+----------+-----------+-----------+----------------+-------+
+\end{verbatim}
+
+\paragraph{Fields.}
+
+\begin{itemize}
+    \item \textbf{Preamble (8 bytes):} Seven bytes of 10101010 and one byte of 10101011 for receiver clock synchronization.
+    \item \textbf{Addresses:} Destination and source MAC addresses.
+    \item \textbf{Type:} Identifies higher-layer protocol (e.g., IPv4, IPv6, ARP).
+    \item \textbf{Data:} MTU = 1500 bytes; minimum 46 bytes (padding added if needed).
+    \item \textbf{CRC:} 32-bit error detection. Frames failing CRC are dropped (Ethernet does not retransmit).
+\end{itemize}
+
+\subsubsection{Service Model}
+
+\begin{itemize}
+    \item \textbf{Connectionless:} No handshake.
+    \item \textbf{Unreliable:} No ACKs; corrupted frames are silently discarded.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Link-Layer Switches (6.4.3)}
+
+\subsubsection{Definition and Purpose}
+
+A switch is a transparent Layer-2 packet switch that forwards frames based on MAC addresses.
+Unlike hubs, switches isolate collision domains and support parallel transmissions.
+
+\subsubsection{Switch Table}
+
+Each switch maintains a table of entries:
+\[
+    \langle \text{MAC Address}, \text{Interface}, \text{Timestamp} \rangle.
+\]
+
+\subsubsection{Self-Learning Algorithm (Plug-and-Play)}
+
+\begin{enumerate}
+    \item \textbf{Frame Arrives:} On interface $x$ with source $S$ and destination $D$.
+    \item \textbf{Learn:} Update: “MAC $S$ is on interface $x$”.
+    \item \textbf{Forwarding:}
+          \begin{itemize}
+              \item If $D$ known and mapped to interface $y$:
+                    \begin{itemize}
+                        \item If $x = y$: drop (same segment).
+                        \item If $x \neq y$: forward to $y$ only.
+                    \end{itemize}
+              \item If $D$ unknown: \textbf{flood} to all interfaces except $x$.
+          \end{itemize}
+\end{enumerate}
+
+\paragraph{Self-Learning Sequence.}
+
+\begin{verbatim}
+Initial State: Empty Table []
+
+Event 1: A (on Port 1) sends to B (on Port 2).
+   -> Switch Learns: {A: Port 1}
+   -> Switch Unknown Dest B: Floods to Ports 2, 3, 4.
+
+Event 2: B replies to A.
+   -> Switch Learns: {B: Port 2}
+   -> Switch Checks Dest A: Known! (Port 1)
+   -> Switch Forwards ONLY to Port 1.
+\end{verbatim}
+
+\subsubsection{Switches vs. Routers}
+
+\begin{center}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Feature}  & \textbf{Hub}     & \textbf{Switch (L2)}    & \textbf{Router (L3)}          \\
+        \hline
+        Traffic Isolation & No               & Yes (collision domains) & Yes (broadcast domains)       \\
+        Addressing        & None             & MAC (flat)              & IP (hierarchical)             \\
+        Routing           & None             & Self-learning           & Routing protocols (OSPF, BGP) \\
+        Processing        & Bit-level repeat & Frame inspection        & Packet inspection + TTL       \\
+        Throughput        & Shared           & High (parallel)         & Lower (complex processing)    \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\paragraph{Key Insight.}
+Switches scale well and are plug-and-play, but routers are essential to prevent broadcast storms and implement hierarchical routing.
+
+% ---------------------------------------------------------------------
+\subsection{Virtual Local Area Networks (VLANs) (6.4.4)}
+
+\subsubsection{Motivation}
+
+In a traditional LAN:
+\begin{itemize}
+    \item Excessive broadcast traffic wastes CPU cycles,
+    \item Reorganization requires physical rewiring,
+    \item All users can see broadcast frames (security issue).
+\end{itemize}
+
+\subsubsection{Port-Based VLANs}
+
+A VLAN-capable switch assigns ports to logical groups.
+
+\begin{itemize}
+    \item Ports 1--8 $\rightarrow$ VLAN 10 (Engineering).
+    \item Ports 9--16 $\rightarrow$ VLAN 20 (Sales).
+\end{itemize}
+
+Broadcasts remain within VLAN boundaries.
+Routing is required for communication across VLANs.
+
+\subsubsection{VLAN Trunking (802.1Q)}
+
+When VLANs span multiple switches, a trunk link carries frames for all VLANs using the \textbf{802.1Q tag}.
+
+\paragraph{802.1Q Frame Tag.}
+
+\begin{itemize}
+    \item \textbf{TPID:} \texttt{0x8100} (identifies tagged frames).
+    \item \textbf{TCI:} Contains 12-bit VLAN ID.
+\end{itemize}
+
+\paragraph{Operation:}
+\begin{enumerate}
+    \item Switch A receives an untagged frame from VLAN 10.
+    \item Switch A inserts 802.1Q tag and forwards over trunk.
+    \item Switch B reads tag (ID=10), strips it, and forwards to VLAN 10 ports.
+\end{enumerate}
+
+\paragraph{802.1Q Tag Illustration.}
+
+\begin{verbatim}
+Original: [Dest][Src][Type][Data][CRC]
+Tagged:   [Dest][Src][Type 8100][VLAN ID][Type][Data][CRC]
+                     ^-- Added 4 Bytes --^
+\end{verbatim}
+
+% ---------------------------------------------------------------------
+\subsection{Summary and Reinforcement}
+
+\subsubsection{Key Terms}
+
+\begin{itemize}
+    \item \textbf{MAC Address}: 48-bit hardware identifier.
+    \item \textbf{ARP}: Local broadcast-based IP $\rightarrow$ MAC resolution.
+    \item \textbf{Switching Table}: $\langle$MAC, Interface, TTL$\rangle$ mapping.
+    \item \textbf{Collision Domain}: Range where collisions may occur; broken by switches.
+    \item \textbf{Broadcast Domain}: Range where broadcast frames propagate; broken by routers.
+    \item \textbf{VLAN}: Logical segmentation of Layer-2 networks.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item IP gets packets to the correct subnet; MAC gets packets to the correct interface.
+    \item Switches isolate collisions; hubs do not.
+    \item VLANs separate groups logically; routers interconnect them.
+\end{itemize}
+
+\subsubsection{Key Insights}
+
+\begin{itemize}
+    \item \textbf{Self-learning} allowed Ethernet to scale without manual configuration.
+    \item \textbf{Plug-and-play:} Ethernet works instantly compared to IP, which requires configuration (DHCP/manual).
+    \item \textbf{Scalability Limit:} Broadcast traffic grows with $N$; routers are required to partition large L2 domains.
+\end{itemize}
+
+
+\section{Link Virtualization: A Network as a Link Layer (Section 6.5)}
+
+\subsection{The Evolution of the ``Link'' Abstraction}
+
+\subsubsection{Concept Overview}
+
+Throughout this course, our definition of a ``link'' has expanded from a simple physical connection to a sophisticated logical abstraction. This evolution culminates in the concept of \textbf{Link Virtualization}.
+
+\begin{itemize}
+    \item \textbf{Phase 1: The Physical Wire} – A copper wire directly connecting two hosts.
+    \item \textbf{Phase 2: The Shared Medium} – A medium shared by many nodes (Ethernet bus, WiFi spectrum) requiring multiple access protocols.
+    \item \textbf{Phase 3: The Switched Fabric} – A switched LAN acting as a transparent fabric connecting hosts.
+    \item \textbf{Phase 4: The Network as a Link (Virtualization)} – An entire network (e.g., the PSTN or MPLS core) can act as a \emph{single logical link} to the upper layers.
+\end{itemize}
+
+\subsubsection{The Dial-Up Analogy}
+
+A home user connecting to an ISP via dial-up experiences:
+
+\begin{itemize}
+    \item \textbf{Physical Reality:} The signal traverses the PSTN (switches, copper, fiber, multiplexers).
+    \item \textbf{Link Layer View:} The operating system sees a simple point-to-point link to the ISP.
+    \item \textbf{Virtualization:} The PSTN \emph{virtualizes} a link for the Internet.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Multiprotocol Label Switching (MPLS)}
+
+\subsubsection{Definition and Purpose}
+
+Multiprotocol Label Switching (MPLS) is a forwarding technology using short, fixed-length \textbf{labels} rather than destination IP address lookups.
+
+\begin{itemize}
+    \item \textbf{Original Goal:} Speed up packet forwarding (IP lookup was slow in 1990s hardware).
+    \item \textbf{Modern Use:} Traffic Engineering (TE), Virtual Private Networks (VPNs), Fast Reroute.
+    \item \textbf{Hybrid Nature:} MPLS sits between Layers 2 and 3 (``Layer 2.5'').
+\end{itemize}
+
+\subsubsection{The MPLS Header}
+
+A new 32-bit MPLS header is inserted between the link-layer header (e.g., Ethernet) and the IP header.
+
+\begin{verbatim}
++------------------+-------------+-----------+----------------------+
+| Layer 2 Header   | MPLS Header | IP Header |      Payload         |
+| (e.g., Ethernet) | (32 bits)   |           |                      |
++------------------+-------------+-----------+----------------------+
+\end{verbatim}
+
+\paragraph{Header Fields (32 bits):}
+
+\begin{enumerate}
+    \item \textbf{Label (20 bits)} – Used to forward packets.
+    \item \textbf{Exp (3 bits)} – Typically used for QoS / Class of Service.
+    \item \textbf{S (1 bit)} – Bottom-of-stack indicator (MPLS supports label stacking).
+    \item \textbf{TTL (8 bits)} – Prevents forwarding loops (same function as IP TTL).
+\end{enumerate}
+
+\subsubsection{Mechanism: Label Switched Routers (LSRs)}
+
+Routers supporting MPLS are called \textbf{Label Switched Routers}. They forward based solely on the label rather than inspecting destination IP addresses.
+
+\paragraph{MPLS Forwarding Table:}
+
+Traditional IP forwarding table:
+
+\[
+    \text{Dest IP Prefix} \rightarrow \text{Out Interface}.
+\]
+
+MPLS table:
+
+\[
+    [\text{In Label}, \text{In Interface}] \rightarrow [\text{Out Label}, \text{Out Interface}].
+\]
+
+\paragraph{Forwarding Process:}
+
+\begin{enumerate}
+    \item \textbf{Ingress (Label Push):}
+          The ingress router assigns a label (e.g., 10) based on the IP header and attaches the MPLS header.
+    \item \textbf{Transit (Label Swap):}
+          A transit LSR swaps the incoming label with the appropriate outgoing label.
+    \item \textbf{Egress (Label Pop):}
+          The final router strips the label and forwards the remaining IP packet normally.
+\end{enumerate}
+
+\paragraph{MPLS Forwarding Example.}
+
+\begin{verbatim}
+     [R1: Ingress]          [R2: Transit]          [R3: Egress]
+      (IP Router)            (LSR)                  (IP Router)
+          |                      |                      |
+[IP Packet] ---> [ PUSH Label 6 ] ---> [ SWAP 6->12 ] ---> [ POP Label ] -> [IP Packet]
+          |       [ Label: 6 ]   |      [ Label: 12 ]   |
+          |                      |                      |
+     [Lookup Dest IP]       [Lookup Label 6]       [Lookup Dest IP]
+\end{verbatim}
+
+% ---------------------------------------------------------------------
+\subsection{Why MPLS? (The Value Proposition)}
+
+If routers can now forward IP packets at wire speed, why use MPLS?
+
+\subsubsection{Traffic Engineering}
+
+\begin{itemize}
+    \item \textbf{IP Limitation:}
+          IP routing (OSPF/BGP) selects the \emph{shortest path}, even if congested.
+    \item \textbf{MPLS Solution:}
+          Operators define explicit traffic paths:
+          \begin{itemize}
+              \item Voice traffic (Label 100) via fast path.
+              \item Bulk email (Label 200) via slower, uncongested path.
+          \end{itemize}
+    \item \textbf{Mechanism:}
+          Establish a Label Switched Path (LSP) that behaves like a virtual circuit.
+\end{itemize}
+
+\subsubsection{Fast Reroute (Restoration)}
+
+\begin{itemize}
+    \item MPLS can precompute backups for every path.
+    \item Failover occurs in under 50ms.
+    \item OSPF convergence may take several seconds.
+\end{itemize}
+
+\subsubsection{Virtual Private Networks (VPNs)}
+
+\begin{itemize}
+    \item ISPs use MPLS to create traffic-isolated logical networks for customers.
+    \item Customer A’s labeled packets and Customer B’s labeled packets share the same physical infrastructure but remain isolated.
+    \item Each customer views the ISP backbone as a virtual private link between branch offices.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Summary and Reinforcement}
+
+\subsubsection{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \textbf{MPLS (Multiprotocol Label Switching):}
+          Forwarding technology using short labels rather than IP prefixes.
+    \item \textbf{LSR (Label Switched Router):}
+          MPLS-capable router performing label swapping.
+    \item \textbf{LSP (Label Switched Path):}
+          Predefined forwarding path taken by MPLS labeled packets.
+    \item \textbf{Traffic Engineering:}
+          Steering traffic along controlled paths to optimize performance.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item MPLS is often described as \textbf{Layer 2.5}: encapsulated by L2, encapsulating L3.
+    \item IP is simple and stateless but limited; MPLS is more complex but offers flexible routing, TE, VPNs.
+\end{itemize}
+
+\subsubsection{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item \textbf{Decoupling Routing from Forwarding:}
+          MPLS separates \emph{path selection} (at ingress) from \emph{hop-by-hop forwarding} (label swapping).
+    \item \textbf{``Link'' as a Construct:}
+          MPLS demonstrates that a “link” to IP may represent an entire network of LSRs and forwarding rules.
+    \item \textbf{SDN Connection:}
+          Software-Defined Networking generalizes the MPLS concept: forwarding entries are programmed by a controller rather than by distributed signaling (LDP/RSVP-TE).
+\end{itemize}
+
+\section{Data Center Networking (Section 6.6)}
+
+\subsection{Concept Overview}
+
+A \textbf{Data Center Network (DCN)} is the internal, complex computer network that interconnects the tens to hundreds of thousands of computing devices (hosts) within a massive data center \cite{13885}. DCNs are the backbone of modern cloud computing and large Internet service platforms like search, streaming video, e-commerce, social media, and large-scale machine learning systems \cite{13886}. Modern DCNs must simultaneously support high throughput, low latency, failure resilience, and massive scalability.
+
+\paragraph*{Purpose and Applications.}
+DCNs support several large-scale services:
+\begin{itemize}
+    \item \cite{13886} \textbf{Content Provision:} Serving Web pages, search results, e-mail, and streaming video to external clients.
+    \item \cite{13886} \textbf{Massively Parallel Computing:} Supporting distributed computing tasks such as search index construction, data analytics, and machine learning pipelines.
+    \item \cite{13886} \textbf{Cloud Computing/Services:} Providing IaaS, PaaS, and SaaS for platforms such as AWS, Azure, and Google Cloud.
+\end{itemize}
+
+\paragraph*{Underlying Mechanisms (Hosts and Racks).}
+\begin{itemize}
+    \item \cite{13886} The fundamental work unit in a DCN is the \textbf{host} (or blade), a commodity server with CPU, RAM, and local storage.
+    \item \cite{13886} Hosts are physically organized into \textbf{racks}, typically containing 20--40 hosts.
+    \item Each rack connects upward into the DCN via a \textbf{Top-of-Rack (TOR) switch}, which aggregates host traffic and forwards it toward higher-tier switching layers.
+\end{itemize}
+
+\paragraph*{Workload Characteristics (From the Textbook).}
+According to Section 6.6, DCN workloads display the following important patterns:
+\begin{itemize}
+    \item \textbf{Highly parallel applications} generate \emph{shuffle traffic}, where many hosts exchange intermediate data.
+    \item \textbf{Data analytics jobs} exhibit \emph{query fan-out}: a single user request may trigger hundreds of internal queries.
+    \item \textbf{East-West traffic dominates}: Most DCN traffic flows between hosts \emph{within} a data center rather than between the data center and the external Internet.
+\end{itemize}
+
+These patterns heavily influence DCN architecture and routing strategies.
+
+% ------------------------------------------------------------------
+
+\subsection{Technical Mechanism: Data Center Architectures}
+
+The internal network topology is predominantly hierarchical and designed for massive scale and high throughput \cite{13778}. This structure resembles a \textbf{Clos network} (also called a \textbf{fat-tree topology}), providing rich multi-path connectivity and high bisection bandwidth \cite{13778,13779}. Conceptually, a Clos fabric behaves like one giant non-blocking switch interconnecting all hosts.
+
+\subsubsection{A. Hierarchical/Tiered Network Topology}
+
+Traditional DCNs adopt a three-tier hierarchy beneath a set of border routers:
+
+\begin{center}
+    \begin{tabular}{|c|c|p{5cm}|p{4.5cm}|}
+        \hline
+        \textbf{Layer}       & \textbf{Element}     & \textbf{Function}                                & \textbf{Interconnection}                         \\
+        \hline
+        Edge                 & Hosts (Blades)       & Run applications and store data.                 & Connect to TOR switches (40--100 Gbps Ethernet). \\
+        \hline
+        Tier 3 (Access)      & TOR Switch           & Aggregates host traffic within a rack.           & Connects to Tier-2 switches.                     \\
+        \hline
+        Tier 2 (Aggregation) & Tier-2 Switches      & Aggregate traffic from dozens of TORs.           & Connect to Tier-1/core switches.                 \\
+        \hline
+        Tier 1 (Core)        & Core/Tier-1 Switches & Provide fabric-wide interconnection.             & Connect to Tier-2 switches and border routers.   \\
+        \hline
+        Border               & Border Routers       & Connect the DCN to ISPs and the public Internet. & Connect upward to external networks.             \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\paragraph*{Oversubscription (Important Detail from Textbook).}
+Traditional hierarchical DCNs often suffer from \textbf{oversubscription}, meaning:
+\[
+    \text{Capacity(host-to-host)} \; > \; \text{Capacity(available upward bandwidth)}.
+\]
+Typical oversubscription ratios in early DCNs were 5:1, 10:1, or even 20:1, severely limiting inter-rack throughput.
+
+% ------------------------------------------------------------------
+
+\subsubsection{B. The Challenge of Limited Host-to-Host Capacity}
+
+\paragraph*{Problem.}
+\cite{13778} The tiered architecture limits \textbf{bisection bandwidth}: the capacity supporting traffic between hosts in different halves of the network. This constraint is most severe when much of the traffic is \emph{cross-rack}, which is typical for distributed applications.
+
+\paragraph*{Mechanism of Failure (Bottleneck).}
+\cite{13778} A TOR switch may serve 40 hosts at 10 Gbps each (400 Gbps total), yet its uplink capacity to Tier 2 might be only 100 Gbps. When many hosts concurrently communicate externally or across racks, the uplink becomes an immediate bottleneck.
+
+\paragraph*{Solution: Increased Interconnection \& Multi-Path Routing.}
+\begin{itemize}
+    \item Higher-tier switches are interconnected in mesh-like Clos/Fat-Tree patterns.
+    \item \cite{13778,13779} Multi-path routing (especially via ECMP) distributes traffic across many equal-cost paths.
+    \item \cite{13778} Increased redundancy simultaneously improves reliability and throughput.
+\end{itemize}
+
+\paragraph*{Clos/Fat-Tree Benefits (Explicit from Section 6.6).}
+\begin{itemize}
+    \item Uniform bandwidth between any two racks.
+    \item Rich path diversity tolerates failures without service interruption.
+    \item Scales naturally by adding more switching stages.
+\end{itemize}
+
+% ------------------------------------------------------------------
+
+\subsubsection{C. Load Balancing}
+
+\paragraph*{Mechanism.}
+Incoming client requests targeting a public service IP address first reach a \textbf{Load Balancer} (typically a Layer 4 device).
+
+\paragraph*{Function.}
+\cite{13778} The load balancer distributes traffic across many internal hosts to balance load, reduce latency, and maximize utilization.
+
+\paragraph*{Security and Addressing.}
+\cite{13778} It also performs a NAT-like function, translating the public IP address into internal private host addresses, preventing direct external access to hosts.
+
+% ------------------------------------------------------------------
+
+\subsection{Practical and Intuitive View: Trends and Evolution}
+
+\subsubsection{A. Centralized SDN Control and Management}
+
+\paragraph*{Connection to Chapter 5.}
+Unlike typical ISP networks (with per-router control), DCNs are owned and operated by a single organization. This allows for \textbf{centralized SDN control} \cite{13779,13778}.
+
+\paragraph*{Mechanism.}
+A logically centralized SDN controller programs flow tables for the DCN’s switches. This enables:
+\begin{itemize}
+    \item automated multi-path routing,
+    \item dynamic load balancing,
+    \item consistent network-wide security policy enforcement,
+    \item fast failure recovery.
+\end{itemize}
+
+% ------------------------------------------------------------------
+
+\subsubsection{B. Virtualization and Network Layer Abstraction}
+
+\paragraph*{Problem: VM Mobility.}
+VMs may move across racks for load balancing or hardware maintenance. Traditional IP/MAC addressing binds addresses to physical topology, complicating mobility.
+
+\paragraph*{Mechanism: Flat Layer 2 Abstraction.}
+To support seamless migration, the entire DCN is often treated as a \textbf{giant flat L2 network}. Instead of ARP floods:
+\begin{itemize}
+    \item a directory service maps VM IP $\rightarrow$ VM MAC $\rightarrow$ VM location,
+    \item hosts query this directory for updated mappings.
+\end{itemize}
+
+This allows the DCN to behave like one massive Ethernet switch despite being physically multi-tiered.
+
+% ------------------------------------------------------------------
+
+\subsubsection{C. The Unique Challenge of Data Center Congestion Control}
+
+\paragraph*{Physical Constraints.}
+DCNs operate with extremely high bandwidth (40--100+ Gbps) and very low latency (microseconds) \cite{13780}.
+
+\paragraph*{Congestion Problem.}
+Classic TCP reacts only after packet loss, which is too slow at microsecond timescales. By the time loss occurs, queues may be overwhelmed.
+
+\paragraph*{Custom Solutions (DCTCP/DCQCN).}
+\cite{13780,13794} Modern DCNs use specialized transport protocols such as:
+\begin{itemize}
+    \item \textbf{DCTCP}: Uses ECN marking rather than loss to detect early congestion.
+    \item \textbf{DCQCN}: A more advanced variant for RDMA over Converged Ethernet (RoCE).
+\end{itemize}
+
+These protocols reduce queue buildup, maintain extremely low latency, and improve throughput.
+
+% ------------------------------------------------------------------
+
+\subsection{Summary and Reinforcement}
+
+\subsubsection{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \cite{13778} \textbf{TOR Switch (Top-of-Rack):} The first-tier switch connecting hosts in a rack.
+    \item \cite{13886} \textbf{Blade:} A thin, modular server unit; the fundamental computing element.
+    \item \cite{13779} \textbf{Clos Network/Fat-Tree:} A multi-stage interconnection network providing high bisection bandwidth.
+    \item \textbf{Bisection Bandwidth:} Maximum traffic capacity between any two halves of a network.
+    \item \cite{13778} \textbf{Load Balancer:} Component distributing client requests across multiple servers while performing address translation.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item \cite{13778} \textbf{Hierarchy and Scale:} The TOR/Tier-2/Tier-1 architecture supports tens of thousands of hosts as a unified system.
+    \item \cite{13778} \textbf{Capacity vs.\ Redundancy:} Interconnecting switches via Clos/Fat-Tree fabrics provides path diversity and supports multi-path routing.
+    \item \cite{13780} \textbf{Congestion and Latency:} Low-latency DCNs require ECN-driven congestion control rather than TCP’s loss-based approach.
+\end{itemize}
+
+\subsubsection{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item \textbf{Complexity at the Edge:} Although the underlying DCN architecture is complex, it is engineered so that hosts experience a simple, uniform, high-speed network.
+    \item \cite{13779} \textbf{Software-Defined Infrastructure:} Centralized SDN control is critical for scale, automation, and global optimization.
+    \item \cite{13777,13779} \textbf{Networking as a Cost Factor:} Efficient multi-path routing and congestion control directly influence operational cost and performance.
+\end{itemize}
+
+
+\section{Retrospective: A Day in the Life of a Web Page Request (Section 6.7)}
+\label{sec:day-in-life}
+
+In this section, we take an integrated, holistic journey down and up the protocol stack by following a single Web page request from a user's browser. As emphasized in the textbook, even a ``simple’’ request to download a Web page involves \emph{many (many!)} protocols working together across all layers of the Internet architecture. This retrospective synthesizes DHCP, DNS, ARP, IP, TCP, and HTTP into one continuous narrative of encapsulation, addressing, and hop-by-hop forwarding. Figure~6.32 in the textbook depicts the setting: a student, Bob, plugs his laptop into an Ethernet switch at his school and downloads a page such as \url{www.google.com}. As we will see, there is a great deal happening ``under the hood.'' (A Wireshark lab at the end of the chapter analyzes similar traces.)
+
+\subsection{Concept Overview: The Synthesis of the Protocol Stack}
+
+Typing a URL into a browser triggers an extended sequence of protocol interactions. The goals of this retrospective are to (i) trace the full lifecycle of a Web request from application layer down to the physical link and back, and (ii) clearly identify the roles played by DHCP, DNS, ARP, IP, TCP, and HTTP.
+
+We assume a client host~C wants to fetch a Web page from a remote server~S at \texttt{www.somecollege.edu}. The host is connected to a local Ethernet switch, which is connected to a first-hop router~R1. As in the textbook scenario, the router is connected to an ISP; for example, Comcast may provide the DNS service for the school, so the DNS server resides \emph{not} on the school's LAN but within the ISP network.
+
+\subsection{Phase I: Initial Configuration and Name Resolution (L7, L4, L3, L2)}
+
+Before C can send any application-layer request, it must acquire network configuration and learn the server's IP address. This involves DHCP and DNS.
+
+\subsubsection{Initial Network Configuration via DHCP}
+
+If C is newly connected to the LAN, it must obtain an IP address and other parameters through the Dynamic Host Configuration Protocol (DHCP), an application-layer protocol running over UDP.
+
+\paragraph{Four-Step DHCP Process}
+\begin{enumerate}
+    \item \textbf{DHCP Discover (Broadcast):}
+          C broadcasts a DHCP Discover message to \texttt{255.255.255.255} with destination MAC \texttt{FF:FF:FF:FF:FF:FF}. Because C has no IP address, the Discover is encapsulated in a UDP segment within an IP datagram whose source IP is \texttt{0.0.0.0}. This datagram is then carried inside an Ethernet frame and sent into the LAN.
+
+    \item \textbf{DHCP Offer (Unicast or Broadcast):}
+          A DHCP server receives the broadcast and replies with a DHCP Offer proposing an IP address $IP_C$ and associated configuration.
+
+    \item \textbf{DHCP Request (Broadcast):}
+          If multiple offers arrive, C picks one and broadcasts a DHCP Request message, specifying the chosen server's offer.
+
+    \item \textbf{DHCP ACK (Unicast):}
+          The server responds with a DHCP ACK that includes:
+          \begin{itemize}
+              \item $IP_C$ (the leased IP address),
+              \item subnet mask,
+              \item default gateway (router R1),
+              \item the IP address of the DNS server (here provided by Comcast in the textbook scenario).
+          \end{itemize}
+\end{enumerate}
+
+\paragraph{Intuition}
+This process resembles a newcomer entering an office environment and asking an administrator (DHCP) for their desk number, campus mailbox rules (subnet mask), manager (default gateway), and directory services (DNS).
+
+\subsubsection{DNS Query: Resolving the Web Server's IP}
+
+Before sending an HTTP request, the browser must obtain the server's IP $IP_S$ from the Domain Name System (DNS).
+
+\paragraph{Client-Side Operation}
+\begin{itemize}
+    \item The browser extracts the hostname from the URL and hands it to the DNS client.
+    \item The DNS client constructs a DNS query message (application layer).
+    \item The query is placed into a UDP segment (transport layer) with destination port~53.
+    \item The UDP segment is encapsulated into an IP datagram (network layer) with destination equal to the DNS server's IP (provided by Comcast in the text's example).
+\end{itemize}
+
+At this point, the datagram must be sent to R1 for forwarding toward the DNS server.
+
+\subsection{Phase II: Establishing Link-Layer Connectivity (L2)}
+
+\subsubsection{ARP: Resolving the Router’s MAC Address}
+
+To send the DNS query to R1, C must encapsulate the IP datagram in a link-layer frame addressed to R1's MAC address.
+
+\paragraph{Technical Mechanism}
+\begin{enumerate}
+    \item C checks its ARP cache; if $MAC_{R1}$ is absent, it broadcasts an ARP query frame.
+    \item The ARP frame uses destination MAC \texttt{FF:FF:FF:FF:FF:FF} and asks: ``Who has $IP_{R1}$?''
+    \item Every adapter on the LAN receives the broadcast; R1 recognizes its IP and replies with an ARP Response containing $MAC_{R1}$.
+    \item C updates its ARP cache and can now send frames addressed to $MAC_{R1}$.
+\end{enumerate}
+
+\paragraph{Key Principle}
+ARP highlights the separation between network-layer addressing (IP) and link-layer addressing (MAC). C \emph{never} needs the MAC address of the remote Web server; only the MAC of the next-hop router at each link.
+
+\subsection{Phase III: Request and Response (L7, L4, L3, L2)}
+
+With DNS and ARP completed, C can resolve the server address and initiate TCP/HTTP.
+
+\subsubsection{DNS Resolution and the TCP Handshake}
+
+\paragraph{DNS Response}
+The DNS server returns $IP_S$ to C, completing name resolution.
+
+\paragraph{TCP Connection Setup}
+C creates a TCP SYN segment destined for S:
+\begin{itemize}
+    \item The SYN is encapsulated in an IP datagram with destination $IP_S$.
+    \item The IP datagram is encapsulated in a link-layer frame addressed to $MAC_{R1}$.
+    \item R1 forwards the datagram hop-by-hop across the Internet.
+    \item The server replies with a SYNACK; C responds with an ACK, completing the three-way handshake.
+\end{itemize}
+
+\subsubsection{HTTP Transaction and Data Transfer}
+
+\paragraph{Technical Mechanism}
+\begin{enumerate}
+    \item C sends an HTTP \texttt{GET} request for \texttt{/index.html} over the established TCP connection.
+    \item S processes the GET and retrieves the HTML file.
+    \item S sends the file as a stream of TCP segments; TCP handles reliable, in-order delivery and congestion control.
+    \item Segments are carried in IP datagrams; datagrams are encapsulated in link-layer frames and forwarded across each hop.
+\end{enumerate}
+
+\paragraph{Router Encapsulation/De-encapsulation Example}
+
+Consider an intermediate router~R2:
+\begin{itemize}
+    \item \textbf{Inbound at R2:}
+          R2 receives a link-layer frame, removes the frame header, checks for errors, removes the IP header, inspects the destination address, and consults its forwarding table.
+    \item \textbf{Outbound at R2:}
+          R2 decrements the IP TTL, determines the next hop (R3), uses ARP if needed to obtain $MAC_{R3}$, constructs a new frame with a fresh link-layer header, and transmits it.
+\end{itemize}
+
+\[
+    \text{Frame}_{in} \to \text{Datagram} \to \text{Datagram (TTL-1)} \to \text{Frame}_{out}
+\]
+\[
+    MAC_{in} \to IP \to IP \to MAC_{out}
+\]
+
+This process is repeated at every router: full link-layer decapsulation and re-encapsulation, while the IP datagram remains mostly unchanged end-to-end.
+
+\subsubsection{Final Delivery}
+
+The TCP segments arrive at C:
+\begin{itemize}
+    \item TCP reassembles the byte stream.
+    \item The application layer (browser) processes the HTML.
+    \item The Web page appears to the user.
+\end{itemize}
+
+\subsection{Summary and Reinforcement}
+
+\subsubsection{Key Terms and Definitions}
+
+\begin{itemize}
+    \item \textbf{Link-Local Discovery:} Processes such as DHCP and ARP that allow a host to obtain configuration and determine the MAC address of the next hop.
+    \item \textbf{Encapsulation/De-encapsulation:} Headers added as data moves down the stack and removed as data moves up; routers decapsulate only to the network layer.
+    \item \textbf{Three-Way Handshake:} TCP's SYN--SYNACK--ACK procedure that establishes a reliable connection.
+    \item \textbf{IP Datagram vs.\ Link-Layer Frame:} The IP datagram's addresses remain constant end-to-end; link-layer frames change at every hop.
+\end{itemize}
+
+\subsubsection{Core Relationships}
+
+\begin{itemize}
+    \item \textbf{Interdependence of Layers:} Application-layer protocols depend on transport-layer services, which depend on IP routing, which requires link-layer addressing.
+    \item \textbf{Broadcast vs.\ Unicast:} DHCP Discover and ARP queries use broadcast; DNS, TCP, and HTTP use unicast once addressing is resolved.
+\end{itemize}
+
+\subsubsection{Key Insights / Takeaways}
+
+\begin{itemize}
+    \item \textbf{TTL is the Only Changing IP Header Field Hop-by-Hop:} Each router decrements the TTL; otherwise the IP datagram stays intact.
+    \item \textbf{Layering Abstraction Works:} HTTP is oblivious to whether frames travel over Ethernet, Wi-Fi, MPLS, or a mixture.
+    \item \textbf{Initial Setup Dominates Complexity:} DHCP, ARP, and DNS often require more protocol exchanges than the ensuing HTTP data transfer.
+\end{itemize}
+
+
+
+% template
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
+
+\end{document}
