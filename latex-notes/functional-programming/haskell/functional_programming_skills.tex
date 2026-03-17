@@ -1,0 +1,1238 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Function Programming SKills Introduction}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% \section{Function Programming SKills Introduction - Haskell}
+
+
+
+\section{Structural Recursion}
+
+Structural recursion is a form of recursion where the implementation follows a template defined by the data structure itself. It typically consists of two main parts:
+
+\begin{itemize}
+  \item \textbf{Case Analysis:} The function checks which ``choice'' characterizes the data (e.g., is the list empty or does it have elements?).
+  \item \textbf{Recursive Call:} The function calls itself on the ``sub-structure'' of the data.
+\end{itemize}
+
+\subsection{Example: List Length}
+
+A list of type $a$ is defined as either an empty list \texttt{[]} or a value $x$ prepended to another list $xs$ (written as \texttt{x:xs}). Calculating the length follows this structure:
+
+\begin{itemize}
+  \item \textbf{Base Case:} The length of an empty list \texttt{[]} is $0$.
+  \item \textbf{Recursive Step:} The length of \texttt{x:xs} is $1 + \mathrm{len}(xs)$.
+\end{itemize}
+
+\section{The Fold Functions}
+
+Functional programming allows us to ``reify,'' or turn into a concrete reusable tool, the abstract patterns of structural recursion. This is done through folds.
+
+\subsection{\texttt{foldr} (Right Fold)}
+
+\texttt{foldr} captures the standard structural recursion pattern.
+
+\begin{itemize}
+  \item \textbf{Pattern:}
+        \[
+          g(x:xs) = f \ x \ (g \ xs)
+        \]
+        with base case
+        \[
+          g \ [] = z.
+        \]
+  \item \textbf{Visualization:} It replaces the list constructors with a function $f$ and the empty list with a starting value $z$, effectively processing from the right.
+\end{itemize}
+
+\subsection{\texttt{foldl} (Left Fold)}
+
+\texttt{foldl} represents accumulative structural recursion.
+
+\begin{itemize}
+  \item \textbf{Pattern:} It uses an accumulator $a$. For an empty list:
+        \[
+          g \ [] \ a = a.
+        \]
+  \item \textbf{Processing:} For a list \texttt{x:xs}, it updates the accumulator and moves to the next element:
+        \[
+          g(x:xs) \ a = g \ xs \ (f \ a \ x).
+        \]
+\end{itemize}
+
+\section{Types}
+
+Haskell uses a robust type system to ensure safety and clarity. Common basic types include:
+
+\subsection{Atomic Types}
+\begin{itemize}
+  \item \texttt{Bool} (true/false)
+  \item \texttt{Integer} (arbitrary precision)
+  \item \texttt{Int} (fixed precision)
+  \item \texttt{Double} (floating point)
+  \item \texttt{Char} (single characters)
+\end{itemize}
+
+\subsection{Collection Types}
+\begin{itemize}
+  \item \texttt{String} (lists of characters)
+  \item \texttt{[a]} (a list of elements of type $a$)
+\end{itemize}
+
+\subsection{Structured Types}
+\begin{itemize}
+  \item \textbf{Tuples:} $(\alpha_1, \dots, \alpha_n)$ for grouping different types.
+  \item \texttt{Maybe a}: Used for optional values.
+  \item \texttt{Either a b}: Used for values that can be one of two different types.
+\end{itemize}
+
+\section{Type Classes and Overloading}
+
+Type classes define a set of functions that can be applied to different types, allowing for ad-hoc polymorphism (overloading).
+
+\begin{center}
+  \begin{tabular}{|l|p{6cm}|p{4cm}|}
+    \hline
+    \textbf{Type Class} & \textbf{Description}                                     & \textbf{Common Operations}                                                   \\
+    \hline
+    \texttt{Eq}         & Types that support equality testing.                     & \texttt{==}, \texttt{/=}                                                     \\
+    \hline
+    \texttt{Ord}        & Types with a total ordering (inherits from \texttt{Eq}). & \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=}, \texttt{max}, \texttt{min} \\
+    \hline
+    \texttt{Show}       & Types that can be converted to strings.                  & \texttt{show}                                                                \\
+    \hline
+    \texttt{Num}        & Basic numeric types.                                     & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{abs}, \texttt{negate}            \\
+    \hline
+    \texttt{Fractional} & Types supporting division (inherits from \texttt{Num}).  & \texttt{/}, \texttt{recip}                                                   \\
+    \hline
+    \texttt{Floating}   & Trigonometric and exponential functions.                 & \texttt{exp}, \texttt{log}, \texttt{sqrt}, \texttt{sin}, \texttt{cos}        \\
+    \hline
+    \texttt{Foldable}   & Data structures that can be folded.                      & \texttt{foldr}, \texttt{foldl}, \texttt{toList}, \texttt{product}            \\
+    \hline
+  \end{tabular}
+\end{center}
+
+
+\section{Functional Programming Foundations}
+
+Functional programming (FP) is a paradigm that treats computation as the evaluation of mathematical functions, avoiding changing state and mutable data. In Computer Science and Finance, these concepts are particularly powerful for building predictable high-frequency trading systems and complex financial models.
+
+\subsection{1. Pure Functions}
+
+At the heart of FP is the mathematical notion of a function. A function is \emph{pure} if its output is determined solely by its input values, without observable side effects.
+
+\begin{itemize}
+  \item \textbf{Predictability:} Like rule-based mathematical expressions, a pure function produces the same result every time it is called with the same arguments.
+  \item \textbf{No Side Effects:} Pure functions do not modify global variables or hidden storage locations, avoiding the issues that arise from implicit state changes.
+\end{itemize}
+
+\subsection{2. Immutability}
+
+In FP, data does not change once it is created. Instead of modifying an existing structure, a new structure is produced.
+
+\begin{itemize}
+  \item \textbf{Mathematical Grounding:} This aligns with the modern view of functions as mappings (sets or infinite tables).
+  \item \textbf{Safety:} Immutability makes computation behave more like mathematics, where a value such as $5$ does not later become $6$.
+  \item \textbf{Parallelism:} With no shared mutable state, multithreading becomes simpler and safer.
+\end{itemize}
+
+\subsection{3. Recursion (Instead of Loops)}
+
+Because FP avoids state changes (such as incrementing a counter $i$ in a \texttt{for} loop), it relies on recursion to perform repetitive tasks.
+
+\begin{itemize}
+  \item \textbf{Structural Recursion:} Recursion that follows the template of the data itself.
+  \item \textbf{Example:} To compute the length of a list, consider the base case (empty list) and the recursive case (an element prepended to a sub-list).
+  \item \textbf{Tail Recursion:} Tail-recursive formulations improve efficiency and can often be proven correct using mathematical induction.
+\end{itemize}
+
+\subsection{4. Higher-Order Functions}
+
+A higher-order function is a function that either takes another function as an argument or returns one as a result.
+
+\begin{itemize}
+  \item \textbf{Abstraction:} They allow abstraction of common patterns, such as applying a transformation to every element in a list.
+  \item \textbf{Reification:} Functions such as \texttt{foldr} (right fold) and \texttt{foldl} (left fold) reify structural recursion patterns into reusable tools.
+\end{itemize}
+
+\subsection{5. Function Composition}
+
+Composition combines two or more functions to produce a new function.
+
+\begin{itemize}
+  \item \textbf{Combining Forms:} Emphasis is placed on combining functions rather than sequencing commands.
+  \item \textbf{Modular Software:} Function application provides a richer means of combination than sequencing, resulting in succinct and maintainable software.
+\end{itemize}
+
+\subsection{Key Idea: Transformations vs.\ State Changes}
+
+In imperative programming, the focus is on how to change the state of the computer (e.g., updating variables or moving pointers).
+
+In functional programming, the focus is on what the data is. Computation is expressed as a sequence of transformations:
+
+\begin{enumerate}
+  \item Take a data structure.
+  \item Apply a transformation (function).
+  \item Produce a new data structure.
+\end{enumerate}
+
+As a result, functional programs often resemble their mathematical specifications more closely than imperative programs.
+
+
+\section{Haskell Syntax and Core Language Features}
+
+Haskell’s syntax is concise and closely mirrors mathematical notation. This design promotes safety and correctness by making programs resemble formal specifications rather than step-by-step machine instructions.
+
+\subsection{1. Defining Functions}
+
+Functions are the primary building blocks in Haskell. A basic definition consists of a name, parameters, an equals sign, and an expression.
+
+\textbf{Syntax:}
+\begin{verbatim}
+functionName arg1 arg2 = expression
+\end{verbatim}
+
+\textbf{Example (Factorial):}
+\begin{verbatim}
+fact n = if n == 0 then 1 else n * fact (n - 1)
+\end{verbatim}
+
+\textbf{Application:}
+\begin{verbatim}
+fact 5
+\end{verbatim}
+
+\textbf{Additional Examples:}
+
+\begin{verbatim}
+-- Square of a number
+square x = x * x
+
+-- Add three numbers
+addThree a b c = a + b + c
+
+-- Fibonacci (simple recursive definition)
+fib n = if n <= 1 then n else fib (n-1) + fib (n-2)
+\end{verbatim}
+
+\subsection{2. Pattern Matching}
+
+Pattern matching defines behavior based on the “shape” of the input data.
+
+\textbf{Factorial with Pattern Matching:}
+\begin{verbatim}
+fact 0 = 1
+fact n = n * fact (n - 1)
+\end{verbatim}
+
+\textbf{Lists:}
+\begin{verbatim}
+-- Length of a list
+len []     = 0
+len (x:xs) = 1 + len xs
+
+-- Sum of a list
+sumList []     = 0
+sumList (x:xs) = x + sumList xs
+\end{verbatim}
+
+\textbf{Tuples:}
+\begin{verbatim}
+first (x, _) = x
+second (_, y) = y
+\end{verbatim}
+
+\subsection{3. Guards}
+
+Guards provide a readable alternative to nested conditionals.
+
+\textbf{Absolute Value:}
+\begin{verbatim}
+absolute x
+  | x < 0     = -x
+  | otherwise = x
+\end{verbatim}
+
+\textbf{Additional Examples:}
+
+\begin{verbatim}
+grade score
+  | score >= 90 = "A"
+  | score >= 80 = "B"
+  | score >= 70 = "C"
+  | score >= 60 = "Pass"
+  | otherwise   = "Fail"
+
+sign x
+  | x > 0     = 1
+  | x == 0    = 0
+  | otherwise = -1
+\end{verbatim}
+
+\subsection{4. \texttt{let} and \texttt{where} Bindings}
+
+Bindings define local names or helper functions.
+
+\textbf{Using \texttt{where}:}
+\begin{verbatim}
+circleArea r = pi * rSquare
+  where
+    rSquare = r * r
+\end{verbatim}
+
+\begin{verbatim}
+sphereVolume r = (4/3) * pi * r^3
+  where
+    pi = 3.1415926535
+\end{verbatim}
+
+\textbf{Using \texttt{let}:}
+\begin{verbatim}
+cylinderArea r h =
+  let sideArea = 2 * pi * r * h
+      topArea  = pi * r^2
+  in  sideArea + 2 * topArea
+\end{verbatim}
+
+\begin{verbatim}
+quadratic a b c =
+  let disc = sqrt (b^2 - 4*a*c)
+  in  ((-b + disc) / (2*a), (-b - disc) / (2*a))
+\end{verbatim}
+
+\subsection{5. Indentation Rules (Layout System)}
+
+Haskell uses whitespace to determine structure.
+
+\textbf{Correctly Indented Example:}
+\begin{verbatim}
+main = do
+  putStrLn "What is your name?"
+  name <- getLine
+  putStrLn ("Hello " ++ name)
+\end{verbatim}
+
+Definitions in a \texttt{where} or \texttt{let} block must align vertically. Spaces are preferred over tabs to ensure consistent formatting.
+
+\subsection{6. Basic Operators and Infix Functions}
+
+\textbf{Arithmetic Operators:}
+\begin{verbatim}
++  -  *  /  ^  **
+\end{verbatim}
+
+\textbf{Boolean Operators:}
+\begin{verbatim}
+&&  ||  not
+\end{verbatim}
+
+\textbf{Comparison Operators:}
+\begin{verbatim}
+==  /=  <  <=  >  >=
+\end{verbatim}
+
+\textbf{Infix vs.\ Prefix:}
+
+\begin{verbatim}
+add x y = x + y
+
+-- Prefix usage
+add 5 3
+
+-- Infix usage
+5 `add` 3
+\end{verbatim}
+
+\textbf{Integer Division vs.\ Fractional Division:}
+
+\begin{verbatim}
+10 / 4    -- 2.5  (Fractional)
+10 `div` 4  -- 2  (Integral)
+\end{verbatim}
+
+\subsection{Practice Exercises}
+
+\begin{enumerate}
+  \item \textbf{Pattern Matching:} Write a function \texttt{isZero} that returns \texttt{"Yes"} if the input is 0 and \texttt{"No"} otherwise.
+  \item \textbf{Guards:} Define a function \texttt{grade} that returns \texttt{"Pass"} if a score is at least 60 and \texttt{"Fail"} otherwise.
+  \item \textbf{Bindings:} Compute the volume of a sphere using a \texttt{where} clause to define $\pi$.
+  \item \textbf{Layout:} Rewrite misaligned code so that blocks are properly indented.
+  \item \textbf{Operators:} Explain the difference between \texttt{/} (Fractional) and \texttt{div} (Integral).
+\end{enumerate}
+
+
+\section{Haskell Type System and Polymorphism}
+
+Haskell’s type system forms a mathematical foundation that promotes robustness and logical soundness. Strong static typing helps ensure safety and correctness, which is especially important in complex computational systems.
+
+\subsection{1. Basic Types}
+
+Haskell provides several core (primitive) types:
+
+\begin{itemize}
+  \item \texttt{Int}: Fixed-precision integer (typically 64-bit).
+  \item \texttt{Integer}: Arbitrary-precision integer.
+  \item \texttt{Float}: Single-precision floating point.
+  \item \texttt{Double}: Double-precision floating point.
+  \item \texttt{Bool}: Logical values (\texttt{True}, \texttt{False}).
+  \item \texttt{Char}: Single Unicode character (e.g., \texttt{'a'}).
+  \item \texttt{String}: List of characters (\texttt{[Char]}).
+\end{itemize}
+
+\textbf{Examples:}
+\begin{verbatim}
+x :: Int
+x = 42
+
+bigNumber :: Integer
+bigNumber = 9007199254740993
+
+flag :: Bool
+flag = True
+
+letter :: Char
+letter = 'G'
+
+message :: String
+message = "Hello"
+\end{verbatim}
+
+\subsection{2. Type Annotations}
+
+Type annotations use \texttt{::} and improve clarity and documentation.
+
+\textbf{Examples:}
+\begin{verbatim}
+piValue :: Double
+piValue = 3.14159
+
+add :: Int -> Int -> Int
+add x y = x + y
+
+multiply :: Double -> Double -> Double
+multiply x y = x * y
+
+isPositive :: Int -> Bool
+isPositive n = n > 0
+\end{verbatim}
+
+The arrow \texttt{->} separates input types from the return type. Multiple arrows indicate multiple arguments.
+
+\subsection{3. Type Inference}
+
+Haskell automatically infers the most general type consistent with the code.
+
+\textbf{Examples:}
+\begin{verbatim}
+x = 5 + 5
+-- inferred: x :: Num a => a
+
+square n = n * n
+-- inferred: square :: Num a => a -> a
+
+isEven n = n `mod` 2 == 0
+-- inferred: isEven :: Integral a => a -> Bool
+\end{verbatim}
+
+Type inference prevents invalid operations at compile time.
+
+\subsection{4. Parametric Polymorphism}
+
+Parametric polymorphism allows functions to operate uniformly over any type.
+
+\textbf{Examples:}
+\begin{verbatim}
+lengthList :: [a] -> Int
+lengthList []     = 0
+lengthList (_:xs) = 1 + lengthList xs
+
+reverseList :: [a] -> [a]
+reverseList []     = []
+reverseList (x:xs) = reverseList xs ++ [x]
+\end{verbatim}
+
+These functions work for lists of any type because they do not depend on the specific element type.
+
+\subsection{5. Type Variables}
+
+Type variables begin with lowercase letters and represent arbitrary types.
+
+\textbf{Identity Function:}
+\begin{verbatim}
+id :: a -> a
+id x = x
+\end{verbatim}
+
+\textbf{Tuple Example:}
+\begin{verbatim}
+first :: (a, b) -> a
+first (x, _) = x
+
+second :: (a, b) -> b
+second (_, y) = y
+\end{verbatim}
+
+\textbf{Constant Function:}
+\begin{verbatim}
+constValue :: a -> b -> a
+constValue x _ = x
+\end{verbatim}
+
+The signature \texttt{a -> b -> a} indicates the function takes two arguments of potentially different types and returns the first.
+
+\subsection{6. Polymorphic Standard Functions}
+
+\begin{verbatim}
+head :: [a] -> a
+head (x:_) = x
+
+map :: (a -> b) -> [a] -> [b]
+map _ []     = []
+map f (x:xs) = f x : map f xs
+
+filter :: (a -> Bool) -> [a] -> [a]
+filter _ [] = []
+filter p (x:xs)
+  | p x       = x : filter p xs
+  | otherwise = filter p xs
+\end{verbatim}
+
+\subsection{Practice Exercises}
+
+\begin{enumerate}
+  \item \textbf{Type Identification:} Determine appropriate types for:
+        \begin{itemize}
+          \item \texttt{'G'} $\rightarrow$ \texttt{Char}
+          \item \texttt{9007199254740993} $\rightarrow$ \texttt{Integer}
+          \item \texttt{True} $\rightarrow$ \texttt{Bool}
+          \item \texttt{6.022} $\rightarrow$ \texttt{Double}
+        \end{itemize}
+
+  \item \textbf{Type Annotations:} Write the type signature for:
+        \begin{verbatim}
+multiply :: Double -> Double -> Double
+\end{verbatim}
+
+  \item \textbf{Inference:} For
+        \begin{verbatim}
+isEven n = n `mod` 2 == 0
+\end{verbatim}
+        the return type is \texttt{Bool}.
+
+  \item \textbf{Polymorphism:} Provide a type signature for:
+        \begin{verbatim}
+head :: [a] -> a
+\end{verbatim}
+
+  \item \textbf{Type Variables:} Interpret:
+        \begin{verbatim}
+foo :: a -> b -> a
+\end{verbatim}
+        This means the function takes two arguments of possibly different types and returns a value of the same type as the first argument.
+\end{enumerate}
+
+
+
+\section{Lists and Recursion in Functional Programming}
+
+In functional programming, lists are the most fundamental data structure. Because mutable state is avoided, lists are processed using recursion and high-level transformations. These patterns naturally generalize to processing streams of financial data, historical price sequences, or event logs.
+
+\subsection{1. List Syntax and Properties}
+
+A list in Haskell is a homogeneous collection of elements (all elements must have the same type).
+
+\textbf{Constructors:}
+\begin{itemize}
+  \item \texttt{[]} represents the empty list.
+  \item \texttt{:} (cons operator) prepends an element to a list.
+\end{itemize}
+
+\textbf{Representation:}
+\begin{verbatim}
+[1,2,3]  ==  1 : (2 : (3 : []))
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+numbers :: [Int]
+numbers = [10,20,30]
+
+chars :: [Char]
+chars = ['a','b','c']
+
+word :: String
+word = "Haskell"     -- equivalent to ['H','a','s','k','e','l','l']
+\end{verbatim}
+
+\textbf{Common List Operators:}
+\begin{verbatim}
+head [1,2,3]     -- 1
+tail [1,2,3]     -- [2,3]
+[1,2] ++ [3,4]   -- [1,2,3,4]
+1 : [2,3]        -- [1,2,3]
+length [1,2,3]   -- 3
+\end{verbatim}
+
+Lists are singly linked structures, so prepending with \texttt{:} is efficient ($O(1)$), while appending with \texttt{++} is linear time.
+
+\subsection{2. Recursively Processing Lists}
+
+Recursive list functions follow the structural recursion template:
+
+\begin{itemize}
+  \item Handle the empty case.
+  \item Handle the non-empty case \texttt{(x:xs)}.
+  \item Recursively process the tail \texttt{xs}.
+\end{itemize}
+
+\textbf{Length:}
+\begin{verbatim}
+len :: [a] -> Int
+len []     = 0
+len (_:xs) = 1 + len xs
+\end{verbatim}
+
+\textbf{Sum:}
+\begin{verbatim}
+sumList :: Num a => [a] -> a
+sumList []     = 0
+sumList (x:xs) = x + sumList xs
+\end{verbatim}
+
+\textbf{Product:}
+\begin{verbatim}
+productList :: Num a => [a] -> a
+productList []     = 1
+productList (x:xs) = x * productList xs
+\end{verbatim}
+
+\textbf{Reverse (Naive Version):}
+\begin{verbatim}
+reverseList :: [a] -> [a]
+reverseList []     = []
+reverseList (x:xs) = reverseList xs ++ [x]
+\end{verbatim}
+
+The naive version is $O(n^2)$ due to repeated use of \texttt{++}.
+
+\textbf{Tail-Recursive Reverse (Efficient):}
+\begin{verbatim}
+reverseFast :: [a] -> [a]
+reverseFast xs = revHelper xs []
+  where
+    revHelper [] acc     = acc
+    revHelper (x:xs) acc = revHelper xs (x:acc)
+\end{verbatim}
+
+This version runs in $O(n)$ time.
+
+\subsection{3. The ``Big Four'' Higher-Order Functions}
+
+Higher-order functions abstract recursive patterns.
+
+\subsubsection{map}
+
+Applies a function to each element.
+
+\begin{verbatim}
+map :: (a -> b) -> [a] -> [b]
+
+map _ []     = []
+map f (x:xs) = f x : map f xs
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+map (+1) [1,2,3]         -- [2,3,4]
+map (*1.1) prices        -- apply 10% increase
+map length ["AI","ML"]   -- [2,2]
+\end{verbatim}
+
+\subsubsection{filter}
+
+Selects elements satisfying a predicate.
+
+\begin{verbatim}
+filter :: (a -> Bool) -> [a] -> [a]
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+filter even [1..10]          -- [2,4,6,8,10]
+filter (>100) prices         -- prices above 100
+filter (\x -> x < 0) deltas  -- negative returns
+\end{verbatim}
+
+\subsubsection{foldr}
+
+Processes from the right.
+
+\begin{verbatim}
+foldr :: (a -> b -> b) -> b -> [a] -> b
+
+foldr f z []     = z
+foldr f z (x:xs) = f x (foldr f z xs)
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+foldr (+) 0 [1,2,3]      -- 6
+foldr (:) [] [1,2,3]     -- [1,2,3]
+foldr (++) [] [[1],[2]]  -- [1,2]
+\end{verbatim}
+
+\subsubsection{foldl}
+
+Processes from the left with an accumulator.
+
+\begin{verbatim}
+foldl :: (b -> a -> b) -> b -> [a] -> b
+
+foldl f acc []     = acc
+foldl f acc (x:xs) = foldl f (f acc x) xs
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+foldl (+) 0 [1,2,3]      -- 6
+foldl (*) 1 [1,2,3,4]    -- 24
+foldl (\acc x -> x:acc) [] [1,2,3]  -- [3,2,1]
+\end{verbatim}
+
+\subsection{4. List Comprehensions}
+
+List comprehensions provide declarative list construction similar to set-builder notation.
+
+\textbf{Syntax:}
+\begin{verbatim}
+[ expression | element <- list, qualifier ]
+\end{verbatim}
+
+\textbf{Examples:}
+
+\begin{verbatim}
+-- Squares of even numbers
+[ x*x | x <- xs, even x ]
+
+-- All pairs (x,y)
+[ (x,y) | x <- [1,2], y <- [3,4] ]
+
+-- Filter and transform
+[ price * 1.05 | price <- prices, price > 100 ]
+
+-- Cartesian product with condition
+[ (x,y) | x <- [1..5], y <- [1..5], x < y ]
+\end{verbatim}
+
+\subsection{Key Insight}
+
+List processing in functional programming emphasizes:
+
+\begin{itemize}
+  \item Structural recursion over mutation.
+  \item Declarative transformations over step-by-step state updates.
+  \item Reusable abstractions (\texttt{map}, \texttt{filter}, \texttt{fold}) instead of manual loops.
+\end{itemize}
+
+These patterns scale naturally from small academic examples to large-scale data transformation pipelines.
+
+
+
+\section{Algebraic Data Types (ADTs) and Data Modeling}
+
+In Haskell, Algebraic Data Types (ADTs) are the primary mechanism for modeling domain concepts. They allow complex structures to be built from simpler ones using:
+
+\begin{itemize}
+  \item \textbf{Products (AND)} — combining multiple pieces of data.
+  \item \textbf{Sums (OR)} — choosing between alternative forms.
+\end{itemize}
+
+ADTs enable precise modeling of real-world systems and make many categories of bugs impossible by construction.
+
+\subsection{1. \texttt{data} Declarations}
+
+New types are introduced using the \texttt{data} keyword.
+
+\textbf{Syntax:}
+\begin{verbatim}
+data TypeName = ConstructorName Type1 Type2 ...
+\end{verbatim}
+
+\textbf{Rules:}
+\begin{itemize}
+  \item Type names begin with an uppercase letter.
+  \item Constructor names also begin with an uppercase letter.
+\end{itemize}
+
+\textbf{Simple Example:}
+\begin{verbatim}
+data Color = Red | Green | Blue
+\end{verbatim}
+
+Here, \texttt{Color} is a type with three possible values.
+
+\subsection{2. Product Types (AND)}
+
+A product type combines multiple values into one structure.
+
+\textbf{Example: 2D Point}
+\begin{verbatim}
+data Point = Point Double Double
+\end{verbatim}
+
+This defines a type \texttt{Point} consisting of two \texttt{Double} values.
+
+\textbf{Usage:}
+\begin{verbatim}
+myPoint :: Point
+myPoint = Point 10.5 20.0
+\end{verbatim}
+
+\textbf{Pattern Matching:}
+\begin{verbatim}
+distanceFromOrigin :: Point -> Double
+distanceFromOrigin (Point x y) = sqrt (x^2 + y^2)
+\end{verbatim}
+
+\textbf{Another Product Example:}
+\begin{verbatim}
+data Stock = Stock String Double
+\end{verbatim}
+
+\begin{verbatim}
+apple = Stock "AAPL" 195.25
+\end{verbatim}
+
+\subsection{3. Sum Types (OR)}
+
+A sum type represents a value that can take one of several forms.
+
+\textbf{Example: Order Types}
+\begin{verbatim}
+data OrderType
+  = Market
+  | Limit Double
+  | StopLoss Double
+\end{verbatim}
+
+An \texttt{OrderType} is either:
+\begin{itemize}
+  \item \texttt{Market}
+  \item \texttt{Limit price}
+  \item \texttt{StopLoss price}
+\end{itemize}
+
+\textbf{Another Sum Example:}
+\begin{verbatim}
+data TradeSignal = Buy | Sell | Hold
+\end{verbatim}
+
+\subsection{4. Record Syntax}
+
+Record syntax names fields and automatically creates accessor functions.
+
+\textbf{Example: Trader Profile}
+\begin{verbatim}
+data Trader = Trader
+  { name    :: String
+  , balance :: Double
+  , active  :: Bool
+  }
+\end{verbatim}
+
+\textbf{Usage:}
+\begin{verbatim}
+alice :: Trader
+alice = Trader "Alice" 100000.0 True
+
+currentBalance = balance alice
+\end{verbatim}
+
+\textbf{Record Example: Trade}
+\begin{verbatim}
+data Trade = Trade
+  { ticker   :: String
+  , quantity :: Int
+  , price    :: Double
+  }
+\end{verbatim}
+
+\subsection{5. Pattern Matching on Custom Types}
+
+Pattern matching extracts values from constructors.
+
+\textbf{Processing Orders:}
+\begin{verbatim}
+describeOrder :: OrderType -> String
+describeOrder Market =
+  "Executing at market price."
+describeOrder (Limit price) =
+  "Waiting for price " ++ show price
+describeOrder (StopLoss p) =
+  "Stop loss set at " ++ show p
+\end{verbatim}
+
+\textbf{Evaluating a Trade:}
+\begin{verbatim}
+evaluateTrade :: Trade -> Double
+evaluateTrade (Trade _ qty p) =
+  fromIntegral qty * p
+\end{verbatim}
+
+\textbf{Pattern Matching with Records:}
+\begin{verbatim}
+evaluateTrade' :: Trade -> Double
+evaluateTrade' trade =
+  price trade * fromIntegral (quantity trade)
+\end{verbatim}
+
+\subsection{6. Parametric ADTs}
+
+ADTs can also be polymorphic.
+
+\textbf{Example: Maybe}
+\begin{verbatim}
+data Maybe a = Nothing | Just a
+\end{verbatim}
+
+\textbf{Safe Price Lookup:}
+\begin{verbatim}
+safePrice :: Bool -> Double -> Maybe Double
+safePrice available p =
+  if available then Just p else Nothing
+\end{verbatim}
+
+\textbf{Handling Maybe:}
+\begin{verbatim}
+displayPrice :: Maybe Double -> String
+displayPrice Nothing  = "Price unavailable"
+displayPrice (Just p) = "Price: " ++ show p
+\end{verbatim}
+
+\subsection{7. Making Impossible States Unrepresentable}
+
+ADTs improve safety by forcing all cases to be handled.
+
+\textbf{Example:}
+\begin{verbatim}
+data Transaction
+  = Deposit Double
+  | Withdrawal Double
+  | CheckBalance
+\end{verbatim}
+
+Because the compiler requires exhaustive pattern matching, every transaction type must be handled:
+
+\begin{verbatim}
+processTransaction :: Transaction -> String
+processTransaction (Deposit amt) =
+  "Depositing " ++ show amt
+processTransaction (Withdrawal amt) =
+  "Withdrawing " ++ show amt
+processTransaction CheckBalance =
+  "Checking balance"
+\end{verbatim}
+
+There is no possibility of an invalid transaction shape.
+
+\subsection{8. Design Tradeoffs}
+
+\begin{itemize}
+  \item In object-oriented systems, adding new data variants is easy, but adding new operations often requires modifying many classes.
+  \item In functional systems, adding new functions over existing data is easy, but adding new constructors requires updating pattern matches.
+\end{itemize}
+
+\subsection{Practice Exercises}
+
+\begin{enumerate}
+  \item Define:
+        \begin{verbatim}
+data Transaction
+  = Deposit Double
+  | Withdrawal Double
+  | CheckBalance
+\end{verbatim}
+
+  \item Define:
+        \begin{verbatim}
+data Stock = Stock String Double
+\end{verbatim}
+
+  \item Define:
+        \begin{verbatim}
+data Trade = Trade
+  { ticker   :: String
+  , quantity :: Int
+  , price    :: Double
+  }
+\end{verbatim}
+
+  \item Write:
+        \begin{verbatim}
+evaluateTrade :: Trade -> Double
+\end{verbatim}
+
+  \item Explain why:
+        \begin{verbatim}
+Maybe Double
+\end{verbatim}
+        is safer than using a null value for a missing stock price.
+\end{enumerate}
+
+\textbf{Answer (Conceptual):} \texttt{Maybe} forces explicit handling of absence (\texttt{Nothing}) versus presence (\texttt{Just value}). This prevents null-reference errors and ensures all cases are checked at compile time.
+
+
+\section{Typeclasses and Ad-Hoc Polymorphism}
+
+In Haskell, typeclasses define a set of behaviors (functions) that different types can implement. They enable \emph{ad-hoc polymorphism}, meaning the same function name can operate differently depending on the type of its arguments.
+
+A useful way to think about typeclasses is as formal interfaces or regulations: they specify \emph{what} a type must be able to do, but not \emph{how} it does it.
+
+\subsection{1. Core Standard Typeclasses}
+
+Haskell provides several fundamental typeclasses used throughout the language.
+
+\subsubsection{Eq (Equality)}
+
+Defines equality comparison.
+
+\begin{verbatim}
+class Eq a where
+  (==) :: a -> a -> Bool
+  (/=) :: a -> a -> Bool
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+5 == 5        -- True
+'a' /= 'b'    -- True
+True == False -- False
+\end{verbatim}
+
+If a type is an instance of \texttt{Eq}, its values can be compared for equality.
+
+\subsubsection{Ord (Ordering)}
+
+Defines total ordering and inherits from \texttt{Eq}.
+
+\begin{verbatim}
+class Eq a => Ord a where
+  (<), (<=), (>), (>=) :: a -> a -> Bool
+  compare :: a -> a -> Ordering
+  max, min :: a -> a -> a
+\end{verbatim}
+
+\textbf{Examples:}
+\begin{verbatim}
+'a' < 'b'      -- True
+max 10 20      -- 20
+compare 5 3    -- GT
+\end{verbatim}
+
+Any type used in sorting must be an instance of \texttt{Ord}.
+
+\subsubsection{Show and Read}
+
+These convert between values and strings.
+
+\begin{verbatim}
+show 123         -- "123"
+read "123" :: Int -- 123
+\end{verbatim}
+
+Most basic types are instances of both.
+
+\subsubsection{Num (Numeric)}
+
+Provides basic arithmetic.
+
+\begin{verbatim}
+class Num a where
+  (+), (-), (*) :: a -> a -> a
+  negate :: a -> a
+  abs, signum :: a -> a
+  fromInteger :: Integer -> a
+\end{verbatim}
+
+\textbf{Hierarchy:}
+\begin{itemize}
+  \item \texttt{Fractional} extends \texttt{Num} (adds \texttt{/}, \texttt{recip})
+  \item \texttt{Floating} extends \texttt{Fractional} (adds \texttt{sin}, \texttt{log}, etc.)
+\end{itemize}
+
+\textbf{Example:}
+\begin{verbatim}
+10 + 5      -- works (Num)
+10 / 5      -- requires Fractional
+\end{verbatim}
+
+\subsection{2. Typeclass Constraints in Signatures}
+
+Type constraints appear before the \texttt{=>} symbol.
+
+\begin{verbatim}
+sum :: (Foldable t, Num a) => t a -> a
+\end{verbatim}
+
+This means:
+\begin{itemize}
+  \item \texttt{t} must be \texttt{Foldable}
+  \item \texttt{a} must be \texttt{Num}
+\end{itemize}
+
+Another example:
+
+\begin{verbatim}
+sort :: Ord a => [a] -> [a]
+\end{verbatim}
+
+The list elements must be orderable.
+
+\subsection{3. Writing Your Own Typeclass}
+
+You can define custom behavior using the \texttt{class} keyword.
+
+\textbf{Example:}
+\begin{verbatim}
+class Priced a where
+  getPrice :: a -> Double
+\end{verbatim}
+
+This states that any type belonging to \texttt{Priced} must implement \texttt{getPrice}.
+
+\subsection{4. Instance Declarations}
+
+An \texttt{instance} connects a specific type to a typeclass.
+
+\textbf{Example:}
+\begin{verbatim}
+data Stock = Stock String Double
+
+instance Priced Stock where
+  getPrice (Stock _ p) = p
+\end{verbatim}
+
+Now any function requiring a \texttt{Priced} type can accept a \texttt{Stock}.
+
+\subsection{5. Making Custom Types Instances of Standard Classes}
+
+You can also make your own types instances of built-in typeclasses.
+
+\textbf{Example:}
+\begin{verbatim}
+data TradeSignal = Buy | Sell | Hold
+
+instance Show TradeSignal where
+  show Buy  = "BUY"
+  show Sell = "SELL"
+  show Hold = "HOLD"
+\end{verbatim}
+
+\textbf{Example with Eq:}
+\begin{verbatim}
+data Position = Long | Short
+
+instance Eq Position where
+  Long  == Long  = True
+  Short == Short = True
+  _     == _     = False
+\end{verbatim}
+
+\subsection{6. Polymorphic Functions with Constraints}
+
+\begin{verbatim}
+isEqual :: Eq a => a -> a -> Bool
+isEqual x y = x == y
+\end{verbatim}
+
+\begin{verbatim}
+maximumValue :: Ord a => [a] -> a
+maximumValue [x]    = x
+maximumValue (x:xs) = max x (maximumValue xs)
+\end{verbatim}
+
+\subsection{7. Why Typeclasses Matter}
+
+\begin{itemize}
+  \item They enforce compile-time guarantees.
+  \item They clarify what operations are valid on a type.
+  \item They make error messages understandable when constraints are violated.
+\end{itemize}
+
+Example error:
+
+\begin{verbatim}
+No instance for (Eq a) arising from a use of ‘==’
+\end{verbatim}
+
+This means the type used does not implement \texttt{Eq}.
+
+\subsection{Practice Exercises}
+
+\begin{enumerate}
+  \item \textbf{Sorting Constraint:} You need \texttt{Ord a =>} to sort a list.
+
+  \item \textbf{Division Error:} The operator \texttt{/} belongs to \texttt{Fractional}, not \texttt{Num}. Since \texttt{Int} is not \texttt{Fractional}, \texttt{Int / Int} fails.
+
+  \item \textbf{Custom Typeclass:}
+        \begin{verbatim}
+class Representable a where
+  asString :: a -> String
+\end{verbatim}
+
+  \item \textbf{Instance for Bool:}
+        \begin{verbatim}
+instance Representable Bool where
+  asString True  = "YES"
+  asString False = "NO"
+\end{verbatim}
+
+  \item \textbf{Equality Function:}
+        \begin{verbatim}
+isEqual :: Eq a => a -> a -> Bool
+\end{verbatim}
+        The required constraint is \texttt{Eq a}.
+\end{enumerate}
+
+Typeclasses form the backbone of Haskell’s abstraction system, enabling flexible yet strongly typed polymorphism.
+
+% template
+\begin{itemize}
+  \item X
+        \begin{enumerate}
+          \item Y
+        \end{enumerate}
+\end{itemize}
+
+\end{document}

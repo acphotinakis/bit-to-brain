@@ -1,0 +1,435 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Function Programming SKills Introduction}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% \section{Function Programming SKills Introduction - Haskell}
+\section{Understanding \texttt{foldr} in Haskell}
+
+\subsection{The Abstract Pattern}
+In Haskell, \texttt{foldr} (right fold) is a fundamental higher-order function that captures and \emph{reifies} the abstract pattern of structural recursion over lists.
+
+Structural recursion follows a template based on the definition of the data. For a list, the data is either an empty list \texttt{[]} or a value \texttt{x} prepended to another list \texttt{(x:xs)}. The abstract pattern for \texttt{foldr} is defined as:
+
+\begin{itemize}
+    \item \textbf{Base Case:}
+          \[
+              g [] = z
+          \]
+    \item \textbf{Recursive Step:}
+          \[
+              g (x:xs) = f\ x\ (g\ xs)
+          \]
+\end{itemize}
+
+Here, \texttt{z} is the ``zero'' or starting value used for the empty list, and \texttt{f} is a function that combines the current element \texttt{x} with the result of the recursive call on the rest of the list (\texttt{g xs}).
+
+\subsection{How \texttt{foldr} Works}
+The name \texttt{foldr} comes from the fact that it associates to the right. When you call
+
+\[
+    \texttt{foldr f z [x1, x2, \dots, xn]}
+\]
+
+it expands into:
+
+\[
+    f\ x_1\ (f\ x_2\ (\dots (f\ x_n\ z) \dots ))
+\]
+
+\subsubsection{The ``Replacement'' Perspective}
+A useful way to visualize \texttt{foldr} is to think of it as a function that replaces the constructors of a list:
+
+\begin{itemize}
+    \item Every \texttt{cons} operator (\texttt{:}) is replaced by the function \texttt{f}.
+    \item The empty list (\texttt{[]}) at the end is replaced by the starting value \texttt{z}.
+\end{itemize}
+
+For example, the list \texttt{1 : 2 : 3 : []} when processed by \texttt{foldr (+) 0} becomes:
+
+\[
+    1 + (2 + (3 + 0))
+\]
+
+\subsection{Concrete Examples}
+Many standard list functions are simply specific instances of this structural recursion pattern:
+
+\begin{itemize}
+    \item \textbf{Summing a list:} \texttt{foldr (+) 0} \\
+          Here, \texttt{f} is \texttt{+} and \texttt{z} is \texttt{0}.
+
+    \item \textbf{Calculating length:} \texttt{foldr (\textbackslash x acc -> 1 + acc) 0} \\
+          For every element \texttt{x}, it ignores the value and adds \texttt{1} to the accumulated count \texttt{acc}.
+
+    \item \textbf{Mapping:} \texttt{foldr (\textbackslash x acc -> (h x) : acc) []} \\
+          This reconstructs the list while applying function \texttt{h} to each element.
+\end{itemize}
+
+\subsection{Why Use \texttt{foldr}?}
+\begin{itemize}
+    \item \textbf{Laziness:} Because \texttt{foldr} is right-associative, it can work with infinite lists if the combining function \texttt{f} is lazy in its second argument. For example:
+          \[
+              \texttt{foldr (\&\&) True (False : repeat True)}
+          \]
+          can terminate early because \texttt{False \&\& anything} is \texttt{False}.
+
+    \item \textbf{Reification:} Instead of writing manual recursion for every list-processing function, you ``reify'' the pattern by using \texttt{foldr}, which makes the code more concise and easier to reason about.
+\end{itemize}
+
+
+\section{Left Fold in Haskell (foldl)}
+
+\subsection{The Accumulative Pattern}
+In Haskell, \texttt{foldl} (Left Fold) captures the \emph{accumulative recursion} pattern. Unlike standard structural recursion, which processes the head and recurses on the tail, accumulative recursion uses an auxiliary parameter called the \emph{accumulator} to carry partial results through recursive calls.
+
+The abstract pattern for \texttt{foldl} is:
+
+\[
+    \begin{aligned}
+        \text{Base Case:}      & \quad g\ []\ a = a                    \\
+        \text{Recursive Step:} & \quad g\ (x:xs)\ a = g\ xs\ (f\ a\ x)
+    \end{aligned}
+\]
+
+Here, the function \(f\) combines the current accumulator \(a\) with the current element \(x\) to produce a new accumulator, which is then passed into the recursive call on the tail \(xs\).
+
+\subsection{How \texttt{foldl} Works}
+\texttt{foldl} associates to the left. Evaluating
+
+\[
+    \texttt{foldl f z [x1, x2, \dots, xn]}
+\]
+
+expands as:
+
+\[
+    f\ (...(f\ (f\ z\ x_1)\ x_2)\ ...)\ x_n
+\]
+
+For example:
+
+\[
+    \texttt{foldl (+) 0 [1,2,3]} = ((0 + 1) + 2) + 3
+\]
+
+This is fundamentally different from \texttt{foldr}, which expands as:
+
+\[
+    1 + (2 + (3 + 0))
+\]
+
+\subsection{Comparison: \texttt{foldr} vs. \texttt{foldl}}
+While both functions reduce a list to a single value, they differ in associativity, performance, and behavior with infinite lists.
+
+\begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{Feature}        & \textbf{foldr (Right Fold)}                               & \textbf{foldl (Left Fold)}                                                \\
+    \hline
+    Associativity           & Right-associative: \(x_1 + (x_2 + (x_3 + z))\)            & Left-associative: \(((z + x_1) + x_2) + x_3\)                             \\
+    \hline
+    Abstract Pattern        & Structural Recursion: \(g(x:xs) = f\ x\ (g\ xs)\)         & Accumulative Recursion: \(g(x:xs)\ a = g\ xs\ (f\ a\ x)\)                 \\
+    \hline
+    Infinite Lists          & Can work if \(f\) is lazy in its second argument          & Cannot work; must reach the end before finishing                          \\
+    \hline
+    Recursion Type          & Builds up expression in memory (not tail-recursive)       & Naturally tail-recursive; may build thunks unless \texttt{foldl'} is used \\
+    \hline
+    Constructor Replacement & Replaces \texttt{:} with \(f\) and \texttt{[]} with \(z\) & Processes list from seed \(z\) and first element                          \\
+    \hline
+\end{tabular}
+
+\subsection{Which One to Use?}
+\begin{itemize}
+    \item Use \texttt{foldr} when working with infinite lists or when producing a new list (e.g., \texttt{map} or \texttt{filter}), because laziness allows early results.
+    \item Use \texttt{foldl}, or more commonly its strict version \texttt{foldl'}, for tail-recursive calculations on finite lists, such as summing numbers, to minimize memory usage by updating an accumulator.
+\end{itemize}
+
+
+
+
+
+\section{foldr and foldl expected outputs on the same list}
+
+Gemini said \\
+Whether foldr and foldl give the same output depends entirely on the function you are using to fold the list.
+
+The rule of thumb is: If the operation is associative (like addition) and commutative, the results will usually be the same. If the order of operations matters (like subtraction or building a list), the results will be very different.
+
+\subsection{1. When the Output is the Same}
+For operations where the order doesn't matter, foldr and foldl are interchangeable in terms of the final result.
+
+\textbf{Addition:} foldr (+) 0 [1,2,3] vs foldl (+) 0 [1,2,3]
+
+\begin{verbatim}
+foldr: 1+(2+(3+0))=6
+foldl: ((0+1)+2)+3=6
+\end{verbatim}
+
+\textbf{Multiplication:} Both will result in 1*2*3=6.
+
+\subsection{2. When the Output is Different}
+For operations where the "direction" changes the logic, you will get different results.
+
+\textbf{Example A: Subtraction} \\
+Subtraction is not associative, so the grouping changes everything.
+
+\begin{verbatim}
+foldr (-) 0 [1, 2, 3]
+-- Logic: 1-(2-(3-0))
+-- Result: 2
+
+foldl (-) 0 [1, 2, 3]
+-- Logic: ((0-1)-2)-3
+-- Result: -6
+\end{verbatim}
+
+\textbf{Example B: List Construction (The "Reverse" Effect)} \\
+foldl naturally flips things because it processes the "head" first and carries it forward, whereas foldr processes the "tail" first.
+
+\begin{verbatim}
+-- foldr keeps the order (replacing : with :)
+foldr (:) [] [1,2,3] -- Output: [1,2,3]
+
+-- foldl reverses the order (if we flip the arguments)
+foldl (\acc x -> x : acc) [] [1,2,3] -- Output: [3,2,1]
+\end{verbatim}
+
+\subsection{3. Summary Comparison}
+
+\begin{tabular}{|l|l|l|}
+    \hline
+    Feature        & foldr (Fold Right)                & foldl (Fold Left)                       \\
+    \hline
+    Direction      & Right-to-left (starts at the end) & Left-to-right (starts at the beginning) \\
+    Association    & Right-associative: f x (f y z)    & Left-associative: f (f z x) y           \\
+    Infinite Lists & Can work (if f is lazy)           & Will hang (must reach the end first)    \\
+    Memory         & Uses a "call stack"               & Uses an "accumulator"                   \\
+    \hline
+\end{tabular}
+
+\subsection*{A Note on Performance}
+In practice, if you are working with a large list and want the "left" behavior, you should almost always use \texttt{foldl'} (the version with the prime). Standard \texttt{foldl} is often avoided in Haskell because it builds up a massive "thunk" (a pile of unfinished math) in memory, whereas \texttt{foldl'} calculates the result immediately at each step.
+
+
+
+
+
+
+\section{Understanding \texttt{lengthList} in Haskell}
+
+Consider the following Haskell code:
+
+\begin{verbatim}
+lengthList :: [a] -> Int
+lengthList = myFoldr (\_ acc -> 1 + acc) 0
+\end{verbatim}
+
+We will break down the key components: the \texttt{\textbackslash} and the \texttt{\_} symbols.
+
+\subsection{The \textbackslash Symbol: Lambda Functions}
+
+In Haskell, \texttt{\textbackslash} introduces an \emph{anonymous function}, also called a \emph{lambda function}. Its general syntax is:
+
+\begin{verbatim}
+\arg1 arg2 ... -> expression
+\end{verbatim}
+
+In the \texttt{lengthList} function:
+
+\begin{verbatim}
+\_ acc -> 1 + acc
+\end{verbatim}
+
+is a lambda function equivalent to defining a named function:
+
+\begin{verbatim}
+addOneIgnoreX :: a -> Int -> Int
+addOneIgnoreX _ acc = 1 + acc
+\end{verbatim}
+
+Using a lambda allows the function to be written inline without needing a separate name.
+
+\subsection{The \_ Symbol: Wildcard}
+
+The underscore \texttt{\_} is called the \emph{wildcard} in Haskell. It tells the compiler:
+
+\begin{quote}
+    "I do not care about this argument."
+\end{quote}
+
+In the lambda \texttt{\_ acc -> 1 + acc}, the first argument represents the current element of the list. We do not need the element itself for counting the length, so we ignore it using \texttt{\_}. This is a common Haskell pattern when only the accumulator matters.
+
+\subsection{How It Works: Step-by-Step}
+
+\texttt{myFoldr} performs a right fold over the list. For each element, it applies the lambda function to the element and the accumulator:
+
+\[
+    (\_\, acc \to 1 + acc)\ 5 \ ((\_\, acc \to 1 + acc)\ 7 \ ((\_\, acc \to 1 + acc)\ 9\ 0))
+\]
+
+Evaluating from the innermost call:
+
+\begin{align*}
+    (\_\, acc \to 1 + acc)\ 9\ 0 & = 1 + 0 = 1 \\
+    (\_\, acc \to 1 + acc)\ 7\ 1 & = 1 + 1 = 2 \\
+    (\_\, acc \to 1 + acc)\ 5\ 2 & = 1 + 2 = 3
+\end{align*}
+
+Thus, \texttt{lengthList [5,7,9] = 3}, which is the length of the list.
+
+\subsection{Summary Table of Symbols}
+
+\begin{tabular}{llp{7cm}}
+    \textbf{Symbol}         & \textbf{Concept} & \textbf{Explanation}                                           \\
+    \hline
+    \texttt{\textbackslash} & Lambda           & Anonymous function, defined inline without a name.             \\
+    \texttt{\_}             & Wildcard         & Ignore the argument; used when the value itself is irrelevant. \\
+    \texttt{->}             & Lambda body      & Separates the arguments from the expression in the function.   \\
+\end{tabular}
+
+\subsection{Key Insight}
+
+Haskell encourages a declarative, concise style. Using \texttt{\_ acc -> 1 + acc} makes it immediately clear that:
+
+\begin{itemize}
+    \item The elements of the list are irrelevant for computing length.
+    \item Only the accumulator matters.
+    \item No extra function names are needed.
+\end{itemize}
+
+
+\section{foldr and foldl expected outputs on the same list}
+
+Gemini said \\
+Whether foldr and foldl give the same output depends entirely on the function you are using to fold the list.
+
+The rule of thumb is: If the operation is associative (like addition) and commutative, the results will usually be the same. If the order of operations matters (like subtraction or building a list), the results will be very different.
+
+\subsection{1. When the Output is the Same}
+For operations where the order doesn't matter, foldr and foldl are interchangeable in terms of the final result.
+
+\textbf{Addition:} foldr (+) 0 [1,2,3] vs foldl (+) 0 [1,2,3]
+
+\begin{verbatim}
+foldr: 1+(2+(3+0))=6
+foldl: ((0+1)+2)+3=6
+\end{verbatim}
+
+\textbf{Multiplication:} Both will result in 1*2*3=6.
+
+\subsection{2. When the Output is Different}
+For operations where the "direction" changes the logic, you will get different results.
+
+\textbf{Example A: Subtraction} \\
+Subtraction is not associative, so the grouping changes everything.
+
+\begin{verbatim}
+foldr (-) 0 [1, 2, 3]
+-- Logic: 1-(2-(3-0))
+-- Result: 2
+
+foldl (-) 0 [1, 2, 3]
+-- Logic: ((0-1)-2)-3
+-- Result: -6
+\end{verbatim}
+
+\textbf{Example B: List Construction (The "Reverse" Effect)} \\
+foldl naturally flips things because it processes the "head" first and carries it forward, whereas foldr processes the "tail" first.
+
+\begin{verbatim}
+-- foldr keeps the order (replacing : with :)
+foldr (:) [] [1,2,3] -- Output: [1,2,3]
+
+-- foldl reverses the order (if we flip the arguments)
+foldl (\acc x -> x : acc) [] [1,2,3] -- Output: [3,2,1]
+\end{verbatim}
+
+\subsection{3. Summary Comparison}
+
+\begin{tabular}{|l|l|l|}
+    \hline
+    Feature        & foldr (Fold Right)                & foldl (Fold Left)                       \\
+    \hline
+    Direction      & Right-to-left (starts at the end) & Left-to-right (starts at the beginning) \\
+    Association    & Right-associative: f x (f y z)    & Left-associative: f (f z x) y           \\
+    Infinite Lists & Can work (if f is lazy)           & Will hang (must reach the end first)    \\
+    Memory         & Uses a "call stack"               & Uses an "accumulator"                   \\
+    \hline
+\end{tabular}
+
+\subsection*{A Note on Performance}
+In practice, if you are working with a large list and want the "left" behavior, you should almost always use \texttt{foldl'} (the version with the prime). Standard \texttt{foldl} is often avoided in Haskell because it builds up a massive "thunk" (a pile of unfinished math) in memory, whereas \texttt{foldl'} calculates the result immediately at each step.
+
+
+\section{Improving a Guess for the Square Root}
+
+Given a number $a$ and a number $g$, where $g$ is a guess for $\sqrt{a}$, we can come up with a new (and improved) guess using the following computation, often referred to as the \textbf{Newton-Raphson method} or the \textbf{Babylonian method} for square roots.
+
+\subsection{Formula}
+
+The new guess $g_{\text{next}}$ is computed as:
+
+\[
+    g_{\text{next}} = \frac{g + \frac{a}{g}}{2}
+\]
+
+\subsection{Explanation}
+
+This computation works by taking the average of your current guess $g$ and the value obtained by dividing $a$ by that guess $\frac{a}{g}$:
+
+\begin{itemize}
+    \item If $g$ is an underestimate, then $\frac{a}{g}$ will be an overestimate.
+    \item If $g$ is an overestimate, then $\frac{a}{g}$ will be an underestimate.
+\end{itemize}
+
+By taking the average of these two values, the new guess moves significantly closer to the true square root.
+
+In Haskell, this logic is often implemented using the \texttt{iterate} function to generate a sequence of increasingly accurate approximations. For example:
+
+\begin{verbatim}
+-- Generates an infinite sequence of improved guesses for sqrt(a)
+sqrtApprox a = iterate (\g -> (g + a / g) / 2) initialGuess
+\end{verbatim}
+
+This produces an infinite list where each element is a better guess than the last.
+
+
+% template
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
+
+\end{document}

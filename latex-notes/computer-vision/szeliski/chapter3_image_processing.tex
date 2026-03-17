@@ -1,0 +1,522 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Chapter 3: Image Processing}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Image Processing and Transformations}
+
+\section{Point Operators}
+
+\begin{enumerate}
+    \item Simplest kinds of image processing transforms
+    \item Each output pixel's value depends on only the corrsponding input pixel value
+    \item Examples of operators
+          \begin{enumerate}
+              \item Brightness
+              \item Contrast
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Pixel Transforms}
+
+A general image processing operator takes one or more input images and produces an output image.
+
+\paragraph{Continuous Domain}
+In the continuous domain, this relationship can be written as:
+
+\begin{enumerate}
+    \item \begin{equation}
+              g(\mathbf{x}) = h\big(f(\mathbf{x})\big)
+              \quad \text{or} \quad
+              g(\mathbf{x}) = h\big(f_0(\mathbf{x}), \dots, f_n(\mathbf{x})\big).
+          \end{equation}
+    \item \begin{itemize}
+              \item This equation represents an image as a continuous mathematical function.
+              \item $\mathbf{x}$ is a vector representing a location in the image domain. For standard 2D images, $\mathbf{x} = (x, y)$. The domain is typically $D$-dimensional (usually $D = 2$).
+              \item $f(\mathbf{x})$ is the input image, interpreted as a function that returns an intensity or color value at coordinate $\mathbf{x}$.
+              \item $h(\cdot)$ is the operator that transforms the input value(s) to produce the output image $g(\mathbf{x})$.
+              \item $g(\mathbf{x})$ resulting output image
+          \end{itemize}
+
+\end{enumerate}
+
+
+\paragraph{The Discrete Domain}
+
+\begin{enumerate}
+    \item Digital images are not continuous; they are sampled into a grid of pixels. This equation adapts the continuous formulation for use in computers.
+    \item \[
+              g(i,j) = h\big(f(i,j)\big)
+          \]
+    \item \begin{itemize}
+              \item $(i,j)$: The discrete integer coordinates of a pixel (row $i$ and column $j$).
+              \item $f(i,j)$: The value of the pixel at row $i$, column $j$ in the original image.
+              \item $g(i,j)$: The value of the pixel at the same location in the processed image.
+          \end{itemize}
+
+\end{enumerate}
+
+\paragraph{Understanding the Range (Scalar vs.\ Vector)}
+
+The values returned by $f$ and $g$ are referred to as the \textbf{range}.
+
+\begin{itemize}
+    \item \textbf{Scalar-valued:} In a grayscale image, $f(\mathbf{x})$ is a single number representing brightness (e.g., $0$ for black to $255$ for white).
+    \item \textbf{Vector-valued:} In a color image (RGB), $f(\mathbf{x})$ is a vector containing three values:
+          \[
+              [R, G, B].
+          \]
+\end{itemize}
+
+As noted in the text, an image can be viewed in three distinct ways:
+
+\begin{itemize}
+    \item \textbf{Appearance:} The visual picture we see.
+    \item \textbf{A Grid of Numbers:} The raw data stored in a computer's memory.
+    \item \textbf{A 2D Function (Surface Plot):} A 3D landscape where the $x$ and $y$ axes represent pixel locations, and the ``height'' of the surface corresponds to pixel intensity.
+\end{itemize}
+
+
+\paragraph{Point Operators}
+Point operators are the simplest form of image processing. To process an image, we iterate through every pixel one by one. The new value of a pixel depends only on its old value, completely ignoring its neighbors.
+
+\subsection{Pixel Transforms and Color Transforms}
+
+The most common pixel transform is the linear gain and bias adjustment:
+
+\[
+    g(x) = a f(x) + b
+\]
+
+\begin{itemize}
+    \item $f(x)$: The original input pixel value at coordinate $x$.
+    \item $a$ (Gain): A multiplier that controls contrast. If $a > 1$, the difference between light and dark pixels grows (higher contrast).
+    \item $b$ (Bias): An additive constant that controls brightness. If $b > 0$, the entire image becomes uniformly lighter.
+    \item $g(x)$: The new output pixel value.
+\end{itemize}
+
+\paragraph{Impact of Data Types and Quantization}
+
+\begin{enumerate}
+    \item Images are typically stored as 8-bit integers (uint8), so pixel values must be betwee 0 and 255
+    \item When applying math like $g(x) = 1.5 f(x) + 50$
+          \begin{enumerate}
+              \item A pixel might calculate to 300, but b/c 300 cannot fit in an 8-bit int, causes overflow to a low number like 44
+              \item To prevent this, processing must be done using floating-point decimals, and final results must be \textbf{clamped} (restricted to 0-255 range) before converting back to integers
+              \item
+          \end{enumerate}
+    \item When adjusting colors, adding a constant bias to Red, Green, and Blue indepdendently might wash out the image's saturation.
+    \item \begin{enumerate}
+              \item To properly adjust tonal values without destroying color purity, convert image to luminance/chromaticity color space, apply point operator to only luminance channel, then convert back to RGB
+          \end{enumerate}
+\end{enumerate}
+
+
+\section{Compositing and Matting}
+
+\begin{enumerate}
+    \item
+\end{enumerate}
+
+
+When pasting a foreground object onto a new background, we use an alpha channel ($\alpha$). The alpha channel is a mask where $\alpha = 1$ means fully solid, $\alpha = 0$ means fully transparent, and fractional values (like 0.5) represent semi-transparent edges (like hair or motion blur).
+
+To combine the foreground ($F$) and background ($B$), we use the ``over'' operator:
+
+\[
+    C = (1 - \alpha)B + \alpha F
+\]
+
+\paragraph{Concept}
+
+The term $(1 - \alpha)B$ cuts a ``hole'' in the background, dimming it exactly where the foreground will go. The $\alpha F$ term represents the foreground object itself. Adding them together merges the images seamlessly.
+
+\paragraph{Numerical Example}
+
+Suppose a background pixel is pure blue ($B = [0, 0, 255]$), a foreground pixel is pure red ($F = [255, 0, 0]$), and the alpha is $0.5$ (semi-transparent edge).
+
+\[
+    C = (1 - 0.5)[0, 0, 255] + 0.5 [255, 0, 0]
+\]
+\[
+    = [0, 0, 127.5] + [127.5, 0, 0]
+\]
+\[
+    = [127.5, 0, 127.5]
+\]
+
+The result is purple, perfectly blending the edge.
+
+\section{Histogram Equalization}
+
+A histogram counts how many pixels exist at each brightness level (0 to 255). If an image is mostly dark, its histogram clumps near 0. Histogram equalization forcefully redistributes these pixels so the histogram becomes flat, stretching the contrast to use the full 0--255 range.
+
+To do this, we use the Cumulative Distribution Function (CDF):
+
+\[
+    c(I) = \frac{1}{N} \sum_{i=0}^{I} h(i)
+\]
+
+\begin{itemize}
+    \item $h(i)$: The number of pixels with intensity $i$.
+    \item $N$: The total number of pixels in the image.
+    \item $c(I)$: The percentage of pixels that are equal to or darker than intensity $I$.
+\end{itemize}
+
+\paragraph{Concept}
+
+If a pixel has an intensity of $40$, and the CDF tells us that $75\%$ of the image is darker than $40$, we map that pixel to $75\%$ of the maximum brightness ($0.75 \times 255 = 191$). The pixel's new value is $191$.
+
+Because global equalization can sometimes look unnatural, Contrast Limited Adaptive Histogram Equalization (CLAHE) computes separate histograms for localized blocks of the image and smoothly blends them together using bilinear interpolation.
+
+
+
+\subsection{Color Transforms}
+
+\subsection{Compositing and Matting}
+
+\subsection{Histogram Equalization}
+
+\subsection{Application: Tonal Adjustment}
+
+\section{Linear Filtering}
+Is a fundamental technique used to change an image by looking at small groups of pixels ratheer than just one at a time.
+
+\paragraph{The Neighborhood Concept}
+\begin{enumerate}
+    \item Instead of processing pixel in isolation, output pixel's value is calcualted as weighted sum of pixel values within a small surrounding neighborhood
+    \item Matrix of weights is called a kernel of mask
+    \item By looking at the neighbors, the computer can udnerstand the context of a pixel
+          \begin{enumerate}
+              \item For example, whether it's a part of a smooth background or a sharp edge
+          \end{enumerate}
+\end{enumerate}
+
+\paragraph{Linear Filtering}
+\begin{enumerate}
+    \item Math involved is weighted sum
+    \item Think of this as a voting system
+    \item To calculate a new pixel value, look at its neighbors
+    \item Each neighbor gets a weight (some votes count more than others)
+    \item Multiply each neighbor's value by its weight, add them all together, and that total becoems the new value for the center pixel
+\end{enumerate}
+
+\paragraph{Kernel}
+\begin{enumerate}
+    \item The grid of weights is called a kernel or mask. Different kernels produce different visual effects
+    \item Kernel Effects:
+          \begin{enumerate}
+              \item Blurring: A kernel where all weights are equal softens the image
+              \item Sharpening: A kernel that gives high weight to the center and negative weights to neighbors makes edges stand out.
+          \end{enumerate}
+\end{enumerate}
+
+\paragraph{Correlation vs Convolution}
+
+While both operations involve sliding a filter mask (kernel) $h$ over an image $f$, they are distinguished by the orientation of the kernel during the calculation.
+
+\textbf{1. Correlation ($\otimes$)}\\
+Correlation measures the similarity between a kernel and the image neighborhood. It is essentially a sliding dot product.
+
+Mathematical Definition:
+\[
+    g(i,j) = \sum_{k,l} f(i+k, j+l)h(k,l)
+\]
+
+The Process: You center your filter mask $h$ over the image $f$ at coordinate $(i,j)$, multiply the overlapping values, and sum them all up.
+
+Primary Use Case: It is widely used for template matching, where the goal is to find instances of a specific pattern within a larger scene. Each pixel in the resulting image represents a "score" of how well that local patch matches the filter.
+
+\textbf{2. Convolution ($*$)}\\
+Convolution is the standard operation for linear systems. It involves a mathematical "flip" of the kernel before performing the summation.
+
+Mathematical Definition:
+\[
+    g(i,j) = \sum_{k,l} f(i-k, j-l)h(k,l)
+\]
+
+The Process: Notice the minus signs in the indices. In convolution, the filter mask $h$ is mathematically flipped both horizontally and vertically (a 180-degree rotation) before sliding it over the image.
+
+Physical Interpretation: Convolution represents the impulse response of a system—effectively describing how the system reacts to a single point of light.
+
+\textbf{Why the Flip? (Mathematical Properties)}\\
+Flipping the kernel provides convolution with powerful algebraic properties that correlation lacks. These properties allow for more efficient computation and complex system modeling.
+
+\begin{itemize}
+    \item \textbf{Commutativity:} $f * h = h * f$ — You can swap the image and the filter, and the mathematical result holds.
+    \item \textbf{Associativity:} $f * (g * h) = (f * g) * h$ — This is highly significant for performance. You can convolve two filters together first (e.g., combining a Gaussian blur and a Sobel edge detector) to create a single combined filter, then apply that single filter to the image.
+    \item \textbf{Distributivity:} $f * (g + h) = (f * g) + (f * h)$ — Filtering a sum of images is the same as filtering them individually and then adding the results.
+    \item \textbf{Linear Scaling:} $a(f * g) = (af) * g$ — Scaling the input or the filter scales the output proportionally.
+\end{itemize}
+
+\textbf{The Symmetry Exception:} If the kernel $h$ is symmetric (such as a Gaussian kernel), correlation and convolution perform the exact same operation because flipping a symmetric kernel results in the original kernel.
+
+\textbf{Boundary Conditions: Padding Strategies}\\
+When a filter is placed at the edge of an image, part of the kernel "hangs off" into empty space. To calculate these edge pixels, you must "pad" the image to provide values for these missing coordinates.
+
+\begin{enumerate}
+    \item Zero Padding
+          \begin{enumerate}
+              \item Assume all pixels outside of image boundaries are 0 (black)
+              \item Simplest to implement but often results in "dark borders" b/c filter averages image data with surrounding blackness, thus lowering intensity at the edges
+          \end{enumerate}
+    \item Clamp/Replicate (Edge Extension)
+          \begin{enumerate}
+              \item Values of outermost pixels (last row or last column) are copied and extended infinitely outward
+              \item Maintains intensity of border regions and effectively prevents dark border artifacts caused by zero padding
+          \end{enumerate}
+    \item Wrap/Cyclic
+          \begin{enumerate}
+              \item Treats image as if it were mapped onto a sphere.
+              \item Filter falling off right edge samples data from left edge, and filter falling off botom samples from top of iamge
+              \item While mathematically useful for periodic textures or Fourier-based processing, it's unsuitable for most natural images b/c it introduces sharp discontinuities where opposite edges don't match
+          \end{enumerate}
+    \item Mirror/Reflect
+          \begin{enumerate}
+              \item Image is reflected across boundary, similar to a mirror image
+              \item Generally consisted best approach for natural images. Provides smoothest transition and preserves local color and texture statistics of image data at boundaries
+          \end{enumerate}
+    \item Specialized Approached (Normalized Zero Padding)
+          \begin{enumerate}
+              \item More sophisticated variant
+              \item In this, image is zero-padded, but final result at each edge pixel is divided by a "soft alpha" value
+              \item Alpha value represents fraction of filter that was actually positioned over real image data
+              \item Effectivaly re-scales output to ignore influence of zeros, mitigating darkening effect while keeping implementation simple
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Separable Filtering}
+
+Separable filtering is a computational technique used to significantly accelerate the process of linear convolution. By decomposing a two-dimensional kernel into two one-dimensional kernels, the number of required operations is reduced from a quadratic relationship to a linear one.
+
+\textbf{1. Mathematical Foundation} \\
+A 2D filter kernel $K$ is considered separable if it can be factored into the outer product of two 1D vectors: a vertical column vector $v$ and a horizontal row vector $h^T$:
+\[
+    K = v h^T
+\]
+
+This property is rooted in the associative property of convolution. Because convolution is associative, applying a 2D kernel to an image $f$ is mathematically identical to applying the horizontal 1D kernel first, and then applying the vertical 1D kernel to the intermediate result:
+\[
+    g = f * (v * h^T) = (f * v) * h^T
+\]
+
+\textbf{2. Computational Complexity and Efficiency} \\
+The primary motivation for using separable filters is the massive reduction in multiplications and additions required per pixel.
+
+\begin{itemize}
+    \item \textbf{Standard 2D Convolution:} For an image with $N$ pixels and a square kernel of size $K \times K$, the operation requires $O(K^2)$ operations per pixel. \\
+          Example: An $11 \times 11$ kernel requires 121 multiply-adds per pixel.
+    \item \textbf{Separable 1D Convolution:} By filtering the image horizontally with the 1D row and then vertically with the 1D column, the operation requires only $O(2K)$ operations per pixel. \\
+          Example: An $11 \times 11$ kernel implemented separably requires only $11 + 11 = \mathbf{22}$ operations per pixel.
+\end{itemize}
+
+As the kernel size $K$ grows, the efficiency gap widens, making separability a critical design consideration for real-time computer vision applications.
+
+\textbf{3. Identifying Separable Kernels} \\
+There are three primary ways to determine if a kernel $K$ is separable:
+
+\begin{enumerate}[label=\alph*.]
+    \item \textbf{Inspection:} Simple kernels, like a Box (mean) filter, are clearly separable. \\
+          Box Filter Example:
+          \[
+              \frac{1}{9} \begin{bmatrix} 1 & 1 & 1 \\ 1 & 1 & 1 \\ 1 & 1 & 1 \end{bmatrix}
+              = \frac{1}{3} \begin{bmatrix} 1 \\ 1 \\ 1 \end{bmatrix}
+              \times \frac{1}{3} \begin{bmatrix} 1 & 1 & 1 \end{bmatrix}
+          \]
+
+    \item \textbf{Analytic Form:} Looking at the mathematical formula of the kernel. For instance, the 2D Gaussian function is separable because its exponential term $e^{-(x^2+y^2)}$ can be factored into $e^{-x^2} \cdot e^{-y^2}$.
+
+    \item \textbf{Singular Value Decomposition (SVD):} For an arbitrary 2D matrix $K$, the SVD decomposes it into:
+          \[
+              K = \sum_{i} \sigma_i u_i v_i^T
+          \]
+          If only the first singular value $\sigma_0$ is non-zero, the kernel is perfectly separable. The 1D kernels are then derived as $\sqrt{\sigma_0} u_0$ and $\sqrt{\sigma_0} v_0^T$.
+\end{enumerate}
+
+\textbf{4. Common Separable Filters} \\
+Many of the most important filters in image processing are separable:
+\begin{itemize}
+    \item Box (Mean) Filter: Useful for simple blurring.
+    \item Gaussian Filter: The "gold standard" for smoothing; its separability is key to its widespread use.
+    \item Sobel Operator: Used for edge detection; the 2D Sobel kernel can be decomposed into a 1D derivative operator and a 1D smoothing operator.
+\end{itemize}
+
+\textbf{5. Approximating Non-Separable Filters} \\
+If a kernel is not perfectly separable (i.e., it has multiple non-zero singular values), it can still be implemented efficiently by taking the first $n$ terms of the SVD series.
+
+By summing a small number of separable convolutions, you can approximate a complex non-separable filter. This "sum of separable filters" approach is often faster than a full 2D convolution, depending on the kernel size $K$ and the number of significant singular values. For example, the Laplacian of Gaussian (LoG) kernel is often implemented as the sum of two separable filters to maintain efficiency.
+
+\subsection{Examples of Linear Filtering}
+
+\begin{enumerate}
+    \item Box filter: A simple moving average where all kernel weights are identical. Highly efficient to compute but creates blocky artifacts in image
+    \item Gaussian Filter: A smoothing filter based on a bell curve that provide a more natural, rotationally symmetric blur without blocky artifacts
+    \item Unsharp Masking: A technique used to sharpen an image. You subtract a blurred version of the image from the original to isolate the "details", then add those details back to the original image
+\end{enumerate}
+
+\paragraph{Common Image Filters and Operators}
+
+\textbf{1. Box Filters (Moving Average)} \\
+A box filter replaces each pixel with the mean of its $K \times K$ neighborhood.
+
+\begin{itemize}
+    \item \textbf{Mathematical Necessity of Normalization:} If you apply a $5 \times 5$ filter of all 1s, the output image will be 25 times brighter, pushing most pixel values past the maximum 255 (saturation) and creating a washed-out image. Normalizing by the area (e.g., $1/25$) ensures the average brightness remains constant.
+    \item \textbf{Algorithmic Optimization:} While standard 2D convolution is $O(K^2)$, box filters are separable and can be implemented with a sliding horizontal and vertical window, bringing complexity down to $O(2K)$.
+    \item \textbf{Artifacts:} Because the weights drop abruptly to zero at the square boundaries, it creates harsh vertical and horizontal "blocky" artifacts and "ringing" in the frequency domain, failing to mimic natural, rotationally symmetric optical blur.
+\end{itemize}
+
+\textbf{2. Gaussian Filters} \\
+The Gaussian filter provides a "fuzzy," rotationally symmetric blur that accurately models natural lens defocus.
+
+\begin{itemize}
+    \item \textbf{Mathematical Form:}
+          \[
+              G(x,y;\sigma) = \frac{1}{2\pi\sigma^2} e^{-\frac{x^2+y^2}{2\sigma^2}}
+          \]
+          The constant $\frac{1}{2\pi\sigma^2}$ is crucial; it normalizes the volume under the 2D surface to exactly 1.
+    \item \textbf{Rule of Thumb for Filter Size:} Because a true Gaussian extends to infinity, we truncate it into a finite $K \times K$ matrix. Standard practice sets $K \approx 2\pi\sigma$ (roughly $6\sigma$) to capture most of the function's energy.
+    \item \textbf{Proof of Separability:}
+          \[
+              e^{-\frac{x^2+y^2}{2\sigma^2}} = e^{-\frac{x^2}{2\sigma^2}} \cdot e^{-\frac{y^2}{2\sigma^2}}
+          \]
+          This allows the 2D convolution to be executed as two sequential 1D convolutions (horizontal then vertical). For a $K \times K$ kernel, this reduces operations from $K^2$ multiplications to $2K$ multiplications per pixel.
+\end{itemize}
+
+\textbf{3. Sharpening and Delta Kernels} \\
+Sharpening leverages the distributive property of convolution to isolate and amplify high-frequency edges.
+
+\begin{itemize}
+    \item \textbf{Delta Kernel ($\delta$):} A matrix with a 1 in the exact center and 0s elsewhere. Convolving an image $f$ with $\delta$ returns $f$ exactly.
+    \item \textbf{Condensing the Math:} Instead of blurring the image and then performing matrix subtraction
+          \[
+              g_\text{sharp} = f + \alpha(f - f * h_\text{blur})
+          \]
+          you can factor the equation into a single step:
+          \[
+              h_\text{sharp} = \delta(1+\alpha) - \alpha h_\text{blur}
+          \]
+          This creates a single "Sharpening Kernel" with a large positive center weight surrounded by negative weights. Flat color areas remain unchanged, while intensity peaks are amplified.
+\end{itemize}
+
+\textbf{4. Sobel Operator} \\
+The Sobel operator calculates the first derivative of an image to find edges. Naive differentiation (e.g., $[1,0,-1]$ kernel) is sensitive to noise, so Sobel combines differentiation with Gaussian-like smoothing.
+
+\begin{itemize}
+    \item \textbf{Separable Construction:}
+          \begin{itemize}
+              \item Horizontal Sobel ($S_x$) detects vertical edges:
+                    \[
+                        S_x = \begin{bmatrix} 1 & 2 & 1 \\ 0 & 0 & 0 \\ -1 & -2 & -1 \end{bmatrix}
+                    \]
+                    It is the outer product of a 1D smoothing tent filter $\begin{bmatrix} 1 & 2 & 1 \end{bmatrix}$ and a 1D difference filter $[1,0,-1]$.
+
+              \item Vertical Sobel ($S_y$) detects horizontal edges:
+                    \[
+                        S_y = \begin{bmatrix} 1 & 0 & -1 \\ 2 & 0 & -2 \\ 1 & 0 & -1 \end{bmatrix}
+                    \]
+          \end{itemize}
+    \item \textbf{Gradient Vector:} Applying both filters gives the partial derivatives $I_x$ and $I_y$ at every pixel.
+    \item \textbf{Edge Properties:} From the gradient vector, calculate the absolute edge strength
+          \[
+              \text{Magnitude} = \sqrt{I_x^2 + I_y^2}
+          \]
+          and edge orientation
+          \[
+              \theta = \tan^{-1}\left(\frac{I_y}{I_x}\right).
+          \]
+\end{itemize}
+
+\subsection{Band-pass and Steerable Filters}
+
+While low-pass filters (like Gaussian) are used to smooth images by removing high-frequency noise, and high-pass filters isolate sharp transitions, band-pass filters and steerable dilters allow for isolation of specific scales and orientations
+
+\paragraph{Band-Pass Filtering}
+\begin{enumerate}
+    \item Isolates specific range of spatial frequencies by filtering out both very low frequencies (homogeneous, flat regions) and very high frequencies (fine-grained noise)
+\end{enumerate}
+
+
+
+
+\section{More Neighborhood Operators}
+
+\subsection{Non-linear Filtering}
+
+\subsection{Bilateral Filtering}
+
+\subsection{Binary Image Processing}
+
+\begin{enumerate}
+    \item Y
+\end{enumerate}
+
+
+\section{Fourier Transforms}
+
+\subsection{Two-Dimensional Fourier Transforms}
+
+\subsection{Application: Sharpening, Blur, and Noise Removal}
+
+\section{Pyramids and Wavelets}
+
+\subsection{Interpolation}
+
+\subsection{Decimation}
+
+\subsection{Multi-resolution Representations}
+
+\subsection{Wavelets}
+
+\subsection{Application: Image Blending}
+
+\section{Geometric Transformations}
+
+\subsection{Parametric Transformations}
+
+\subsection{Mesh-Based Warping}
+
+\subsection{Application: Feature-Based Morphing}
+
+
+
+% template
+\begin{itemize}
+    \item X
+          \begin{enumerate}
+              \item Y
+          \end{enumerate}
+\end{itemize}
+
+
+\end{document}

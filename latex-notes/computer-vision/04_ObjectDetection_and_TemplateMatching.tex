@@ -1,0 +1,922 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Object Detection with Template Matching}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction to Template Matching}
+
+\subsection{Key Concepts and Definitions}
+
+\begin{itemize}
+
+    \item \textbf{Template}
+
+          A \textbf{template} is a small image or pattern that we want to locate within a larger image.
+
+          \textbf{Example:}
+          If we want to detect a coin in a photograph, we can use a cropped image of the coin as the template.
+
+    \item \textbf{Scene Image}
+
+          The \textbf{scene image} is the larger image in which we are searching for the template.
+
+          \textbf{Example:}
+          A photograph containing multiple coins, objects, or textures where we want to detect the template object.
+
+    \item \textbf{Score Map (Response Image)}
+
+          A \textbf{score map} is an output matrix produced by the template matching algorithm. Each element represents how well the template matches the image at that position.
+
+          \textbf{Example:}
+          Bright spots in the score map indicate strong matches between the template and the image.
+
+    \item \textbf{Dot Product Similarity}
+
+          Cross-correlation relies on the \textbf{dot product} between the template and an image patch.
+
+          \textbf{Example:}
+          If pixel values in the template align closely with those in the image patch, the dot product becomes large, indicating a good match.
+
+\end{itemize}
+
+\subsection{Overview}
+\begin{enumerate}
+    \item Template matching one of most foundational techniques for object detection
+    \item At core, goal is to locate specific, known pattern within a larger image
+    \item Process treats search as a dense, sliding-window classifiction problem
+    \item Instead of extracting complex geometric features, algo extracts a raw pixel patch from scene and directly compares it to template patch
+    \item Primary math operation used is correlation
+          \begin{enumerate}
+              \item In Lin Alg, correlation of two localized pixel regions acts identically to a high-dimensional vector dot-product
+              \item By flattening both tempalte and current scene patch into 1D vectors, dot product computes projection of one vector onto other
+              \item High dot product indicates that intensity patterns in scene closly align with intensity patterns in template
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+
+Unnormalized cross-correlation between a scene image $f$ and a template $h$ evaluated at a specific pixel location $(i,j)$ is formulated as:
+
+\[
+    g[i,j] = \sum_{k,l} f[i+k, j+l] \, h[k,l]
+\]
+
+Where:
+\begin{itemize}
+    \item $g[i,j]$ is the resulting scalar score at the central pixel $(i,j)$.
+    \item $f[i+k, j+l]$ represents the pixel intensities of the scene image patch.
+    \item $h[k,l]$ represents the pixel intensities of the template.
+    \item $k,l$ are the local spatial coordinates indexing the dimensions of the template.
+\end{itemize}
+
+Because this raw correlation is highly sensitive to overall image brightness (a completely white image patch will yield a massive dot product with any positive template), practical implementations rely on \textbf{Normalized Cross-Correlation (NCC)} or the \textbf{Sum of Squared Differences (SSD)}. NCC subtracts the local mean from both the template and the patch and divides by their standard deviations, mapping the output score strictly to the range $[-1,1]$.
+
+\subsection{Algorithm process}
+
+\begin{enumerate}
+    \item Initialize empty output matrix ('score map') with dimensions equal to scene image
+    \item Position top-left corner of tempalte at top-left corner of scene image
+    \item Compute chose similatiry metric (e.g. SSD or NCC) between tempalte and current overlapped scene pixels
+    \item Store resulting scalar score in output matrix at location corresponding to center of template
+    \item Slide template one pixel right, and repeat computation
+    \item Onee template reaches right edge, shift it down one row and return to left edge
+    \item Analyze completed score map using operations like \texttt{cv.minMaxLoc()} to locate global extremum (peak of dot-product response)
+\end{enumerate}
+
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Imagine looking for specific jigsaw puzzle piece by sliding it smoothly over a completely assembled puzzle
+    \item At most locations, colors and shapes will completely mismatch, causing destructive interference and resulting in low correlation score
+    \item However, when slide piece exactly over true location, every printed color perfectly aligns with target
+    \item Mathematical sum of these synchronized values creates a massive, distinct peak in response map
+\end{enumerate}
+
+\subsection{Limitations}
+
+\begin{enumerate}
+    \item Most severe limitation of template matching is extreme fragility to geometric transformations and photometric variations
+    \item If object in scene is slightly rotated, warped by 3D perspective, partially occluded, or illuminated differently from template, the pixel-by-pixel dot product completely collapses, and object will go undetected
+    \item Furthermore, standard template match is completely scale-dependent; a 50 x 50 tempalte of car will entirely fail to detect exact same car if it moves closer to camera and occupies 100 x 100 pixels
+\end{enumerate}
+
+
+\section{Invariance in Object Detection}
+
+\subsection{Concept Overview}
+
+\begin{enumerate}
+    \item Invariance is critical requirement for robust object detection
+    \item Algorithm possesses invariance if its ability to recognize an object remains entirely unaffected by specific transformations applied to that object
+    \item \textbf{Translation Invariance}
+          \begin{enumerate}
+              \item Used in standard template matching, achieved by sliding-window technique
+              \item B/c evaluate correlation equation at absolutely every (x,y) coordinate, it doesn't mathematically matter where object translates within 2D plane; peak response will simply translate to match it
+          \end{enumerate}
+    \item \textbf{Scale Invariance}
+          \begin{enumerate}
+              \item Standard template matching entirely lacks Scale Invariance
+              \item If attempt to detect flock of birds at different distances from camera, a single-sized template will only match birds at one specific altitude
+              \item To detect all birds, must decouple templates fixed dimensions from varying dimensions of targets in real world
+          \end{enumerate}
+
+    \item Extra
+          \begin{enumerate}
+              \item Real World
+                    \begin{enumerate}
+                        \item In real-world envs, objects rarely appear in single fixed form
+                        \item Same object may appear under different lighting conditions, at different positions in an image, at different scales, or viewed from different orientations
+                        \item A detection algorithm must recognize object despite variations
+                    \end{enumerate}
+              \item Address
+                    \begin{enumerate}
+                        \item Addresses gap between ideal training conditions and real-world image variability
+                        \item If model only recognizes objects exacftly as they appear in training examples, it will fail when encountering even small changes in position, lighting, or orientation
+                        \item Incoporating invariance allows system to generalize beyond exact pixel matches
+                    \end{enumerate}
+              \item Goal
+                    \begin{enumerate}
+                        \item Goal not to ignore object identity, but rather to ignore changes that do not alter what object actually if
+                        \item Example, a car remains a car whether it is slightly rotated, appears smaller because it is farther away, or is positioned on left side of image instead of right
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+\section{Scale Invariance in Template Matching}
+
+\subsection{Why Scale Invariance is Necessary}
+
+In real-world images, objects rarely appear at the same size as the template used for detection. An object may appear closer to the camera, farther away, or captured with a different zoom level. As a result, the object's dimensions in the scene may differ from the template's dimensions.
+
+\textbf{Scale invariance} is the ability of an algorithm to recognize the same object even when its size changes.
+
+For example:
+
+\begin{itemize}
+    \item A template of a stop sign may be $32 \times 32$ pixels.
+    \item In the scene image, the stop sign might appear as $64 \times 64$ pixels (twice as large).
+    \item Alternatively, it might appear as $16 \times 16$ pixels (half the size).
+\end{itemize}
+
+A basic template matching algorithm would fail in these situations because the template and object would no longer align spatially.
+
+To solve this problem, we introduce a \textbf{scale factor}.
+
+\subsection{Definition of the Scale Factor}
+
+Let:
+
+\begin{itemize}
+    \item $W \times H$ represent the original template dimensions.
+    \item $s$ represent a \textbf{scaling factor}.
+\end{itemize}
+
+If an object appears larger or smaller in the scene, its dimensions become:
+
+\[
+    sW \times sH
+\]
+
+Where:
+
+\begin{itemize}
+    \item $s > 1$ means the object appears larger than the template
+    \item $s < 1$ means the object appears smaller than the template
+    \item $s = 1$ means the object size matches the template
+\end{itemize}
+
+\textbf{Analogy:}
+
+Imagine printing the same photograph at different zoom levels. The content of the photo is identical, but the number of pixels representing the object changes.
+
+Scale invariance ensures the algorithm can recognize the object regardless of that zoom level.
+
+\subsection{Two Mathematical Strategies}
+
+There are two possible mathematical approaches to comparing differently scaled objects.
+
+\subsubsection{Option 1: Scale the Template}
+
+We can resize the template itself to match the possible object size in the scene.
+
+Mathematically, this means resampling the template function:
+
+\[
+    h(x,y) \rightarrow h(x/s, y/s)
+\]
+
+\textbf{Interpretation:}
+
+\begin{itemize}
+    \item $h(x,y)$ represents the template image
+    \item $(x/s, y/s)$ stretches the template coordinates
+    \item The template becomes larger when $s > 1$
+\end{itemize}
+
+\textbf{Example}
+
+Original template:
+
+\[
+    32 \times 32
+\]
+
+Scale factor:
+
+\[
+    s = 2
+\]
+
+New template size:
+
+\[
+    64 \times 64
+\]
+
+\subsubsection{Computational Consequence}
+
+Template matching uses correlation or similarity metrics that perform a multiplication for every overlapping pixel.
+
+If the template size becomes:
+
+\[
+    sW \times sH
+\]
+
+then the total number of pixel operations becomes:
+
+\[
+    (sW)(sH) = s^2WH
+\]
+
+This means computational cost grows proportionally to:
+
+\[
+    O(s^2)
+\]
+
+\textbf{Key Insight}
+
+Doubling the template size does not double the cost — it \textbf{quadruples} it.
+
+Example:
+
+\begin{center}
+    \begin{tabular}{c|c}
+        Scale Factor & Relative Cost    \\
+        \hline
+        $s=1$        & $1 \times$ cost  \\
+        $s=2$        & $4 \times$ cost  \\
+        $s=3$        & $9 \times$ cost  \\
+        $s=4$        & $16 \times$ cost \\
+    \end{tabular}
+\end{center}
+
+Because template matching must be repeated at \textbf{every pixel location}, this quadratic growth becomes computationally devastating.
+
+\subsubsection{Option 2: Scale the Scene}
+
+Instead of enlarging the template, we resize the \textbf{scene image}.
+
+Mathematically:
+
+\[
+    f(x,y) \rightarrow f(sx, sy)
+\]
+
+Where:
+
+\begin{itemize}
+    \item $f(x,y)$ represents the scene image
+    \item Scaling reduces or enlarges the entire image
+\end{itemize}
+
+This approach keeps the template size constant.
+
+\subsection{The Image Pyramid Strategy}
+
+To implement scale invariance efficiently, computer vision systems typically use an \textbf{image pyramid}.
+
+\textbf{Definition}
+
+An image pyramid is a sequence of progressively smaller versions of an image.
+
+Each level of the pyramid represents the same image at a different scale.
+
+\subsection{Practical Algorithm}
+
+The practical algorithm for scale-invariant template matching proceeds as follows.
+
+\begin{enumerate}
+
+    \item Keep the template at its original fixed size.
+
+          Example:
+
+          \[
+              32 \times 32
+          \]
+
+    \item Search the original scene image using the sliding window template matching method.
+
+    \item Reduce the scene image size by a fractional scale factor.
+
+          Example:
+
+          \[
+              s = 0.9
+          \]
+
+    \item Run the same template matching algorithm on the smaller scene image.
+
+    \item Continue shrinking the scene image repeatedly.
+
+    \item Stop when the scene becomes smaller than the template.
+
+\end{enumerate}
+
+\subsection{Why This Works}
+
+When the scene image is reduced:
+
+\begin{itemize}
+    \item Large objects become smaller relative to the template.
+    \item Eventually, the object will match the template size at some pyramid level.
+\end{itemize}
+
+\textbf{Example}
+
+Suppose:
+
+\begin{itemize}
+    \item Template size: $32 \times 32$
+    \item Object size in scene: $64 \times 64$
+\end{itemize}
+
+If the scene is shrunk by a factor of $0.5$, the object becomes:
+
+\[
+    32 \times 32
+\]
+
+Now the template perfectly matches the object.
+
+\subsection{Conceptual Analogy}
+
+Imagine holding a magnifying glass over a map while trying to find a symbol.
+
+You could:
+
+\begin{itemize}
+    \item Print many different sizes of the symbol (expensive)
+    \item Or zoom the map in and out while keeping the symbol the same size
+\end{itemize}
+
+The second approach is significantly more efficient — which is exactly what the image pyramid method does.
+
+\subsection{Key Takeaways}
+
+\begin{itemize}
+
+    \item Scale invariance allows object detection to work even when objects appear at different sizes.
+
+    \item Directly scaling the template causes computational cost to grow quadratically.
+
+    \item Instead, computer vision systems shrink the scene image using an image pyramid.
+
+    \item The template remains fixed while the scene is searched at multiple scales.
+
+    \item This strategy dramatically reduces computational cost while preserving detection accuracy.
+
+\end{itemize}
+
+\subsubsection{Translation Invariance}
+\begin{enumerate}
+    \item Means object can appear anywhere in image and still be found
+    \item Detection algo should recognize same object regardless of its horizontal or vertical position
+    \item Do this by scanning image with sliding windows or using convolutional filters
+\end{enumerate}
+
+\subsubsection{Scale Invariance}
+\begin{enumerate}
+    \item Refers to ability to detect objects even when they appear at different sizes
+    \item An object closer to camera appears larger, while same object farther away appears smallers
+    \item Algos that lack scale invariance may only detect objects within a narrow size range
+\end{enumerate}
+
+\subsubsection{Rotation Invariance}
+\begin{enumerate}
+    \item Allows algo to recognize objects even when they are rotated relative to orientatioon seen during training
+    \item Example, detecting face whether it is upright, tilted slightly, or rotated at angle
+\end{enumerate}
+
+\subsubsection{Illumination Invariance}
+\begin{enumerate}
+    \item Lighting conditions largely affect pixel intensities
+    \item Illumination invariance ensures that changes in brightness, shadows, or lighting direction do not prevent object from being detected
+\end{enumerate}
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item If hold printed photo of a bird and want to find matching birds in sky, don't need to print progressively larger photos
+    \item Instead, wait for birds to fly further away (which naturally scales them down optically), or look through wrong end of pair of binoculars to shrink entire sky
+    \item By shrinking world to match tempalte, amount of work done per detection remains strictly capped
+\end{enumerate}
+
+\subsection{Limitations}
+\begin{enumerate}
+    \item While shrinking image solves computational problem, it introduces severe information loss
+    \item Shrinking an image requires discarding pixels, which destroys high-frequency details
+    \item Eventually, an image can be reduced so much that a complex object becomes unrecognizable sub-pixel blur
+\end{enumerate}
+
+
+\section{Multi-Scale Image Pyramids}
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Conceptual framework for searching across scales is formally implemented using data structure known as \textbf{Multi-Scale Image Pyramid} aka \textbf{Guassian Pyramid}
+    \item A pyramid is a discrete sequence of images, where each subsequent image is lower-resolution replica of previous one
+    \item Physically impossible to simply delete alternating pixels to shrink image without incurring massive aliasing artifacts
+    \item B/c natural images contain high-frequency signals (sharp edges, fine textures like zebra stripes), sampling them at lower rate violates Nyquist-Shannon sampling theorem, causing such high frequencies to masquerade as false, low-frequency artifacts
+    \item To prevent this, Guassian Pyramid enforces a strict pre-filtering step before downsampling
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+
+The Gaussian pyramid is a multi-scale representation of an image, where each level is a progressively lower-resolution version of the original. The transition from level $g_k$ to the next coarser level $g_{k+1}$ is defined by convolution with a Gaussian kernel followed by downsampling:
+
+\[
+    g_{k+1}(i,j) = \sum_{m=-2}^{2} \sum_{n=-2}^{2} w(m,n) \, g_k(2i+m, 2j+n)
+\]
+
+\begin{itemize}
+    \item $g_k$ denotes the image at level $k$ of the pyramid.
+    \item $w(m,n)$ is a 2D Gaussian smoothing kernel. A common choice is a $5 \times 5$ binomial kernel, e.g.,
+
+          \[
+              w = \frac{1}{16} \begin{bmatrix} 1 & 4 & 6 & 4 & 1 \\ 4 & 16 & 24 & 16 & 4 \\ 6 & 24 & 36 & 24 & 6 \\ 4 & 16 & 24 & 16 & 4 \\ 1 & 4 & 6 & 4 & 1 \end{bmatrix}
+          \]
+
+    \item The factor of $2$ in the indexing $(2i,2j)$ represents downsampling, i.e., skipping every other row and column.
+\end{itemize}
+
+This formulation ensures that high-frequency components are smoothed before the image is subsampled, preventing aliasing artifacts.
+
+\subsection{Algorithmic Construction}
+
+The Gaussian pyramid can be efficiently implemented using dedicated library functions such as \texttt{cv.pyrDown()} in OpenCV. The process is as follows:
+
+\begin{enumerate}
+    \item Initialize a list to store pyramid levels:
+          \[
+              \texttt{gaussian\_pyramid} = [\texttt{original\_image}]
+          \]
+    \item For the desired number of levels, repeat:
+          \begin{enumerate}
+              \item Retrieve the previous level image:
+                    \[
+                        \texttt{prev\_level} = \texttt{gaussian\_pyramid[-1]}
+                    \]
+              \item Apply a low-pass Gaussian filter to \texttt{prev\_level} to remove high-frequency components that could cause aliasing.
+              \item Downsample the filtered image by discarding every even row and even column.
+              \item Append the resulting half-sized image to the \texttt{gaussian\_pyramid} list.
+          \end{enumerate}
+\end{enumerate}
+
+This iterative process produces a hierarchy of images where each level represents a progressively coarser, smoothed version of the original. Such pyramids are fundamental in multi-scale image processing, including image blending, object detection, and template matching.
+
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Building a Gaussian Pyramid is like looking at a highly detailed painting and taking a step backward
+    \item At first, see individual brushstrokes
+    \item When step back (applying blur and shrinking field of view), sharp strokes blur into smooth gradients, but overall shapes remain intact
+    \item Each level of pyramid represents scene abstracted to slightly higher level, trading fine detail for spatial compression
+\end{enumerate}
+
+
+\section{Iterative Detection Algorithms}
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Object detection systems rarely deployed to find exactly one target
+    \item Practical CV requires finding arbitrary number of objects across a massive variety of scales
+    \item Requires graduating from naive ''single-best-match'' paradigms to robust iterative architectures that process dense, multi-dimensional response maps
+    \item Progression of detection algorithms involves chaining together correlation, thresholding, multi-scale representations, and conflict resolution into a single unified pipeline
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+
+\begin{enumerate}
+    \item \textbf{Single Object Detection:} Locate coordinates of strongest response in correlation map:
+          \[
+              (i^*, j^*) = \arg\max_{i,j} g[i,j]
+          \]
+          where \(g[i,j]\) represents correlation score at pixel location \((i,j)\).
+
+    \item \textbf{Multi-Object Detection:} Identify all candidate coordinates exceeding a threshold \(\tau\):
+          \[
+              S = \{ (i,j) \mid g[i,j] > \tau \}
+          \]
+
+    \item \textbf{Multi-Scale, Multi-Object Detection:} Extend detection across a Gaussian pyramid of scales \(k\):
+          \[
+              S = \{ (i,j,k) \mid g_k[i,j] > \tau \}
+          \]
+          Here, \(g_k[i,j]\) denotes correlation score at scale \(k\) and pixel location \((i,j)\), and spatial suppression constraints (such as Non-Maximal Suppression) are applied across both spatial and scale dimensions
+\end{enumerate}
+
+\subsection{Algorithm Process}
+Evolution of algorithm follows three major iterations: \textbf{Algorithm 1.0 (Single Object)}
+\begin{enumerate}
+    \item Compute cross-correlation map over single scale
+    \item Find absolute maximum location using \texttt{np.argmax}
+    \item Draw a bounding box (Fails instantly if 0 objects or 5 objects are present)
+\end{enumerate}
+
+\subsection{Algorithm 2.0 (Multi-Object)}
+\begin{enumerate}
+    \item Compute cross-correlation map over single scale
+    \item Reject all coordinates whose score falls below a threshold \(\tau\).
+    \item Apply Non-Maximal Suppression (NMS) to surviving candidates to remove overlapping duplicates
+\end{enumerate}
+
+\subsection{Algorithm 3.0 (Multi-Object, Multi-Scale)}
+\begin{enumerate}
+    \item Construct multi-scale Gaussian Pyramid of scene
+    \item Iterate through every scale, executing correlation computation to produce a 3D volume of scores
+    \item Threshold entire 3D volume to isolate candidates
+    \item Apply an advanced NMS algorithm that suppresses neighbors not just in 2D space, but across adjacent pyramid scales
+\end{enumerate}
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Think of Algo 1.0 as a person who looks at a crowd, points to tallest person, and steps
+    \item Algo 2.0 establishes a specific height requirement (the threshold) and selects everyone who passes, but gets confused when a person is measured multiple times
+    \item Algo 3.0 looks at crowd through various optical lenses (scales), applies height requirement everywhere, and mathematically ensures every unique human is counted exactly once, regardless of their distance from observer
+\end{enumerate}
+
+
+\section{Thresholding and Non-Maximal Suppression (NMS)}
+
+\subsection{Concept Overview}
+
+\begin{enumerate}
+    \item When object detector slides over a scane, it rarely produces single, perfectly isolated ''hit''
+    \item Instead, as template overlaps 80\%, then 90\%, then 100\%, and back to 90\% of target, it generates cluster of extremely high scores
+    \item Without intervention, system would draw hundreds of slightly shifted bounding boxes around a single faces
+    \item To resolve this, system relies on two filtering mechanisms
+          \begin{enumerate}
+              \item \textbf{Thresholding} \- acts as absolute baseline of confidence, rejecting any area of image that doesn't look sufficiently like template
+              \item \textbf{Non-Maximal Suppression (NMS)} \- acts as spatial referee
+                    \begin{enumerate}
+                        \item Operates under assumption that an object occupies finite space, therefore, multiple overlapping high-confidence detections must simply be redundant observations of exact same object
+                        \item NMS enforces sparsity, ensuring only single strongest signal within a local neighborhood is kept
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsection{Mathematical Formulation}
+Let $B = \{b_1, b_2, \dots, b_n\}$ represent candidate bounding boxes, and $S = \{s_1, s_2, \dots, s_n\}$ their confidence scores.
+
+\begin{itemize}
+    \item \textbf{Thresholding:}
+          \[
+              B_{\text{filtered}} = \{b_i \in B \mid s_i \ge \tau\}
+          \]
+          Only boxes with scores above threshold $\tau$ are kept.
+
+    \item \textbf{NMS Constraint:}
+          \[
+              b_i \text{ is suppressed if } \exists b_j \text{ such that } s_j > s_i \text{ AND } \text{Similarity}(b_i, b_j) > \lambda
+          \]
+          Here, $\lambda$ is an overlap threshold (e.g., 0.5) and \texttt{Similarity} is usually Intersection-over-Union (IoU). Boxes with excessive overlap to a higher-scoring box are removed.
+\end{itemize}
+
+\subsection{Algorithm Process}
+\begin{enumerate}
+    \item Initialize empty list \texttt{final\_detections}.
+    \item Remove all boxes with score below $\tau$ (thresholding).
+    \item Sort remaining boxes in descending order of confidence scores.
+    \item Pop highest-scoring box and append it to \texttt{final\_detections}.
+    \item For all remaining boxes, calculate geometric overlap (IoU) with the recently selected box:
+          \begin{itemize}
+              \item If overlap $> \lambda$, remove the box from the candidate list (suppress it).
+          \end{itemize}
+    \item Repeat steps 4-5 until no boxes remain.
+\end{enumerate}
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Imagine dropping handful of marbles onto topographic map
+    \item Marbles will roll into valleys (local maxima of correlation scores)
+    \item B/c they have physical widthm, they cluster together at bottom
+    \item NMS is process of looking at each cluster, finding single marble resting at absolute lowest point of valley, and removing all other marbles touching it
+\end{enumerate}
+
+\subsection{Limitations}
+\begin{enumerate}
+    \item Greedy nature of NMS creates failure cases in crowded environments
+    \item If two people are walking closely side-by-side, their bounding boxes will naturally overlap heavily
+    \item A standard NMS algo will view this overlap, assume it's redundant detection of a single person, and ruthlessly delete the prediction with slightly lower score, causing system to hallucinate that second person doesn't exist
+\end{enumerate}
+
+\section{Intersection Over Union (IoU)}
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item To execute NMS, algo requires rigorously defined, scale-invariant mathematical definition of what it means for two bounding boxes to be ''neighbors'' or to ''overlap''
+    \item Relying on simple pixel distances between centers of boxes fails b/c a 10-pixel distance is meaningless for a massive truck but highly significant for a small coin
+\end{enumerate}
+
+\subsection{IoU}
+\begin{enumerate}
+    \item Solves above problem by normalizing overlap by total size of objects
+    \item Provides pure ratio representing geometric similatiry, entirely decoupled from absolute pixel coordinates
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+
+For a predicted bounding box $B_\text{pred}$ and a ground truth or competing box $B_\text{gt}$:
+
+\[
+    \text{IoU} = \frac{\text{Area}(B_\text{pred} \cap B_\text{gt})}{\text{Area}(B_\text{pred} \cup B_\text{gt})}
+\]
+
+The union area can be computed geometrically as:
+
+\[
+    \text{Area}(B_\text{pred} \cup B_\text{gt}) = \text{Area}(B_\text{pred}) + \text{Area}(B_\text{gt}) - \text{Area}(B_\text{pred} \cap B_\text{gt})
+\]
+
+\textbf{Scalar bounds:}
+
+\[
+    0 \leq \text{IoU} \leq 1
+\]
+
+\begin{itemize}
+    \item $\text{IoU} = 0$: Boxes are completely disjoint.
+    \item $\text{IoU} = 1$: Boxes are identical and perfectly aligned.
+\end{itemize}
+
+\subsection{Algorithm Process}
+
+Given two boxes:
+
+\[
+    \text{Box 1: } (x_{1\text{min}}, y_{1\text{min}}, x_{1\text{max}}, y_{1\text{max}})
+\]
+\[
+    \text{Box 2: } (x_{2\text{min}}, y_{2\text{min}}, x_{2\text{max}}, y_{2\text{max}})
+\]
+
+\begin{enumerate}
+    \item Compute intersection coordinates:
+          \[
+              x_{\text{int min}} = \max(x_{1\text{min}}, x_{2\text{min}}), \quad
+              y_{\text{int min}} = \max(y_{1\text{min}}, y_{2\text{min}})
+          \]
+          \[
+              x_{\text{int max}} = \min(x_{1\text{max}}, x_{2\text{max}}), \quad
+              y_{\text{int max}} = \min(y_{1\text{max}}, y_{2\text{max}})
+          \]
+    \item Calculate the area of the intersection (if $x_{\text{int max}} < x_{\text{int min}}$ or $y_{\text{int max}} < y_{\text{int min}}$, area = 0).
+    \item Calculate individual areas of Box 1 and Box 2:
+          \[
+              \text{Area}_1 = (x_{1\text{max}} - x_{1\text{min}})(y_{1\text{max}} - y_{1\text{min}})
+          \]
+          \[
+              \text{Area}_2 = (x_{2\text{max}} - x_{2\text{min}})(y_{2\text{max}} - y_{2\text{min}})
+          \]
+    \item Compute union area:
+          \[
+              \text{Union} = \text{Area}_1 + \text{Area}_2 - \text{Area}_{\text{intersection}}
+          \]
+    \item Divide intersection by union to produce IoU:
+          \[
+              \text{IoU} = \frac{\text{Area}_{\text{intersection}}}{\text{Union}}
+          \]
+\end{enumerate}
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item If two children draw rectangles on a window using dry-erase markers, IoU simply asks "Out of all glass covered by ink (union), what percent of that glass contains ink from both markets (intersection)?"
+    \item If IoU is very high, children traced exact same box
+    \item If low, they drew distinct areas
+\end{enumerate}
+
+
+\section{Evaluation Metrics: Precision, Recall, and Average Precision}
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item After object detector outputs final bounding boxes, must quantify its performance
+    \item Insufficient to simple state ''accuracy'', b/c background dominates most images
+    \item If image has 1 car and 1,000,000 background pixels, a model that predicts ''no cars exists'' achieves 99.99\% pixel accuracy but is useless
+    \item Instead, detection models evaluated using \textbf{Precision} \& \textbf{Recall}, measured against labeled ground truth datasets
+    \item B/c models output confidence scores, performance changes depending on where we set acceptance threshold
+    \item To holistically evaludate model across all possible thresholds, plot a \textbf{Precision-Recall Curve} \& calculate \textbf{Average Precision (AP)}
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+In object detection, evaluate model predictions by comparing them to ground-truth bounding boxes. Evaluation relies on \textbf{Intersection over Union (IoU)} threshold, typically $\text{IoU} \ge 0.5$. Predictions categorized as follows:
+\begin{itemize}
+    \item \textbf{True Positive (TP)}: A predicted bounding box that correctly overlaps a ground-truth box.
+    \item \textbf{False Positive (FP)}: A predicted bounding box that does not overlap any ground-truth box, or is a duplicate detection of an already matched ground-truth.
+    \item \textbf{False Negative (FN)}: A ground-truth box that the model completely failed to predict.
+\end{itemize}
+Using these definitions, we calculate the following core evaluation metrics:
+
+\begin{enumerate}
+    \item \textbf{Precision}
+          \begin{enumerate}
+              \item Precision measures the accuracy of the model's predictions:
+              \item \begin{equation}
+                        \text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}
+                    \end{equation}
+              \item \textit{Interpretation:} What fraction of the model's predicted boxes are actually correct?
+          \end{enumerate}
+    \item \textbf{Recall}
+          \begin{enumerate}
+              \item Recall measures the coverage of the model over the ground-truth objects:
+              \item \begin{equation}
+                        \text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}
+                    \end{equation}
+              \item \textit{Interpretation:} What fraction of the true ground-truth objects did the model successfully detect?
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Algorithm Process}
+To compute Average Precision:
+\begin{enumerate}
+    \item Run detector on test dataset and collect every bounding box prediction along with its confidence score
+    \item Sort all predictions globally in descending order of confidence score
+    \item Iterate down list, treading each confidence score as a new, hypothetical threshold
+    \item At each step, calculate cumulative True Positives and False Positives, and compute current Precision and Recall
+    \item Plot these values on a 2D graph with recall on X-axis and Precision on Y-axis
+    \item Calculate exact Area Under the Curve (AUC) --> this single scalar valur is Average Precision
+\end{enumerate}
+
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Image metal detector sweeping a beach
+    \item \textbf{Recall} measures how many of actual buried coins machine beeped for
+    \item \textbf{Precision} measures how many of those beeps were actually coins instead of rusty nails
+\end{enumerate}
+
+\subsection{Intuition}
+
+To build an intuitive understanding of \textbf{Precision} and \textbf{Recall}, consider the analogy of a \textbf{metal detector} sweeping across a beach in search of buried coins.
+
+\begin{itemize}
+    \item \textbf{Recall} answers the question: \\
+          \textit{``Out of all the actual coins buried in the sand, how many did the detector successfully find?''}
+    \item \textbf{Precision} answers the question: \\
+          \textit{``Out of all the times the detector beeped, how many were actually coins (not junk)?''}
+\end{itemize}
+
+\paragraph{Definitions:}
+
+\begin{itemize}
+    \item \textbf{Recall (Sensitivity):} The ability of a model to find all relevant instances.
+          \[
+              \text{Recall} = \frac{\text{True Positives (TP)}}{\text{True Positives (TP)} + \text{False Negatives (FN)}}
+          \]
+    \item \textbf{Precision:} The accuracy of the model's positive predictions.
+          \[
+              \text{Precision} = \frac{\text{True Positives (TP)}}{\text{True Positives (TP)} + \text{False Positives (FP)}}
+          \]
+\end{itemize}
+
+\paragraph{Precision-Recall Trade-Off:}
+
+Precision and Recall are often in tension due to the choice of a \textbf{decision threshold}:
+
+\begin{itemize}
+    \item \textbf{Maximizing Recall (Low Threshold):} The detector beeps at almost everything.
+          \begin{itemize}
+              \item Finds all coins $\rightarrow$ Recall $\approx 100\%$
+              \item Many non-coins trigger beeps $\rightarrow$ many False Positives
+              \item Result: Precision drops significantly
+          \end{itemize}
+          \textit{Analogy: Digging everywhere guarantees you won't miss coins, but most digs are useless.}
+
+    \item \textbf{Maximizing Precision (High Threshold):} The detector beeps only when extremely confident.
+          \begin{itemize}
+              \item Almost every beep is a real coin $\rightarrow$ Precision $\approx 100\%$
+              \item Many coins are missed $\rightarrow$ many False Negatives
+              \item Result: Recall drops significantly
+          \end{itemize}
+          \textit{Analogy: Only digging when absolutely certain saves effort, but you leave many coins undiscovered.}
+\end{itemize}
+
+\paragraph{Precision-Recall Curve:}
+
+The relationship between precision and recall can be visualized with a \textbf{Precision-Recall (PR) curve}:
+
+\begin{itemize}
+    \item The \textbf{x-axis} represents Recall
+    \item The \textbf{y-axis} represents Precision
+\end{itemize}
+
+\textbf{Goal:} A strong model pushes the PR curve toward the \textbf{top-right corner}, achieving both:
+\begin{itemize}
+    \item High Recall (few missed detections)
+    \item High Precision (few false alarms)
+\end{itemize}
+
+\paragraph{Key Insight:}
+
+\begin{quote}
+    A perfect model detects all real objects (\textbf{Recall = 1}) while making no false detections (\textbf{Precision = 1}), but in practice, improving one often comes at the cost of the other.
+\end{quote}
+
+\paragraph{Analogy Summary:}
+
+\begin{itemize}
+    \item \textbf{Recall} = ``Did we find all the coins?''
+    \item \textbf{Precision} = ``Were the things we found actually coins?''
+\end{itemize}
+
+
+\section{Hyperparameter Tuning}
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Machine learning models consist of parameters (weights learned automatically from data) and hyperparameters (structural variables set manually by human engineer before algorithm runs)
+    \item In context of classical object detection via template matching, performance of system hinges on few highly sensitive hyperparameters:
+          \begin{enumerate}
+              \item Scaling factor of multi-scale pyramid
+              \item Correlation acceptance threshold
+              \item IoU limit for NMS
+          \end{enumerate}
+    \item Tuning these parameters represents constant tug-of-war between computational efficiency and detection accuracy
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+
+In object detection, feature pyramids are often used to handle objects at different scales. Let us formalize this mathematically.
+
+\paragraph{Pyramid Scaling Ratio.} Consider a \textbf{pyramid scaling ratio} $s$, which defines how image is resized at each level of the pyramid. If image at level $i$ has dimensions $\text{ImageShape}[i]$, then dimensions at next level $i+1$ are given by:
+\[
+    \text{ImageShape}[i+1] = s \times \text{ImageShape}[i]
+\]
+
+\noindent Here, $0 < s < 1$ typically, meaning each successive level is a downscaled version of previous one.
+
+\paragraph{Area Reduction.} Because area of a 2D image scales quadratically with its dimensions, total area of image at level $i+1$ is reduced by a factor of $s^2$:
+
+\[
+    \text{Area}[i+1] = s^2 \times \text{Area}[i]
+\]
+
+\paragraph{Effect on IoU.}
+\begin{enumerate}
+    \item Suppose an object exists in scene at a continuous scale factor of $\alpha$
+    \item Max possible IoU between fixed template and object is constrained by how finely pyramid samples scale space
+    \item If step size $s$ is too coarse (i.e. $s=0.5$), then discrete pyramid may miss optimal object scale, causing max IoU to decrease
+    \item In extreme cases, this max IoU can fall below threshold used for NMS, potentially causing missed detections
+          \[
+              \text{IoU}_{\max}(\alpha, s) \downarrow \text{ as } s \text{ becomes coarser.}
+          \]
+\end{enumerate}
+
+
+\paragraph{Key Insight.} Choosing an appropriate $s$ balances computational efficiency with detection accuracy: a smaller $s$ gives finer scale sampling and higher possible IoU, but increases the number of pyramid levels and computation.
+
+\end{document}
