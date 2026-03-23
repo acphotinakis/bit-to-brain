@@ -1,0 +1,1432 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Edges}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{The Physics and Definition of Edges}
+Edges are defined as local, sharp changes in image intensity (brightness) or color. In the real world, these changes arise from several physical phenomena. A \textbf{depth discontinuity} occurs when one object is in front of another, creating a sudden change in distance from the camera. A \textbf{surface reflectance discontinuity} happens when two adjacent surfaces have different colors or material properties, causing a change in how light is reflected. \textbf{Illumination discontinuities}, such as shadows, produce edges due to changes in lighting rather than object boundaries. Finally, changes in \textbf{surface orientation} affect how light reflects off a surface, leading to gradual or sharp intensity variations. These physical causes explain why edges are meaningful features in images.
+
+An \textbf{edge} occurs when pixel values change rapidly over a small region of an image. In simpler terms, if you move from one point in an image to another and notice a quick jump in brightness (light to dark) or color, you have likely crossed an edge.
+
+\textbf{Analogy:}
+Think of walking across a flat field and suddenly stepping onto a sidewalk curb. That sudden height change is similar to how an edge behaves in an image—a sharp transition rather than a gradual one.
+
+Edges are important because they capture the \textbf{structure} of a scene. Instead of processing every pixel, a computer can focus on edges to understand object boundaries, shapes, and important visual features. In this sense, edges act like a \textbf{skeleton} of the image, preserving essential information while reducing unnecessary detail.
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Edge detection is how computer finds where things suddenly change in a photo
+    \item Such edges are most important parts of a picture b/c they show shapes of objects
+    \item Edge happens whenever brightness or color jumps quickly in one spot
+    \item While look like simple lines on screen, usually happen b/c of four things in real 3D world
+          \begin{enumerate}
+              \item \textbf{Depth Discontinuities (Occlusion):}
+                    A depth discontinuity happens when one object blocks another. For example, a person standing in front of a tree creates an edge at the boundary between them. This occurs because the foreground and background have different visual properties, leading to a sudden change in pixel values.
+
+              \item \textbf{Corners and Surface Orientation Changes:}
+                    Edges can form where surfaces change direction, such as at corners or folds. For example, the corner of a box creates an edge even if the entire box is the same color. This happens because different faces reflect light differently.
+                    \textbf{Surface Orientation} refers to the direction a surface is facing relative to a light source.
+
+              \item \textbf{Changes in Color or Material:}
+                    Edges occur when the actual material or color of a surface changes, such as black ink on white paper or the stripes of a zebra.
+                    \textbf{Reflectance} is the property that describes how a surface reflects light, which determines its color.
+
+              \item \textbf{Illumination Changes (Shadows):}
+                    Edges can also result from lighting differences. For example, when a shadow is cast on the ground, the surface itself remains the same, but the brightness suddenly decreases where the shadow begins, creating an edge.
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Mathematical Formulation of Edge Detection}
+
+This section explains how a computer interprets an image as a mathematical object and uses calculus concepts to detect edges. The key idea is to transform a visual problem (finding object boundaries) into a problem of analyzing how a function changes.
+
+\subsubsection{The Image as a Function: $f(x,y)$}
+
+A digital image is not just a collection of pixels; it can be modeled as a mathematical function:
+\[
+    f(x,y)
+\]
+
+\textbf{Definition:}
+\begin{itemize}
+    \item $x, y$ represent spatial coordinates (horizontal and vertical position in the image).
+    \item $f(x,y)$ represents the \textbf{intensity} (brightness) at that point.
+\end{itemize}
+
+\textbf{Interpretation:}
+Think of the image as a \textbf{3D landscape}:
+\begin{itemize}
+    \item The $(x,y)$ plane is the ground.
+    \item The value $f(x,y)$ is the \textbf{height} at that location.
+\end{itemize}
+
+\textbf{Analogy:}
+\begin{itemize}
+    \item Dark pixels $\rightarrow$ low height (valleys, near 0)
+    \item Bright pixels $\rightarrow$ high height (peaks, near 255)
+\end{itemize}
+
+This transformation allows us to use calculus tools to analyze images.
+
+\subsubsection{The Gradient (First Derivative)}
+
+\textbf{Definition:}
+The \textbf{gradient} measures how quickly the intensity changes:
+\[
+    \nabla f = \left( \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right)
+\]
+
+\textbf{Key Idea:}
+Edges occur where the intensity changes \textbf{rapidly}.
+
+\textbf{Magnitude of Gradient:}
+\[
+    |\nabla f| = \sqrt{\left(\frac{\partial f}{\partial x}\right)^2 + \left(\frac{\partial f}{\partial y}\right)^2}
+\]
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Small gradient $\rightarrow$ flat region (no edge)
+    \item Large gradient $\rightarrow$ steep change (edge)
+\end{itemize}
+
+\textbf{Thresholding:}
+\begin{itemize}
+    \item A \textbf{threshold} is a cutoff value.
+    \item If $|\nabla f| > T$, the pixel is classified as an edge.
+\end{itemize}
+
+\textbf{Analogy:}
+Walking on terrain:
+\begin{itemize}
+    \item Flat ground $\rightarrow$ no edge
+    \item Sudden cliff $\rightarrow$ strong edge
+\end{itemize}
+
+\subsubsection{Zero-Crossing (Second Derivative)}
+
+\textbf{Definition:}
+The second derivative measures how the \textbf{rate of change itself} is changing.
+
+In images, this is often computed using the \textbf{Laplacian}:
+\[
+    \nabla^2 f = \frac{\partial^2 f}{\partial x^2} + \frac{\partial^2 f}{\partial y^2}
+\]
+
+\textbf{Key Idea:}
+Edges are located at points where the second derivative changes sign.
+
+\textbf{Zero-Crossing:}
+\begin{itemize}
+    \item Positive value $\rightarrow$ concave up
+    \item Negative value $\rightarrow$ concave down
+    \item Zero-crossing $\rightarrow$ exact center of the edge
+\end{itemize}
+
+\textbf{Analogy:}
+Climbing a hill:
+\begin{itemize}
+    \item Before peak: slope increasing (positive curvature)
+    \item After peak: slope decreasing (negative curvature)
+    \item Peak point: where curvature changes sign $\rightarrow$ edge center
+\end{itemize}
+
+\subsubsection{The Step Function (Ideal Edge Model)}
+
+\textbf{Definition:}
+A \textbf{step function} models a perfect edge:
+\[
+    f(x) =
+    \begin{cases}
+        I_1 & x < x_0    \\
+        I_2 & x \geq x_0
+    \end{cases}
+\]
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item $I_1$: intensity before the edge
+    \item $I_2$: intensity after the edge
+    \item $x_0$: location of the edge
+\end{itemize}
+
+\textbf{Interpretation:}
+This represents an \textbf{instant jump} in brightness.
+
+\textbf{Reality Note:}
+Real images are usually blurred, so edges are not perfectly sharp, but this model is useful for understanding.
+
+\subsubsection{Example: Black-to-White Vertical Edge}
+
+Consider an image defined as:
+\[
+    f(x,y) =
+    \begin{cases}
+        0   & x < 10    \\
+        255 & x \geq 10
+    \end{cases}
+\]
+
+\textbf{Step Function Representation:}
+\begin{itemize}
+    \item $I_1 = 0$ (black)
+    \item $I_2 = 255$ (white)
+    \item $x_0 = 10$
+\end{itemize}
+
+\textbf{Edge Detection Methods:}
+\begin{enumerate}
+    \item \textbf{Gradient Method}
+          \begin{itemize}
+              \item At $x=10$, intensity jumps from 0 to 255
+              \item Gradient magnitude is very large:
+                    \[
+                        255 - 0 = 255
+                    \]
+              \item Since this exceeds any reasonable threshold, the edge is detected.
+          \end{itemize}
+    \item \textbf{Zero-Crossing Method}
+          \begin{itemize}
+              \item Second derivative shows:
+                    \begin{itemize}
+                        \item Positive spike before $x=10$
+                        \item Negative spike after $x=10$
+                    \end{itemize}
+              \item The point where it crosses zero is:
+                    \[
+                        x = 10
+                    \]
+          \end{itemize}
+\end{enumerate}
+
+\textbf{Final Insight:}
+\begin{itemize}
+    \item Gradient $\rightarrow$ detects \textbf{where change is large}
+    \item Zero-crossing $\rightarrow$ detects \textbf{exact center of the edge}
+\end{itemize}
+
+Together, these methods allow computers to precisely identify object boundaries in images.
+
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Imagine in pitch black room with a small, bright flashlight
+    \item As you move light around, everything is dark until beam hits edge of a table
+    \item Suddenly, you see a bright line where table starts and darkness ends
+    \item Edge detection is just a computer doing exact same thing
+    \item It scans a picture looking for sudden jumps from dark to light
+    \item Instead of using eyes, it uses math to spot cliffs of brightness, which tell it where one object ends and another begins
+\end{enumerate}
+
+
+\subsection{Practical Applications}
+\begin{enumerate}
+    \item Identifying specific physical cause of an edge allows advanced CV algos to parse 3D geometry of a scene
+    \item Example, autonomous driving systems rely on depth discountinuities to segment pedestrians from static background, while relying on surface reflectance discontinuities to dtect painted lane markings
+\end{enumerate}
+
+
+\section{The Purpose of Edge Detection}
+The goal of edge detection is to extract meaningful structural information from an image while discarding unnecessary details. Instead of working with full color or intensity values, edge detection produces a sparse representation that highlights only significant transitions. This simplifies computation because fewer data points are processed. The resulting representation is often binary, where edges are marked and non-edges are ignored. This process preserves important shape and boundary information, making it useful for tasks like object recognition, segmentation, and scene understanding.
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Standard high-resolution digital image contains millions of pixels, representing overwhelming volume of data
+    \item Processing entire grid pixel by pixel is computationally expensive
+    \item Fundamental rationale for edge detection is massive \textbf{information compression}
+    \item By extracting only edges, intentionally discard vast amounts of visually irrelevant data, such as large uniform pathes of color, smooth lighting gradients, and flat textures
+    \item Output is a sparse, binary representation (an image of mostly 0s with a few 1s denoting edges) that is computationally efficient to process
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+Edge detection can be understood as a \textbf{mathematical transformation} that converts a rich image into a much simpler representation.
+
+\subsection{Idea of a Mapping}
+
+In mathematics, a \textbf{mapping} (or function) takes an input and produces an output.
+
+\begin{itemize}
+    \item \textbf{Input domain:} A dense, multi-channel image
+    \item \textbf{Output domain:} A sparse, binary image
+\end{itemize}
+
+\textbf{Definitions:}
+\begin{itemize}
+    \item \textbf{Dense:} Almost every pixel contains meaningful information (like color values).
+    \item \textbf{Multi-channel:} Each pixel stores multiple values (e.g., Red, Green, Blue).
+    \item \textbf{Sparse:} Most values are zero, with only a few important points.
+    \item \textbf{Binary:} Each pixel can only be one of two values (0 or 1).
+\end{itemize}
+
+\textbf{Analogy:}
+Think of a detailed photograph versus a simple sketch. The photograph contains all colors and textures (dense), while the sketch only keeps the important outlines (sparse).
+
+\subsection{The Edge Function}
+
+The transformation is defined as a function:
+
+\[
+    E(x,y) =
+    \begin{cases}
+        1, & \text{if } (x,y) \text{ is an edge pixel} \\
+        0, & \text{otherwise}
+    \end{cases}
+\]
+
+\textbf{Explanation:}
+\begin{itemize}
+    \item $(x,y)$ represents the position of a pixel in the image.
+    \item $E(x,y)$ is the output at that pixel.
+    \item If a sharp change (an edge) is detected at that point, we assign a value of \textbf{1}.
+    \item If not, we assign \textbf{0}.
+\end{itemize}
+
+\textbf{Key Idea:}
+This function acts like a \textbf{filter} that keeps only important structural information (edges) and removes everything else.
+
+\subsection{Memory Reduction}
+
+A standard color image typically uses:
+\begin{itemize}
+    \item 8 bits for Red
+    \item 8 bits for Green
+    \item 8 bits for Blue
+\end{itemize}
+
+\[
+    \text{Total} = 24 \text{ bits per pixel}
+\]
+
+After edge detection:
+\begin{itemize}
+    \item Each pixel only needs \textbf{1 bit} (edge or no edge)
+\end{itemize}
+
+\[
+    \text{New Total} = 1 \text{ bit per pixel}
+\]
+
+\textbf{Why this matters:}
+\begin{itemize}
+    \item \textbf{Memory efficiency:} The image becomes 24$\times$ smaller.
+    \item \textbf{Speed:} Less data means faster processing.
+    \item \textbf{Focus:} Only the most important structural features remain.
+\end{itemize}
+
+\textbf{Analogy:}
+This is like compressing a full-color movie into a line drawing storyboard. You lose detail, but keep the essential structure needed to understand the scene.
+
+\subsection{Big Picture Insight}
+
+This transformation is powerful because it:
+\begin{itemize}
+    \item Converts complex visual data into a simple mathematical representation
+    \item Highlights boundaries and shapes
+    \item Enables higher-level tasks like object detection and recognition
+\end{itemize}
+
+In summary, edge detection is not just a visual trick—it is a \textbf{data reduction technique} that extracts meaningful structure from images using a simple binary function.
+
+\subsection{Algorithm Process}
+\begin{enumerate}
+    \item Process of creating sparse matrix involves thresholding
+    \item After calculating strength of intensity across image, algorithm applies a threshold to retain only most significant changes, converting continuous strength values into binary 1s and converting everything else to 0s
+\end{enumerate}
+
+\subsection{Practical Applications}
+\begin{enumerate}
+    \item Sparse representation is backbone of classical object recognition
+    \item Once image is reduced to structural skeleton, algos can perform shape analysis, line fitting, and template matching without being confused by color of an object or specific lighting conditions under which the photo was taken
+\end{enumerate}
+
+\subsection{Limitations}
+\begin{enumerate}
+    \item Aggressive discarding of data is double edged sword
+    \item By throwing away color and texture, algo binds itself to interior object features
+    \item A sparse edge map of a red apple and green apple of same size will look identical
+    \item If a task requires distinguishing objects based on texture or chromaticity, edge map alone is insufficient
+\end{enumerate}
+
+
+
+\section{Image Gradients and Finite Differences}
+Edge detection can be formulated mathematically using derivatives. In a continuous image, edges correspond to locations where the intensity function changes rapidly, which can be captured using the first derivative (gradient). For digital images, which are discrete, derivatives must be approximated using \textbf{finite differences}. A forward difference approximates the derivative using:
+\[
+    \frac{\partial I}{\partial x} \approx I(x+1, y) - I(x, y)
+\]
+A central difference provides a more accurate approximation:
+\[
+    \frac{\partial I}{\partial x} \approx \frac{I(x+1, y) - I(x-1, y)}{2}
+\]
+These approximations allow computation of gradients in both the x and y directions, forming the basis for detecting edges.
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item To mathematically locate rapid change in image intensity, use calculus
+    \item In a 1D continuous signal $f(x)$, a sharp change (discontinuity) corresponds to a massive peak in first derivative $f'(x)$
+    \item B/c a digital image is a 2D function $I(x,y)$, extend this concept using \textbf{Gradient Operator}
+    \item Gradient is a 2D vector that points in direction of most rapid increase in image intensirty, and its magnitude dicates steepness of increase
+\end{enumerate}
+
+\textbf{Analogy:} Think of driving a car:
+\begin{itemize}
+    \item Position $\rightarrow f(x)$
+    \item Speed $\rightarrow f'(x)$ (rate of change)
+\end{itemize}
+
+\textbf{Definition:} The \textit{gradient} is a vector that:
+\begin{itemize}
+    \item Points in the direction of the greatest increase in intensity
+    \item Has a magnitude representing how steep that increase is
+\end{itemize}
+
+\textbf{Analogy:} Imagine standing on a mountain:
+\begin{itemize}
+    \item The gradient direction tells you which way to walk to go uphill fastest
+    \item The gradient magnitude tells you how steep the hill is
+\end{itemize}
+
+\textbf{Conclusion:} True derivatives cannot be computed; instead, we approximate them using \textbf{finite differences}.
+
+\textbf{Definition:} Finite differences approximate derivatives by measuring changes between neighboring pixel values.
+
+\textbf{Analogy:} Instead of measuring an exact slope at a point, you estimate it by looking at the difference between nearby points.
+
+\vspace{1em}
+
+\subsection{Mathematical Formulation}
+
+\begin{enumerate}
+    \item The continuous 2D gradient is defined as:
+          \[
+              \nabla I =
+              \begin{bmatrix}
+                  \frac{\partial I}{\partial x} \\
+                  \frac{\partial I}{\partial y}
+              \end{bmatrix}
+          \]
+    \item For discrete images, we approximate using \textbf{central finite differences}:
+          \[
+              \frac{\partial I}{\partial x} \approx \frac{I(x+1,y) - I(x-1,y)}{2}
+          \]
+          \[
+              \frac{\partial I}{\partial y} \approx \frac{I(x,y+1) - I(x,y-1)}{2}
+          \]
+    \item \textbf{Explanation:}
+          \begin{itemize}
+              \item $I(x+1,y)$ = pixel to the right
+              \item $I(x-1,y)$ = pixel to the left
+              \item The difference measures how intensity changes horizontally
+          \end{itemize}
+    \item These computations are efficiently implemented using \textbf{convolution}.
+
+          \textbf{Definition:} Convolution ($\ast$) is an operation where a small matrix (called a kernel or filter) slides across the image to compute local changes.
+
+          \textbf{Horizontal gradient:}
+          \[
+              G_x = I \ast [-1 \;\; 0 \;\; 1]
+          \]
+
+          \textbf{Vertical gradient:}
+          \[
+              G_y = I \ast
+              \begin{bmatrix}
+                  -1 \\
+                  0  \\
+                  1
+              \end{bmatrix}
+          \]
+
+          \textbf{Explanation:}
+          \begin{itemize}
+              \item $G_x$ detects left-to-right intensity changes
+              \item $G_y$ detects top-to-bottom intensity changes
+          \end{itemize}
+
+          From these, we compute two key properties:
+
+          \textbf{1. Gradient Magnitude (Edge Strength)}
+          \[
+              \|\nabla I\| = \sqrt{G_x^2 + G_y^2}
+          \]
+
+          \textbf{Meaning:} Measures how strong the edge is.
+
+          \textbf{2. Gradient Orientation (Edge Direction)}
+          \[
+              \theta = \tan^{-1}\left(\frac{G_y}{G_x}\right)
+          \]
+
+          \textbf{Meaning:} Indicates the direction of the edge normal (perpendicular to the edge).
+
+          \vspace{1em}
+
+\end{enumerate}
+
+\subsection{Algorithm Process}
+\begin{enumerate}
+    \item Convert the image to grayscale (if necessary).
+    \item Convolve the image with the horizontal kernel to compute $G_x$.
+    \item Convolve the image with the vertical kernel to compute $G_y$.
+    \item For each pixel $(i,j)$:
+          \begin{itemize}
+              \item Compute $\sqrt{G_x^2 + G_y^2}$ to get edge strength.
+              \item Compute $\tan^{-1}(G_y / G_x)$ to get edge direction.
+          \end{itemize}
+    \item Store results in gradient magnitude and orientation maps.
+\end{enumerate}
+
+\subsection{Limitations}
+Finite difference methods operate on very small neighborhoods (e.g., $1 \times 3$ windows). This causes a major issue:
+
+\begin{itemize}
+    \item They respond to \textit{any} rapid intensity change—including noise
+    \item High-frequency noise produces false edges
+\end{itemize}
+
+
+\section{Noise Sensitivity and Gaussian Smoothing}
+Differentiation is highly sensitive to noise because noise often contains high-frequency components. When computing derivatives, these high-frequency variations can be amplified, leading to false edge detections. To address this, a \textbf{Gaussian smoothing filter} is applied before computing gradients. This acts as a low-pass filter, reducing noise while preserving important structural information. The Gaussian function spreads intensity values in a controlled way, ensuring that the image becomes smoother and more stable for derivative computation.
+
+
+\subsection{Concept Overview}
+\subsection{Noise and Gaussian Smoothing}
+
+\begin{itemize}
+
+    \item \textbf{Overview}
+
+          This section explains why digital images are noisy and how Gaussian smoothing (blurring) is used to improve edge detection.
+
+    \item \textbf{1. The Problem: Noise (Digital Static)}
+
+          Digital cameras are not perfect. Images often contain noise, which appears as random visual artifacts.
+
+          \begin{itemize}
+              \item \textbf{Thermal Noise:} Heat in the sensor creates random bright dots.
+              \item \textbf{Low Light Noise:} Insufficient light leads to grainy, "crunchy" images.
+              \item \textbf{Salt-and-Pepper Noise:} Transmission errors produce random black and white pixels.
+          \end{itemize}
+
+    \item \textbf{2. Why Math Fails: The Noise Trap}
+
+          Edge detection relies on identifying rapid changes in intensity (derivatives).
+
+          \begin{itemize}
+              \item Noise consists of many small, rapid intensity changes.
+              \item These appear as false edges to mathematical operators.
+              \item As a result, real edges become obscured by excessive false detections.
+          \end{itemize}
+
+    \item \textbf{3. The Solution: Gaussian Smoothing}
+
+          To address noise, the image is smoothed before edge detection.
+
+          \begin{itemize}
+              \item \textbf{Gaussian Filter:} A weighting function shaped like a bell curve.
+              \item \textbf{Process:} Each pixel is replaced by a weighted average of its neighbors.
+              \item \textbf{Effect:} Random noise is reduced because it cancels out during averaging.
+          \end{itemize}
+
+    \item \textbf{4. Step-by-Step Process}
+
+          \begin{enumerate}
+              \item Start with a noisy image.
+              \item Apply Gaussian smoothing to reduce noise.
+              \item Apply edge detection to the smoothed image.
+              \item Extract only meaningful edges corresponding to real structures.
+          \end{enumerate}
+
+    \item \textbf{5. Intuition: Gravel Road Analogy}
+
+          \begin{itemize}
+              \item Raw image: Driving with rigid wheels causes sensitivity to small bumps (noise).
+              \item Gaussian blur: Soft tires absorb small bumps, allowing only large bumps (true edges) to be detected.
+          \end{itemize}
+
+    \item \textbf{6. Trade-Off: Loss of Precision}
+
+          \begin{itemize}
+              \item Blurring reduces noise but also reduces sharpness.
+              \item Sharp edges become spread over multiple pixels.
+              \item The exact location of the edge becomes less precise.
+          \end{itemize}
+
+    \item \textbf{Conclusion}
+
+          Gaussian smoothing improves edge detection by removing noise, but introduces a trade-off between noise reduction and spatial accuracy.
+
+\end{itemize}
+
+\subsection{Mathematical Formulation}
+
+Let $f(x)$ be our true, clean optical signal and $n(x)$ be high-frequency noise. Our observed image is
+\[
+    I(x) = f(x) + n(x).
+\]
+
+When we apply the derivative operator:
+\[
+    \frac{d}{dx} I(x) = \frac{d}{dx} f(x) + \frac{d}{dx} n(x).
+\]
+
+Because the spatial frequency of the noise $n(x)$ is vastly higher than the frequency of the true signal $f(x)$, the magnitude of its derivative $n'(x)$ explodes algebraically, entirely burying the true edge signal $f'(x)$.
+
+\subsection{Algorithm Process}
+
+To solve this mathematical instability, we must forcibly suppress the noise before computing the derivative.
+
+Define a Gaussian low-pass filter:
+\[
+    g(x,y) = \frac{1}{2\pi\sigma^2} e^{-\frac{x^2 + y^2}{2\sigma^2}}.
+\]
+
+Convolve the noisy input image with this Gaussian kernel to blur it:
+\[
+    I_{\text{smooth}} = I * g.
+\]
+
+Compute the spatial derivative of the smoothed result:
+\[
+    \text{EdgeMap} = I_{\text{smooth}} * \frac{d}{dx}.
+\]
+
+\subsection{Intuition}
+\begin{enumerate}
+    \item Imagine feeling large, physical speed bumps on a gravel road while driving a car equipped with solid metal wheels
+    \item Every tiny pebble (noise) will violently shake the car, completely masking impact of speed bumps
+    \item Applying a Gaussian blur is mathematical equivalent of putting soft rubber tires on car
+    \item Rubber absorbs high-frequency impacts of tiny pebbles, allowing suspension to smoothly and clearly detect large, physical speed bumps (true edges)
+\end{enumerate}
+
+
+
+\section{Derivative of Gaussian Filters}
+Instead of performing smoothing and differentiation as separate steps, they can be combined into a single operation using the associative property of convolution. This leads to the concept of \textbf{Derivative of Gaussian (DoG)} filters. Mathematically:
+\[
+    \frac{d}{dx}(G * I) = \left(\frac{dG}{dx}\right) * I
+\]
+This means the derivative of a smoothed image is equivalent to convolving the image with the derivative of a Gaussian kernel. Practical implementations include filters like the Sobel and Prewitt operators, which approximate this combined effect efficiently.
+
+
+
+\subsection{Concept Overview}
+
+In previous section, we established a strictly sequential two-step pipeline:
+\begin{enumerate}
+    \item Blur image with a Gaussian kernel
+    \item Differentiate blurred image with a finite difference kernel
+\end{enumerate}
+
+\subsubsection{Key Mathematical Idea: Linearity and Associativity of Convolution}
+
+\textbf{Definition (Convolution):}
+Convolution is a mathematical operation that combines two functions (or matrices, in the case of images) to produce a third function. In image processing, it is used to apply filters (like blur or edge detection) to images.
+
+\textbf{Key Properties:}
+\begin{itemize}
+    \item \textbf{Linearity:} Scaling and adding inputs behaves predictably.
+    \item \textbf{Associativity:} The grouping of operations does not change the result.
+\end{itemize}
+
+Because convolution is associative, we can rewrite the pipeline as:
+\[
+    (\text{Image} * \text{Gaussian}) * \text{Derivative}
+    = \text{Image} * (\text{Gaussian} * \text{Derivative})
+\]
+
+\textbf{Analogy:}
+Think of convolution like applying filters to a photo. Instead of applying a blur filter and then an edge filter separately, you can combine both filters into one and apply it once.
+
+\subsubsection{Optimization Insight: Combining Operations}
+
+Performing two separate convolutions requires:
+\begin{itemize}
+    \item Two full passes over the image
+    \item Higher computational cost (especially for large images)
+\end{itemize}
+
+Instead, we can:
+\begin{itemize}
+    \item Pre-compute the \textbf{Derivative of the Gaussian}
+    \item Use it as a \textbf{single filter}
+\end{itemize}
+
+\textbf{Definition (Derivative of Gaussian):}
+The derivative of a Gaussian is a function obtained by differentiating the Gaussian smoothing function. It captures how intensity changes while still incorporating smoothing.
+
+\textbf{Why this works:}
+\begin{itemize}
+    \item The Gaussian handles \textbf{noise reduction} (smoothing)
+    \item The derivative detects \textbf{rate of change} (edges)
+    \item Combining them allows both to happen simultaneously
+\end{itemize}
+
+\subsubsection{Final Insight}
+
+By computing:
+\[
+    \text{Combined Filter} = \text{Gaussian} * \text{Derivative}
+\]
+
+we can apply:
+\[
+    \text{Image} * \text{Combined Filter}
+\]
+
+\textbf{Result:}
+\begin{itemize}
+    \item Noise is reduced
+    \item Gradients (edges) are computed
+    \item Only \textbf{one convolution pass} is required
+\end{itemize}
+
+\textbf{Intuition:}
+Instead of doing ``blur then detect edges,'' we design a smarter filter that does both at the same time. This is faster, cleaner, and more efficient—especially for large-scale image processing systems.
+
+\subsection{Mathematical Formulation}
+
+The continuous 2D Gaussian function is represented as:
+
+\[
+    G(x,y)=\frac{1}{2\pi\sigma^2} e^{-\frac{x^2+y^2}{2\sigma^2}}
+\]
+
+\textbf{Definition (Gaussian Function):}
+A Gaussian function is a smooth, bell-shaped surface used to blur images and reduce noise. The parameter $\sigma$ (standard deviation) controls the amount of smoothing:
+\begin{itemize}
+    \item Small $\sigma$ $\rightarrow$ less blur (preserves detail)
+    \item Large $\sigma$ $\rightarrow$ more blur (removes noise)
+\end{itemize}
+
+\textbf{Taking the Partial Derivative:}
+To detect edges, we measure how intensity changes. This is done by taking the partial derivative with respect to $x$:
+
+\[
+    \frac{\partial G}{\partial x} = -\frac{x}{\sigma^2} \, G(x,y)
+\]
+
+\textbf{Key Insight:}
+\begin{itemize}
+    \item The Gaussian component smooths the image
+    \item The derivative component detects change (edges)
+\end{itemize}
+
+\textbf{Geometric Interpretation:}
+When visualized in 3D, this function forms:
+\begin{itemize}
+    \item One positive lobe
+    \item One negative lobe
+\end{itemize}
+
+\textbf{Analogy:}
+This is similar to a slope detector placed on a smooth hill:
+\begin{itemize}
+    \item Flat regions $\rightarrow$ near zero response
+    \item Sharp transitions $\rightarrow$ strong positive or negative response
+\end{itemize}
+
+\subsection{Algorithm Process}
+
+\begin{enumerate}
+    \item Compute the Kernel
+          \begin{enumerate}
+              \item Analytically compute Derivative of Gaussian matrix for chosen scale $\sigma$
+              \item This step converts the continuous mathematical formula into actual numerical values
+          \end{enumerate}
+    \item Discretization
+          \begin{enumerate}
+              \item Truncate and discretize the continuous function into a finite grid (e.g. $3 \times 3$ or $5 \times 5$ )
+              \item Discretization is process of converting a continuous function into a grid of values that a compute can use
+              \item Like converting a smooth curve into pixels on a screen
+          \end{enumerate}
+    \item Convolution
+          \begin{enumerate}
+              \item Convolve raw input image exactly once with pre-computed matrix
+              \item Result
+                    \begin{enumerate}
+                        \item Noise is reduced (due to Gaussian smoothing)
+                        \item Image gradients are computed (due to derivative)
+                        \item Output is \textbf{denoised gradient map}
+                    \end{enumerate}
+          \end{enumerate}
+\end{enumerate}
+
+\textbf{Final Insight:}
+This algorithm replaces a two-step process (blur + differentiate) with a single efficient operation, improving both performance and numerical stability.
+
+\subsection{Limitations: The ``One Size'' Problem}
+
+While this approach is computationally efficient, it introduces an important limitation: \textbf{fixed scale}.
+
+\subsubsection*{The Problem}
+
+A small filter (such as a $3 \times 3$ Sobel filter) has a built-in level of smoothing determined by $\sigma$ (the standard deviation of the Gaussian).
+
+\textbf{Definition (Fixed Scale):}
+Fixed scale means the amount of smoothing is constant and cannot adapt to different levels of noise in an image.
+
+If the image is extremely noisy (for example, a photo taken in a very dark environment), a small filter:
+\begin{itemize}
+    \item Does not provide enough smoothing
+    \item Fails to adequately remove noise
+\end{itemize}
+
+\textbf{Analogy:}
+This is like trying to clean a heavily stained surface with a small cloth—it simply does not have enough coverage to be effective.
+
+\subsubsection*{The Trade-off}
+
+To handle high noise levels, we must increase the filter size (e.g., $15 \times 15$ or $31 \times 31$).
+
+\textbf{Effects of Larger Filters:}
+\begin{itemize}
+    \item \textbf{Improved Noise Reduction:} More smoothing power
+    \item \textbf{Increased Computational Cost:} More calculations per pixel
+    \item \textbf{Reduced Edge Precision:} Edges become thicker and less localized
+\end{itemize}
+
+\textbf{Definition (Edge Localization):}
+Edge localization refers to how accurately an algorithm can pinpoint the exact position of an edge.
+
+\textbf{Key Trade-off:}
+\begin{itemize}
+    \item Small filters $\rightarrow$ fast, sharp edges, poor noise handling
+    \item Large filters $\rightarrow$ better noise handling, slower computation, blurrier edges
+\end{itemize}
+
+\textbf{Final Insight:}
+There is no single filter size that works optimally for all images. This limitation motivates more advanced techniques (such as multi-scale methods) that adapt to different noise levels dynamically.
+
+
+
+\section{Scale-Space in Edge Detection}
+The parameter $\sigma$ in the Gaussian function controls the scale of smoothing. A small $\sigma$ preserves fine details and detects high-frequency edges, such as textures. A large $\sigma$ smooths out small variations and highlights only large, structural edges. This concept is known as \textbf{scale-space}, where analyzing an image at different scales reveals different levels of detail. Choosing the appropriate scale depends on the application and the type of features of interest.
+
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Edges do not possess a single, objective ground truth
+    \item Their validity depends entirely on scale of observation
+    \item When we apply a Gaussian blur to an image to combat noise, physical severity of that blur is strictly controlled by variance parameter, $\sigma$
+    \item The value of $\sigma$ dictates the spatial width of a low-pass filter
+    \item This directly determines the scale of the edges that will survive the differentiation process
+    \item By manipulating $\sigma$, an engineer determines whether the algo will extract fine, high-frequency textural details or coarse, overarching structural boundaries.
+\end{enumerate}
+
+\subsection{Concept: What is ``Scale''?}
+
+In the real world, edges exist at different sizes.
+
+\subsubsection*{Fine vs.\ Coarse Scale}
+\begin{itemize}
+    \item \textbf{Fine Scale:} Tiny details, like the pores on a person's skin or the threads in a shirt.
+    \item \textbf{Coarse Scale:} Large structures, like the outline of a person's head or the shape of the shirt.
+\end{itemize}
+
+\subsubsection{Role of $\sigma$ in Gaussian Blur}
+
+When we use a Gaussian blur to clean an image, the ``strength'' of that blur is determined by $\sigma$.
+
+\begin{itemize}
+    \item \textbf{Small $\sigma$ (Weak Blur):} Only the tiniest noise is removed. Fine details stay sharp.
+    \item \textbf{Large $\sigma$ (Strong Blur):} Everything but the biggest, most obvious shapes is washed away.
+\end{itemize}
+
+\subsection{Mathematical Formulation}
+\begin{enumerate}
+    \item The scale space of an image is a continuous 3D volume defined by:
+          \[
+              L(x,y,\sigma) = I(x,y) * G(x,y,\sigma)
+          \]
+          \textbf{1. The Variables}
+          \begin{itemize}
+              \item $I(x,y)$ (\textbf{The Input}): The original, raw image.
+                    \begin{itemize}
+                        \item $x, y$: Pixel coordinates (the ``address'' of a pixel).
+                    \end{itemize}
+
+              \item $G(x,y,\sigma)$ (\textbf{The Gaussian Filter}): The blurring tool.
+                    \begin{itemize}
+                        \item A 2D bell-shaped curve
+                        \item Values are highest at the center and decrease outward
+                    \end{itemize}
+
+              \item $\sigma$ (\textbf{Scale Parameter}): Controls the width of the Gaussian.
+                    \begin{itemize}
+                        \item Small $\sigma$: Thin curve $\rightarrow$ slight blur
+                        \item Large $\sigma$: Wide curve $\rightarrow$ strong blur
+                    \end{itemize}
+
+              \item $*$ (\textbf{Convolution}): The operation of applying the filter.
+              \item $L(x,y,\sigma)$ (\textbf{The Result}): A new image smoothed at scale $\sigma$
+          \end{itemize}
+
+
+    \item \textbf{Scale Space}
+          \begin{enumerate}
+              \item Scale space is a representation of an image at multiple levels of detail, created by progressively applying Gaussian blur with increasing $\sigma$.
+              \item As $\sigma$ increases, the cutoff frequency of the low-pass filter drops, progressively destroying higher-frequency components in the spatial domain.
+          \end{enumerate}
+    \item \textbf{Low-Pass Filter}
+          \begin{enumerate}
+              \item A low-pass filter removes high-frequency information (fine details and noise) while preserving low-frequency information (large structures).
+              \item \textbf{Analogy:}
+                    Imagine looking at an image through increasingly foggy glass:
+                    \begin{itemize}
+                        \item Small $\sigma$ $\rightarrow$ clear view with fine details
+                        \item Large $\sigma$ $\rightarrow$ only large shapes remain visible
+                    \end{itemize}
+          \end{enumerate}
+\end{enumerate}
+
+
+\subsection{Algorithm Process}
+
+There is no single ``correct'' $\sigma$. An algorithm must iterate through scale-space:
+
+\begin{enumerate}
+    \item Define a set of scales (e.g., $\sigma \in \{1,2,4,8\}$).
+    \item Generate the derivative of Gaussian filter for each scale.
+    \item Apply each filter to the image independently.
+    \item Analyze the resulting edge maps to find the structure at the desired semantic level.
+\end{enumerate}
+
+\textbf{Key Insight:}
+Different scales reveal different types of features:
+\begin{itemize}
+    \item Small scales capture fine details
+    \item Large scales capture dominant structures
+\end{itemize}
+
+\textbf{Final Insight:}
+By analyzing multiple scales, we overcome the limitation of fixed filter size and obtain a more complete understanding of the image.
+
+\subsection{Intuition: Brick Wall Example}
+
+Think about looking at a brick wall from different distances:
+
+\begin{itemize}
+    \item \textbf{Standing 1 inch away (Small $\sigma$):}
+          You see every tiny crack in the brick, the grain of the sand in the mortar, and the rough texture of the surface.
+          If you ran an edge detector here, it would find millions of tiny edges for every little bump.
+
+    \item \textbf{Standing 20 feet away (Medium $\sigma$):}
+          The tiny cracks and sand grains blur together.
+          Now, the most obvious edges are the rectangular outlines of the individual bricks.
+
+    \item \textbf{Standing 200 feet away (Large $\sigma$):}
+          The lines between the bricks disappear.
+          You might only see the edge of the entire wall against the sky.
+\end{itemize}
+
+\subsubsection*{Scale as a Detail Filter}
+
+\begin{enumerate}
+    \item \textbf{The ``Dial'' ($\sigma$)}
+          Scale can be understood as a \textbf{detail filter} for a computer. Depending on how much blur is applied (controlled by $\sigma$), the computer perceives entirely different structures.
+          \begin{itemize}
+              \item Turning it down (Small $\sigma$): Everything stays sharp and crisp.
+              \item Turning it up (Large $\sigma$): Everything becomes blurry and smooth.
+          \end{itemize}
+
+    \item \textbf{Fine Scale (Small $\sigma$ = Tiny Blur)}
+          When $\sigma$ is small, very little smoothing is applied.
+          \begin{itemize}
+              \item \textbf{What the computer sees:} Every tiny detail.
+              \item \textbf{Result:} Extremely sensitive edge detection.
+              \item \textbf{Downside:} Produces noise—too many small, insignificant edges.
+          \end{itemize}
+
+    \item \textbf{Coarse Scale (Large $\sigma$ = Heavy Blur)}
+          When $\sigma$ is large, strong smoothing is applied.
+          \begin{itemize}
+              \item \textbf{What the computer sees:} Only large, dominant structures.
+              \item \textbf{Result:} Fine details disappear; major edges remain.
+              \item \textbf{Upside:} Clean representation of overall structure.
+          \end{itemize}
+
+    \item \textbf{Summary: The Brick Wall Example}
+          \begin{itemize}
+              \item Small $\sigma$ (Magnifying Glass): Detects millions of tiny edges from surface texture.
+              \item Large $\sigma$ (Far Distance View): Detects only the large brick boundaries.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Limitations}
+
+Navigating scale-space is computationally expensive. Furthermore, as $\sigma$ increases, edge localization degrades severely.
+
+\textbf{Definition (Edge Localization):}
+Edge localization refers to how precisely an algorithm can determine the exact position of an edge in an image.
+
+\subsubsection*{Effects of Large $\sigma$}
+
+High levels of blurring introduce several problems:
+
+\begin{itemize}
+    \item \textbf{Edge Bleeding:}
+          Adjacent edges (such as the left and right sides of a thin line) begin to overlap and merge into a single, incorrect edge.
+
+    \item \textbf{Loss of Detail:}
+          Fine structures are smoothed out and disappear.
+
+    \item \textbf{Corner Rounding:}
+          Sharp corners become mathematically rounded due to heavy smoothing.
+\end{itemize}
+
+\textbf{Analogy:}
+This is similar to viewing a detailed drawing through thick fog—distinct lines blur together, and sharp features become smooth curves.
+
+\textbf{Key Trade-off:}
+\begin{itemize}
+    \item Larger $\sigma$ $\rightarrow$ better noise reduction but worse localization
+    \item Smaller $\sigma$ $\rightarrow$ sharper edges but more noise
+\end{itemize}
+
+
+
+\section{The Canny Edge Detection Pipeline}
+The Canny edge detector is a multi-step algorithm designed to produce clean and accurate edges. First, the image is smoothed using a Gaussian filter to reduce noise. Next, gradients in the x and y directions are computed to determine edge strength and direction. Then, \textbf{Non-Maximal Suppression (NMS)} is applied to thin edges by keeping only local maxima in the gradient direction. After that, \textbf{double-thresholding} classifies edges as strong, weak, or non-edges. Finally, \textbf{hysteresis} connects weak edges to strong ones if they are part of the same structure, producing a coherent edge map.
+
+\subsection{Concept Overview}
+\begin{enumerate}
+    \item Canny Edge Detector is most widely utilized edge detection algo in classical computer vision
+    \item It unites concepts of Gaussian smoothing, optimal gradient differentiation, and non-linear thresholding into a cohesive, multi-step pipeline
+    \item John Canny designed this pipeline to satisfy three specific mathematical requirements. Every step in the pipeline exists to solve one of these three problems:
+          \begin{itemize}
+              \item \textbf{Robust Detection:}
+                    The algorithm must find as many real edges as possible and ignore as much noise as possible. It should not ``see'' edges where none exist (False Positives).
+
+              \item \textbf{Precise Localization:}
+                    The detected edge should be exactly in the center of the real physical boundary. As discussed earlier, blurring an image (to remove noise) typically ``smears'' edges. The goal is to recover the exact 1-pixel center of that smear.
+
+              \item \textbf{Single Response:}
+                    A single edge should not result in multiple parallel detections. If a boundary is thick and blurry, the algorithm must identify only the strongest response (the peak) and discard the rest.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Mathematical Formulation}
+
+This formula represents the \textbf{Double-Thresholding} stage of the Canny edge detection pipeline. Its purpose is to filter out noise while ensuring that faint, genuine edges are not lost.
+
+\subsubsection*{The Formula Breakdown}
+
+The formula is a \textbf{piecewise function}, meaning the computer follows different rules depending on the value of the gradient magnitude.
+
+\[
+    Class(x,y)=
+    \begin{cases}
+        \text{Strong}  & \text{if } M(x,y)\ge T_{high}            \\
+        \text{Weak}    & \text{if } T_{low} \le M(x,y) < T_{high} \\
+        \text{Discard} & \text{if } M(x,y) < T_{low}
+    \end{cases}
+\]
+
+\subsubsection*{Variable Definitions}
+
+\paragraph{1. $M(x,y)$ — The Gradient Magnitude}
+\begin{itemize}
+    \item \textbf{What it is:} The ``strength'' of the edge at pixel $(x,y)$.
+    \item \textbf{How it's calculated:} Derived from horizontal ($G_x$) and vertical ($G_y$) intensity changes.
+    \item \textbf{Intuition:}
+          \begin{itemize}
+              \item High $M(x,y)$ $\rightarrow$ sharp intensity change (strong edge)
+              \item Low $M(x,y)$ $\rightarrow$ flat region (no edge)
+          \end{itemize}
+\end{itemize}
+
+\paragraph{2. $T_{high}$ — The High Threshold}
+\begin{itemize}
+    \item \textbf{What it is:} Upper cutoff value.
+    \item \textbf{Role:} Identifies the most confident, high-contrast edges.
+\end{itemize}
+
+\paragraph{3. $T_{low}$ — The Low Threshold}
+\begin{itemize}
+    \item \textbf{What it is:} Lower cutoff value.
+    \item \textbf{Role:} Filters out weak noise while preserving potential edges.
+\end{itemize}
+
+\paragraph{4. $Class(x,y)$ — The Output Category}
+
+Each pixel is assigned to one of three categories:
+
+\begin{itemize}
+    \item \textbf{Strong:} Definitive edges; always kept.
+    \item \textbf{Weak:} Uncertain edges; kept only if connected to strong edges (via hysteresis).
+    \item \textbf{Discard:} Noise or flat regions; removed immediately.
+\end{itemize}
+
+\subsubsection*{Why Use Two Thresholds?}
+
+Using a single threshold creates a trade-off:
+\begin{itemize}
+    \item Too high $\rightarrow$ lose faint but real edges
+    \item Too low $\rightarrow$ detect excessive noise
+\end{itemize}
+
+The double-threshold method introduces the \textbf{Weak} category:
+
+\begin{itemize}
+    \item Weak edges are treated as ``candidates''
+    \item They are only kept if connected to strong edges
+\end{itemize}
+
+\textbf{Key Insight:}
+This approach balances sensitivity and noise reduction by delaying the final decision on uncertain edges.
+
+\textbf{Analogy:}
+It is like saying: ``This edge might be real, but I will only trust it if it is connected to something I am sure about.''
+
+
+\subsection{Algorithm Process}
+\begin{enumerate}
+    \item \textbf{Smoothing (Noise Filter)}
+          The image is first blurred using a Gaussian filter.
+          \begin{itemize}
+              \item \textbf{Goal:} Reduce noise before analysis.
+              \item \textbf{Logic:} Removes high-frequency ``salt and pepper'' noise so that small artifacts are not mistaken for real edges.
+          \end{itemize}
+
+    \item \textbf{Gradients (Finding the Slope)}
+          The Sobel operator is used to compute gradients in both the $x$ and $y$ directions.
+          \begin{itemize}
+              \item \textbf{Result:} Each pixel has:
+                    \begin{itemize}
+                        \item \textbf{Magnitude:} Strength of the edge
+                        \item \textbf{Direction ($\theta$):} Orientation of the edge (horizontal, vertical, diagonal)
+                    \end{itemize}
+          \end{itemize}
+
+    \item \textbf{Non-Maximal Suppression (Thinning)}
+          The algorithm refines thick, blurry edges into thin ones.
+          \begin{itemize}
+              \item \textbf{Goal:} Achieve precise localization and a single response.
+              \item \textbf{Action:}
+                    \begin{itemize}
+                        \item Compare each pixel with its neighbors along the gradient direction
+                        \item Keep the pixel if it is a local maximum
+                        \item Otherwise, suppress it (set to 0)
+                    \end{itemize}
+              \item \textbf{Result:} Edges are reduced to 1-pixel-wide lines.
+          \end{itemize}
+
+    \item \textbf{Hysteresis Thresholding (Edge Connection)}
+          Two thresholds are used to classify edges.
+          \begin{itemize}
+              \item \textbf{High Threshold:} Strong, reliable edges
+              \item \textbf{Low Threshold:} Potential (weak) edges
+              \item \textbf{Logic:}
+                    \begin{itemize}
+                        \item Weak edges are kept only if connected to strong edges
+                        \item Isolated weak edges are discarded
+                    \end{itemize}
+              \item \textbf{Result:} Continuous, clean edges with reduced noise
+          \end{itemize}
+\end{enumerate}
+
+\textbf{Final Insight:}
+Each step in the pipeline addresses a specific problem:
+\begin{itemize}
+    \item Noise reduction $\rightarrow$ Smoothing
+    \item Edge detection $\rightarrow$ Gradients
+    \item Edge refinement $\rightarrow$ Non-Max Suppression
+    \item Edge connectivity $\rightarrow$ Hysteresis
+\end{itemize}
+
+\subsection{Intuition}
+
+Imagine a mountain ridge obscured by thick fog (noise). You first apply a filter to clear the fog (Gaussian). Then you calculate the slope of the mountain (Gradients). You walk along the slope, and strictly paint a line only on the absolute highest peak of the ridge (Non-Maximal Suppression). Finally, to ensure the painted line does not have gaps, if the ridge drops slightly in height but still physically connects to the main peak, you keep painting (Hysteresis).
+
+\subsection{Practical Applications}
+
+The Canny pipeline is the standard preprocessing step for shape detection, contour tracing, and boundary extraction. It converts raw photographic data into clean, 1-pixel-wide line drawings.
+
+\subsection{Limitations}
+
+The algorithm is highly parameterized. It requires manual, hard-coded tuning of three distinct hyperparameters ($\sigma$, $T_{low}$, $T_{high}$). Finding a universal configuration that perfectly segments all objects across varying lighting conditions in a dynamic environment is practically impossible.
+
+
+\section{Transitioning from Edges to Boundaries}
+Detecting edges is only the first step toward understanding image structure. The next step is grouping these edges into meaningful boundaries, such as lines or shapes. Simple methods like least-squares line fitting attempt to model edges as straight lines. However, these methods have limitations. For example, they struggle with vertical lines due to slope representation issues and are highly sensitive to outliers. These challenges motivate the need for more robust techniques.
+
+\subsection{Concept Overview}
+
+\subsection{Concept Overview: The "Holistic" Leap}
+
+Once the Canny pipeline is finished, you are left with a Binary Edge Map.
+
+\textbf{Definition: Binary Edge Map:}
+A digital grid where every pixel is either a 1 (edge) or a 0 (background). It looks like a white line drawing on a black background.
+
+\textbf{The Problem:}
+You see a ``square,'' but the computer only sees a Coordinate List—a giant spreadsheet of $X$ and $Y$ numbers like $(10, 5), (11, 5), (12, 5), \dots$
+It does not know these dots are connected or that they form a shape.
+
+\textbf{The Goal:}
+We need to move to Parametric Boundaries.
+
+\textbf{Definition: Parametric Boundary:}
+A mathematical equation that describes a shape using a few fixed numbers (parameters). For example, a line is defined by just two numbers: its slope ($m$) and its starting height ($c$).
+
+\subsection{Mathematical Formulation: Least Squares Line Fitting}
+
+The most common way to turn those dots into a line is Least Squares Optimization. We assume the dots form a straight line:
+
+\[
+    y = mx + c
+\]
+
+\textbf{The Variables:}
+\begin{itemize}
+    \item $y$ and $x$: The vertical and horizontal positions of a pixel.
+    \item $m$ (Slope): The steepness of the line.
+    \item $c$ (Y-intercept): Where the line crosses the vertical axis (at $x=0$).
+    \item $N$: The total number of edge pixels we are looking at.
+    \item $(x_i, y_i)$: The specific coordinates of the ``$i$-th'' pixel in our list.
+    \item $E$ (Energy/Cost): This represents the ``Total Error.'' It is a score of how badly our mathematical line fits the actual dots.
+\end{itemize}
+
+\textbf{The Formula:}
+
+\[
+    E = \frac{1}{N} \sum_{i=1}^{N} (y_i - mx_i - c)^2
+\]
+
+\textbf{What it's doing:}
+For every single dot, we measure the vertical distance between the actual dot ($y_i$) and where our line predicts the dot should be ($mx_i + c$).
+
+\textbf{Why Square it?}
+We square the distance so that a dot 5 pixels above the line and a dot 5 pixels below the line do not cancel each other out (both become a positive error of 25). Squaring also makes ``big misses'' much more expensive than ``small misses.''
+
+
+\subsection{Algorithm Process: Minimizing Error}
+
+To find the "best" line, the computer must find the specific $m$ and $c$ that make the total energy $E$ as small as possible.
+
+\textbf{Partial Derivatives:}
+In calculus, the lowest point of a curve occurs where the slope is zero. The computer calculates the partial derivative of $E$ with respect to $m$ and $c$. This determines how the error changes as we tilt or shift the line.
+
+\textbf{Set to Zero:}
+We set both partial derivatives exactly to $0$ to find the "bottom of the valley" where the error is minimized.
+
+\textbf{Solve:}
+This creates a system of linear equations. Solving them algebraically provides a closed-form solution—a final, optimal pair of numbers for the slope ($m$) and intercept ($c$).
+
+
+\subsection{Intuition: The "Rigid Ruler" Analogy}
+
+Imagine you have a piece of graph paper covered in scattered dots. Least-squares fitting is like dropping a perfectly straight, rigid metal ruler onto the paper.
+
+Because the ruler is rigid, it cannot bend to touch every dot. Instead, you slide the ruler up and down ($c$) and rotate its angle ($m$) until the total "empty space" between the edge of the ruler and all the dots is as small as physically possible. That final resting position is your "best fit" boundary.
+
+\subsection{Practical Application: Self-Driving Cars}
+
+In autonomous driving, cameras detect thousands of white paint pixels on the road (edges).
+
+The car uses parametric fitting to turn those pixels into two straight lines representing the lane.
+
+By identifying where these lines converge at a vanishing point, the car can determine the geometry of the road ahead and stay centered, even if the paint is partially faded.
+
+
+\subsection{Limitations: Why this often fails}
+
+While mathematically elegant, simple algebraic least-squares fitting has three "catastrophic" flaws in real-world environments:
+
+\begin{itemize}
+    \item \textbf{The Vertical Line Failure:}
+          The model $y = mx + c$ cannot represent a perfectly vertical line. As the line becomes vertical, the slope ($m$) approaches infinity, which causes computer memory to overflow or calculations to crash.
+
+    \item \textbf{Catastrophic Outlier Sensitivity:}
+          Because the error is squared, one single "bad" pixel (noise) far away from the true boundary exerts massive mathematical leverage. It acts like a heavy weight at the end of a long lever, violently pulling the line away from the true geometry.
+
+    \item \textbf{Multiple Models:}
+          Least squares assumes all points belong to exactly one line. If an image contains a square (four distinct boundaries), the math will attempt to draw a single, meaningless average line through the center of all four boundaries rather than identifying the four separate sides.
+\end{itemize}
+
+
+\section{Robust Regression and RANSAC}
+To handle noise and outliers, robust regression methods are used. One widely used approach is \textbf{RANSAC (Random Sample Consensus)}. Instead of fitting a model to all data points, RANSAC repeatedly selects random subsets of points to estimate a model. It then evaluates how many points agree with this model (called \textbf{inliers}). The model with the highest number of inliers is chosen as the best representation. This approach is effective in situations where data contains significant noise or multiple structures.
+
+\subsection{Concept Overview}
+
+\begin{itemize}
+    \item Robust regression is a set of techniques designed to overcome the fundamental failures of traditional least-squares fitting.
+
+    \item In many real-world computer vision scenarios, images contain "outliers"—data points caused by noise, shadows, or unrelated objects—that do not belong to the geometric shape being measured.
+
+    \item While standard least-squares attempts to minimize the error of every single point simultaneously, it inadvertently allows a few distant outliers to "pull" the fitted line away from the true boundary.
+
+    \item To solve this, the Random Sample Consensus (RANSAC) algorithm was developed.
+
+    \item RANSAC operates on a "trial-and-error" philosophy: instead of using all data points to find one average model, it repeatedly selects the smallest possible subset of points to propose a candidate model and then searches for a consensus among the remaining data.
+\end{itemize}
+
+
+\subsection{Mathematical Formulation}
+
+Success of RANSAC is governed by probabilistic equation that determines how many times the algorithm must "guess" to ensure it eventually picks a set of points free from outliers.
+
+The formula is defined as:
+$$
+    p = 1 - (1 - w^k)^N
+$$
+
+\begin{itemize}
+    \item $p$ (Confidence Level): Probability that the algorithm will successfully find a valid model at least once. Usually, this is set very high, such as 0.99 (99\% confidence).
+
+    \item $w$ (Inlier Ratio): The probability that any single randomly selected point is a valid "inlier" (part of the real shape) rather than noise. For example, if half the points are noise, $w = 0.5$.
+
+    \item $k$ (Minimum Points): The absolute minimum number of points required to define the geometric model. For a straight line, $k=2$; for a circle, $k=3$.
+
+    \item $N$ (Number of Iterations): The number of times the algorithm must repeat its random sampling.
+\end{itemize}
+
+\textbf{Relationship:} By rearranging this formula to solve for $N$, engineers can calculate exactly how many iterations are required based on the estimated amount of noise in the image. As the noise increases (as $w$ gets smaller), the number of required iterations $N$ grows exponentially to maintain the same confidence $p$.
+
+
+\subsection{Algorithm Process}
+
+\begin{itemize}
+    \item Hypothesize: The algorithm randomly picks the absolute minimum number of points ($k$) needed to form a shape. For a line, it picks exactly two random edge pixels.
+
+    \item Model: It calculates the mathematical parameters (such as the slope $m$ and intercept $c$) of the line that passes perfectly through those specific points.
+
+    \item Verify: It tests this "hypothetically perfect" line against every other edge pixel in the image. For each pixel, it measures the perpendicular distance to the line. If a pixel’s distance is smaller than a strict predefined threshold, it is labeled an Inlier; otherwise, it is an Outlier.
+
+    \item Update: The algorithm counts the total number of inliers. If this "consensus set" is larger than any previously found, it saves this line as the current "best guess."
+
+    \item Repeat: This cycle repeats for $N$ iterations. Once finished, the algorithm takes the final "best" set of inliers and performs a standard least-squares fit on only those points to get a final, ultra-precise boundary, completely ignoring the noise pixels it identified.
+\end{itemize}
+
+
+\subsection{Intuition and Analogy}
+
+\begin{itemize}
+    \item Imagine a crowded room where you are trying to find the "average" opinion on a topic, but you know 30\% of the people are lying just to mess with the results. If you use a standard Least Squares approach, you average everyone’s answer together. Because the liars give extreme, ridiculous answers, the final average is skewed and incorrect—it represents neither the truth nor the lies.
+
+    \item RANSAC acts like a skeptical investigator. It randomly grabs two people from the crowd, asks their opinion, and then draws a line based only on what they said. It then goes to everyone else in the room and asks, "Who agrees with this specific line?"
+
+    \item If the investigator accidentally picked a liar, almost no one will agree, and the guess is thrown out.
+
+    \item Eventually, by pure chance, the investigator will pick two honest people. Suddenly, 70\% of the room will agree with that line.
+
+    \item This massive "Consensus" proves that those two people were telling the truth, and the 30\% who disagree are easily identified as the outliers to be ignored.
+\end{itemize}
+
+
+\subsection{Practical Applications}
+
+\begin{itemize}
+    \item RANSAC is a workhorse in modern technology. In Panoramic Image Stitching, it is used to align two photos. If a bird flies through the sky in one photo but not the other, the bird acts as a "moving outlier." RANSAC ignores the bird and focuses only on the static landmarks (like buildings) that provide a consistent consensus for the alignment.
+
+    \item Similarly, in 3D Mapping (Lidar), RANSAC is used to find flat surfaces like floors and walls within a massive "point cloud" of millions of individual laser measurements.
+\end{itemize}
+
+\subsection{Limitations and Edge Cases}
+
+\begin{itemize}
+    \item \textbf{Non-Determinism:} Because it relies on random sampling, there is a non-zero chance that the algorithm will "get unlucky" and never pick a pure set of inliers, resulting in a failed detection if N is too low.
+
+    \item \textbf{Computational Explosion:} If an image is extremely noisy (e.g., 95\% noise), the probability of picking two "good" points at once becomes so low that the number of iterations (N) required to find a consensus can reach millions, causing the computer to slow down significantly.
+
+    \item \textbf{Threshold Sensitivity:} The "Inlier Distance Threshold" must be manually tuned. If it is too strict, real data is ignored; if it is too loose, the model remains corrupted by noise.
+\end{itemize}
+
+\section{The Hough Transform}
+The Hough Transform is a global technique for detecting shapes in images. Instead of fitting models directly in image space, it transforms the problem into a parameter space where each edge point votes for possible shapes. For line detection, the normal form is used:
+\[
+    \rho = x \cos \theta + y \sin \theta
+\]
+This representation avoids issues with vertical lines. Peaks in the parameter space correspond to detected lines. The method can be extended to detect circles by adding a radius parameter, and further generalized to detect arbitrary shapes using the \textbf{Generalized Hough Transform}. This voting-based approach is robust to noise and partial occlusion.
+
+\subsection{Concept Overview}
+
+\begin{itemize}
+    \item The Hough Transform is a robust, voting-based feature extraction technique used in computer vision to isolate specific shapes within an image.
+
+    \item Unlike regression methods that attempt to fit a single model to all data points simultaneously, the Hough Transform allows every individual edge pixel to "vote" for all possible shapes it could potentially be a part of.
+
+    \item This global approach makes it uniquely capable of detecting multiple instances of a shape—such as several different lines or circles—within a single, noisy image.
+
+    \item By transforming spatial data from the standard Image Space (where we see pixels) into a Parameter Space (where we see mathematical models), the algorithm converts the difficult problem of shape detection into a simpler task of finding peak values in a grid.
+\end{itemize}
+
+
+\subsection{Mathematical Formulation}
+
+\begin{itemize}
+    \item To represent lines, the Hough Transform avoids the traditional $y = mx + c$ formula because it cannot represent vertical lines, where the slope $m$ becomes infinite. Instead, it utilizes the Normal Form of a line equation: $\rho = x \cos \theta + y \sin \theta$.
+
+    \item In this equation, $\rho$ (rho) represents the algebraic perpendicular distance from the origin to the line, and $\theta$ (theta) represents the angle of that perpendicular vector relative to the horizontal axis.
+
+    \item A single point $(x_i, y_i)$ in the image does not define one line; rather, it defines an infinite family of possible lines that pass through it. When plotted in the $(\rho, \theta)$ parameter space, this family of lines forms a continuous sinusoid curve.
+
+    \item If multiple edge pixels lie on the same straight line in the image, their corresponding sinusoids in the parameter space will all intersect at a single point $(\rho_0, \theta_0)$, which identifies the parameters of that shared line.
+
+    \item Lines: To avoid the infinite slope problem of $y = mx + c$, the Hough Transform uses the Normal Form of a line: $\rho = x \cos \theta + y \sin \theta$. Here, $\rho$ is the perpendicular distance from the origin to the line, and $\theta$ is the angle of that perpendicular vector. In this parameter space, a single edge pixel $(x_i, y_i)$ maps to a continuous sinusoid curve representing all possible lines passing through it.
+
+    \item Circles: A circle is defined by $(x - a)^2 + (y - b)^2 = r^2$, where $(a, b)$ is the center and $r$ is the radius. If $r$ is known, the parameter space is 2D $(a, b)$. Every edge pixel in the image casts a vote in the shape of a circle in the parameter space. If $r$ is unknown, the parameter space becomes a massive 3D volume $(a, b, r)$.
+\end{itemize}
+
+\subsection{Algorithm Process}
+
+\begin{itemize}
+    \item The execution of the Hough Transform follows a "quantize and vote" strategy.
+
+    \item \textbf{Quantize Parameter Space:} The computer creates a discrete grid called an accumulator array. Think of this as a giant grid of "buckets." Every bucket represents a specific combination of parameters (like a specific $\rho$ and $\theta$). Quantization is the process of breaking continuous values (like an angle) into these fixed, discrete "buckets."
+
+    \item \textbf{Vote:} The algorithm iterates through every edge pixel $(x,y)$ in the binary edge map. For that pixel, it calculates every possible shape it could belong to and adds a "vote" (+1) to the corresponding buckets in the accumulator array.
+
+    \item \textbf{Find Maxima:} Once every pixel has finished voting, the computer looks for the buckets with the highest number of votes, known as local maxima. These peaks mathematically represent the most obvious and prominent shapes in the original image.
+\end{itemize}
+
+\subsection{Practical Applications and Robustness}
+
+\begin{itemize}
+    \item A major strength of the Hough Transform is its robustness to occlusion (when an object is partially hidden). Because votes are collected globally, a line that is "dashed" or partially blocked by a tree will still have enough pixels to cast votes for the same $(\rho,\theta)$ bucket. This allows the computer to "see" the full boundary even if part of it is missing.
+
+    \item Furthermore, the Generalized Hough Transform (GHT) allows the detection of shapes that don't have a mathematical formula, like a specific tool or a logo. It uses an R-table (a lookup table) based on the centroid (the geometric center) of the shape. Each boundary pixel uses its local orientation to vote for where the center of the object should be, allowing for the detection of highly complex, non-mathematical silhouettes.
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item The primary limitation is the curse of dimensionality. Every new parameter you add to a shape makes the accumulator array much larger. A line needs a 2D grid, but an unknown circle needs a 3D grid. If you wanted to find a random ellipse, you would need a 5D grid. As you add dimensions, the memory required grows exponentially, often making it too "heavy" for a computer to handle efficiently.
+
+    \item Additionally, if the "buckets" (quantization) are too large, the detection becomes imprecise; if they are too small, the votes might be split across multiple buckets, making it impossible to find a clear winner.
+\end{itemize}
+
+
+\end{document}
