@@ -1,0 +1,871 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{margin=1in}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\TOPICTITLE}}
+\fancyhead[R]{\thepage}
+
+% ------------------------------- 
+% Topic Metadata
+% ------------------------------- 
+\newcommand{\TOPICTITLE}{Edges}
+\title{\TOPICTITLE\\\large Study-Ready Notes}
+\author{Compiled by Andrew Photinakis}
+\date{\today}
+
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+
+\section{Fundamentals of Binary Images}
+\begin{itemize}
+    \item \textbf{Definition and Representation:} A binary image is a 2D grid where each pixel is either 0 or 1, representing two states such as foreground/background.
+    \item \textbf{Comparative Analysis:} Color images use 24 bits/pixel, grayscale uses 8 bits/pixel, while binary images use only 1 bit/pixel.
+    \item \textbf{Rationale for Use:} Binary images reduce storage, speed up computation, simplify recognition, and help reduce noise.
+\end{itemize}
+
+\subsection{Concept Overview and Rationale}
+
+\begin{enumerate}
+    \item \textbf{Density of Visual Data}
+          \begin{enumerate}
+              \item Digital images captured by sensors are inherently dense and complex.
+              \item A \textbf{color image} uses $24$ bits per pixel (8 bits each for red, green, and blue), enabling millions of color variations.
+              \item A \textbf{grayscale image} uses $8$ bits per pixel, representing $256$ intensity levels from black to white.
+              \item These representations contain rich visual detail but are computationally expensive to store and process.
+          \end{enumerate}
+
+    \item \textbf{Binary Image Representation}
+          \begin{enumerate}
+              \item A \textbf{binary image} uses exactly $1$ bit per pixel.
+              \item Each pixel can only take one of two values:
+                    \begin{itemize}
+                        \item $1$ (on) $\rightarrow$ typically foreground (object of interest, usually represented as 1 or white)
+                        \item $0$ (off) $\rightarrow$ typically background (rest of the scene, usually 0 or black)
+                    \end{itemize}
+              \item This creates a simple two-class partition of the image: foreground vs.\ background.
+          \end{enumerate}
+
+    \item \textbf{Trade-Off: Information vs. Efficiency}
+          \begin{enumerate}
+              \item Converting from 24-bit or 8-bit to 1-bit removes:
+                    \begin{itemize}
+                        \item Texture information
+                        \item Color information
+                        \item Fine shading and gradients
+                    \end{itemize}
+              \item However, it preserves:
+                    \begin{itemize}
+                        \item Object shape
+                        \item Geometric boundaries
+                        \item Topological structure
+                    \end{itemize}
+          \end{enumerate}
+
+    \item \textbf{Advantages of Binary Images}
+          \begin{enumerate}
+              \item \textbf{Storage Efficiency:} Reduces memory usage drastically (1 bit per pixel vs.\ 8 or 24 bits).
+              \item \textbf{Faster Computation:} Enables simpler and faster processing pipelines.
+              \item \textbf{Algorithm Simplicity:} Allows use of Boolean logic operations (AND, OR, NOT) instead of complex arithmetic.
+              \item \textbf{Real-Time Applications:} Well-suited for systems requiring fast decision-making.
+          \end{enumerate}
+
+    \item \textbf{Key Insight}
+          \begin{enumerate}
+              \item Binary images sacrifice visual detail to gain efficiency.
+              \item They are ideal when the goal is \textbf{structure and shape analysis} rather than visual fidelity.
+          \end{enumerate}
+\end{enumerate}
+
+\subsection{Mathematical Formulation and Variables}
+
+\begin{itemize}
+    \item The transition from a continuous or discrete intensity image to a binary format is defined by a non-linear thresholding function.
+
+    \item Mathematically, if $f[i,j]$ represents the input image and $g[i,j]$ represents the output binary image, the relationship is defined as:
+          \[
+              g[i, j] =
+              \begin{cases}
+                  1 & \text{if } f[i, j] \geq \tau \\
+                  0 & \text{otherwise}
+              \end{cases}
+          \]
+
+    \item In this equation, the variables and their roles are as follows:
+          \begin{itemize}
+              \item $i, j$: These represent the discrete spatial coordinates (row and column) of a pixel in the image matrix.
+              \item $f[i, j]$: This is the input intensity value at a specific coordinate, typically ranging from 0 to 255 in a grayscale image.
+              \item $\tau$ (Threshold): This is the decision boundary or "threshold" value. It is the critical constant used to determine which pixels belong to the foreground and which to the background.
+              \item $g[i, j]$: This is the resulting binary value (0 or 1) for that specific pixel coordinate.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Algorithmic Process}
+\begin{itemize}
+    \item To generate a binary image, a computer vision system follows a systematic, pixel-by-pixel process.
+
+    \item \textbf{Initialization:} An empty 1-bit matrix ($g$) is created with the same dimensions as the input image ($f$).
+
+    \item \textbf{Iteration:} The algorithm scans every coordinate $(i, j)$ in the input image.
+
+    \item \textbf{Evaluation:} For each pixel, the intensity $f[i, j]$ is compared against the threshold $\tau$.
+
+    \item \textbf{Assignment:} If the intensity meets the threshold criteria, a $1$ is written to the output matrix; otherwise, a $0$ is assigned.
+
+    \item \textbf{Finalization:} Once all pixels are processed, the matrix $g$ serves as a final ``mask'' of the foreground objects.
+\end{itemize}
+
+
+\subsection{Intuition}
+\begin{itemize}
+    \item Understanding binary imagery is analogous to watching a shadow puppet theater.
+
+    \item When observing a shadow cast on an illuminated screen, the observer is completely blind to the color of the puppet's clothing, the texture of the fabric, or the painted expressions on the puppet's face.
+
+    \item All photometric data is removed.
+
+    \item However, the human visual system can still recognize the puppet as a ``rabbit'' or a ``bird'' based purely on the high-contrast, binary outline of its silhouette.
+
+    \item Binary images allow computer vision algorithms to do the same thing: ignore complex textures and focus purely on shape and structure.
+\end{itemize}
+
+\subsection{Practical Applications}
+\begin{itemize}
+    \item Binary images are a foundational data structure for tightly controlled industrial computer vision systems.
+
+    \item They are heavily utilized in Optical Character Recognition (OCR) for scanning documents and reading text.
+
+    \item They are used for reading barcodes and QR codes.
+
+    \item They are applied in biometric security systems for extracting fingerprints.
+
+    \item They are used in manufacturing for inspecting physical silhouettes of machined parts (such as screws or washers) on high-speed factory assembly lines.
+\end{itemize}
+
+
+\subsection{Limitations}
+\begin{itemize}
+    \item The most severe limitation of binary representation is its total reliance on intensity contrast.
+
+    \item If the foreground object and the background share the same luminance (visual camouflage), the thresholding function fails completely.
+
+    \item A binary image cannot separate objects when both reflect the same amount of light, such as a green apple on a red table with identical intensity.
+
+    \item Internal textures are destroyed during binarization.
+
+    \item Binary images cannot distinguish between objects with the same silhouette but different internal patterns (e.g., a solid sphere vs.\ a textured volleyball).
+\end{itemize}
+
+\section{Forming Binary Images (Thresholding)}
+\begin{itemize}
+    \item \textbf{Grayscale Thresholding:} A global threshold $c$ is used; pixels above $c$ become 1, otherwise 0.
+    \item \textbf{Otsu’s Method:} Automatically selects a threshold by minimizing variance within foreground and background.
+    \item \textbf{Local Adaptive Thresholding:} Uses local neighborhoods to handle uneven lighting.
+    \item \textbf{Color Thresholding:} Uses distance from a reference color to classify pixels.
+    \item \textbf{Imaging Setup Optimization:} Adjusting lighting (e.g., backlighting) to make segmentation easier.
+\end{itemize}
+
+\subsection{Concept Overview and Strategy}
+\begin{itemize}
+    \item The transformation of raw sensor data into a binary mask is a process universally known as thresholding.
+
+    \item The success of an entire computer vision pipeline depends heavily on the selection of the thresholding parameter, often denoted as $c$ or $\tau$.
+
+    \item If the threshold is set too low, background noise ``bleeds'' into the foreground; if set too high, the target object may fracture or disappear entirely.
+
+    \item To address diverse environmental conditions, engineers utilize a hierarchy of strategies ranging from simple global values to complex statistical models.
+
+    \item \textbf{Global Grayscale Thresholding:} A single, fixed scalar value is applied uniformly across every pixel in the image.
+
+    \item \textbf{Otsu’s Method:} A data-driven, automatic selection algorithm that assumes the image contains two distinct populations (foreground and background). It analyzes the global histogram to find the optimal cut-off point.
+
+    \item \textbf{Local Adaptive Thresholding:} In scenes with severe lighting gradients, a single global threshold fails. Adaptive thresholding computes a unique, dynamically shifting threshold for each pixel using a small local window.
+
+    \item \textbf{Color Thresholding:} In a 3-channel color space (like RGB), an object can be defined by chromaticity rather than brightness. This is done by measuring the geometric distance between a pixel’s color vector and a target ``aim color'' vector in 3D space.
+
+    \item In industrial settings, vision problems are often solved physically by optimizing the imaging setup.
+
+    \item For example, backlighting (placing an object on a translucent, illuminated surface) creates a high-contrast black silhouette on a white background, making the thresholding step mathematically trivial.
+\end{itemize}
+
+
+\subsection{Mathematical Formulation and Variables}
+\begin{itemize}
+    \item The mathematical rigor of thresholding varies by method, with Color Thresholding and Otsu's Method being the most formally defined.
+
+    \item \textbf{1. Color Thresholding}
+          \begin{itemize}
+              \item Let $f[i,j]$ be a 3D vector representing the color channels of a pixel at coordinates $[i,j]$, and let $C_{aim}$ be the target color vector.
+              \item The binary assignment $g[i,j]$ is defined as:
+                    \[
+                        g[i,j] =
+                        \begin{cases}
+                            1 & \text{if } \|f[i,j] - C_{aim}\|_2 \le c \\
+                            0 & \text{otherwise}
+                        \end{cases}
+                    \]
+              \item $\|\cdot\|_2$: Denotes the Euclidean distance between two vectors in color space.
+              \item $c$: The threshold distance; pixels within this ``radius'' of the aim color are classified as foreground.
+          \end{itemize}
+
+    \item \textbf{2. Otsu's Method}
+          \begin{itemize}
+              \item Otsu's algorithm treats pixel intensities as a statistical distribution.
+              \item A candidate threshold $t$ divides pixels into:
+                    \begin{itemize}
+                        \item $C_0$: Background
+                        \item $C_1$: Foreground
+                    \end{itemize}
+              \item The inter-class variance $\sigma_B^2(t)$ is defined as:
+                    \[
+                        \sigma_B^2(t) = \omega_0(t)\,\omega_1(t)\,[\mu_0(t) - \mu_1(t)]^2
+                    \]
+              \item $\omega_0, \omega_1$: Probabilities (weights) of the two classes.
+              \item $\mu_0, \mu_1$: Mean intensity values of the two classes.
+              \item The goal is to find the optimal threshold $\tau$ that maximizes $\sigma_B^2(t)$.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Algorithm Process: Otsu's Execution}
+\begin{itemize}
+    \item \textbf{Histogram Computation:} Calculate the normalized histogram of the grayscale image (the frequency of every intensity from 0 to 255).
+
+    \item \textbf{Initialization:} Initialize the weights ($\omega$) and means ($\mu$) for the potential foreground and background classes.
+
+    \item \textbf{Iteration:} Move a candidate threshold $t$ through every intensity value from 0 to 255.
+
+    \item \textbf{Update and Calculate:} At each step, update the class weights and means, and compute the inter-class variance $\sigma_B^2(t)$.
+
+    \item \textbf{Identify Optimum:} Find the value of $t$ that produces the maximum variance.
+
+    \item \textbf{Apply Mask:} Apply this optimal threshold globally to the image to generate the final binary mask.
+\end{itemize}
+
+\subsection{Intuition and Analogy}
+\begin{itemize}
+    \item Imagine a room filled with a mixed crowd of very tall adults and very short children.
+
+    \item You need to choose a specific height (the threshold) to draw a line on the wall to separate them into two different groups.
+
+    \item If you pick a line right in the middle, the difference between the average height in the ``adult group'' and the ``children group'' is maximized.
+
+    \item Otsu's method works in a similar way.
+
+    \item It mathematically finds the intensity level that makes the foreground and background as distinct from each other as possible.
+\end{itemize}
+
+\subsection{Practical Applications}
+\begin{itemize}
+    \item Automatic thresholding via Otsu's method is heavily utilized in document scanners to extract crisp, readable text regardless of whether the physical paper is stark white or slightly yellowed with age.
+
+    \item Color thresholding is heavily utilized in chroma-keying (green screens) for film production and meteorology broadcasts.
+\end{itemize}
+
+\subsection{Limitations}
+\begin{itemize}
+    \item Otsu's method relies on the strict assumption that the image histogram is perfectly bimodal (two distinct peaks).
+
+    \item If the image is heavily corrupted by noise, the method may fail to find a clear separation point.
+
+    \item If the target object is extremely small compared to the background, the foreground peak may vanish into statistical noise.
+
+    \item In these cases, Otsu's method will fail to find a valid threshold for separation.
+\end{itemize}
+
+
+\section{Geometric Properties (Image Moments)}
+\begin{itemize}
+    \item \textbf{Zeroth Moment ($M_{00}$):} Total number of foreground pixels (object area).
+    \item \textbf{First-Order Moments:} Used to compute the centroid (center of mass).
+    \item \textbf{Second-Order Moments:} Describe spread, variance, and orientation.
+    \item \textbf{Roundedness:} Measures how circular an object is based on its shape.
+\end{itemize}
+
+
+\subsection{Concept Overview}
+\begin{itemize}
+    \item Once an object has been successfully isolated into a binary silhouette through thresholding, the computer vision system must extract quantifiable, semantic meaning from the resulting grid of numbers.
+
+    \item To understand the physical shape, orientation, and size of an object, we use a mathematical framework known as \textbf{Image Moments}.
+
+    \item This framework treats the discrete binary shape as a 2D physical mass distribution.
+
+    \item Under the assumption of uniform density, every pixel with a value of $1$ represents a single unit of mass.
+
+    \item By summing pixel coordinates raised to various polynomial powers, we compute different ``orders'' of moments that correspond to classical physics and geometry.
+
+    \item \textbf{Zeroth Moment ($M_{00}$):}
+          \begin{itemize}
+              \item Represents the sum of all active pixels.
+              \item Corresponds to the total ``mass'' or area of the object.
+          \end{itemize}
+
+    \item \textbf{First-Order Moments ($M_{10}, M_{01}$):}
+          \begin{itemize}
+              \item Describe the spatial distribution of mass.
+              \item When normalized by total area, they reveal the centroid (center of mass).
+              \item Provide the exact $(x, y)$ location of the object in the image.
+          \end{itemize}
+
+    \item \textbf{Second-Order Moments ($M_{20}, M_{02}, M_{11}$):}
+          \begin{itemize}
+              \item Measure spatial variance and covariance of the mass distribution.
+              \item Used to construct a covariance matrix.
+              \item Allow fitting an equivalent elliptical model to determine:
+                    \begin{itemize}
+                        \item Primary axis of orientation
+                        \item Roundedness of the object
+                    \end{itemize}
+          \end{itemize}
+\end{itemize}
+
+\subsection{Mathematical Formulation}
+\begin{itemize}
+    \item For a discrete binary image $f[i,j]$, where $j$ typically maps to the $x$-coordinate and $i$ to the $y$-coordinate, the general $(p,q)$-th moment is defined as:
+          \[
+              M_{pq} \equiv \sum_{i} \sum_{j} y^q x^p f[i,j]
+          \]
+
+    \item \textbf{Area (Zeroth Moment):}
+          \[
+              M_{00} = \sum_{i} \sum_{j} f[i,j]
+          \]
+
+    \item \textbf{Centroid (First Moments):}
+          \[
+              \bar{x} = \frac{M_{10}}{M_{00}}, \quad \bar{y} = \frac{M_{01}}{M_{00}}
+          \]
+
+    \item \textbf{Covariance Matrix ($\Sigma$) and Roundedness:} To analyze intrinsic shape regardless of position, we use the centralized covariance matrix:
+          \[
+              \Sigma \equiv
+              \begin{bmatrix} M_{20} & M_{11} \\ M_{11} & M_{02} \end{bmatrix} / M_{00}
+              -
+              \begin{bmatrix} \bar{x}\bar{x} & \bar{x}\bar{y} \\ \bar{x}\bar{y} & \bar{y}\bar{y} \end{bmatrix}
+          \]
+
+    \item We then apply Singular Value Decomposition (SVD) to this matrix:
+          \[
+              USV^\top = SVD(\Sigma)
+          \]
+
+    \item The diagonal matrix $S$ contains singular values $s_0$ and $s_1$ (where $s_0 \ge s_1$), representing the variance of pixel mass along the major and minor axes.
+
+    \item \textbf{Roundedness:}
+          \[
+              Roundedness = \sqrt{\frac{s_1}{s_0}}
+          \]
+\end{itemize}
+
+\subsection{Algorithm Process}
+\begin{itemize}
+    \item \textbf{Input:} Receive a clean binary mask containing a single foreground object.
+
+    \item \textbf{Accumulation:} Iterate through every pixel. If the pixel is $1$, increment the area accumulator ($M_{00}$), add its $x$-coordinate to $M_{10}$, and its $y$-coordinate to $M_{01}$.
+
+    \item \textbf{Localization:} Divide $M_{10}$ and $M_{01}$ by $M_{00}$ to establish the centroid $(\bar{x}, \bar{y})$.
+
+    \item \textbf{Variance Calculation:} Compute the second moments $M_{20}$ (summing $x^2$), $M_{02}$ (summing $y^2$), and $M_{11}$ (summing $x \cdot y$).
+
+    \item \textbf{Matrix Construction:} Build the $2 \times 2$ covariance matrix $\Sigma$.
+
+    \item \textbf{Decomposition:} Perform SVD on $\Sigma$ to extract singular values.
+
+    \item \textbf{Output:} Compute the square root of the ratio of the singular values to output the continuous Roundedness metric, which is bounded between $0$ and $1$.
+\end{itemize}
+
+\subsection{Intuition}
+\begin{itemize}
+    \item To gain physical intuition, imagine the binary object as a flat sheet of heavy metal.
+
+    \item The first moments tell you where to place your finger under the sheet so it balances perfectly without tipping (the center of gravity).
+
+    \item The second moments correspond to the moments of inertia.
+
+    \item For example, spinning a long wrench around its minor axis requires little effort, while spinning it end-over-end around its major axis requires much more effort because the mass is distributed farther from the center.
+
+    \item SVD mathematically finds these two axes of rotation, and roundedness compares them.
+\end{itemize}
+
+\subsection{Practical Applications}
+\begin{itemize}
+    \item Image moments are heavily used in robotic grasping and automated sorting.
+
+    \item An industrial robotic arm can classify shapes by computing roundedness (e.g., distinguishing an elongated wrench with a roundedness of $0.19$ from a circular ball bearing with a roundedness of $1.0$).
+
+    \item These moments also allow the robot to compute the exact orientation needed to align its gripper and safely pick up objects from a conveyor belt.
+\end{itemize}
+
+\subsection{Limitations}
+\begin{itemize}
+    \item Roundedness measures variance distribution, not perimeter circularity.
+
+    \item Because a square has equal variance along orthogonal axes, it can produce a roundedness of $1.0$, making it indistinguishable from a circle using this metric alone.
+
+    \item Second moments square the distance from the centroid (e.g., $x^2, y^2$), which means a single distant noise pixel can disproportionately affect the result.
+
+    \item This can severely distort the covariance matrix and negatively impact shape analysis.
+\end{itemize}
+
+
+
+\section{Segmentation and Connectivity}
+\begin{itemize}
+    \item \textbf{Connected Components:} Groups of pixels connected to form objects.
+    \item \textbf{Neighborhood Paradoxes:} 4-connected vs 8-connected definitions affect object interpretation.
+    \item \textbf{6-Connectedness:} Uses a hexagonal-like structure to avoid ambiguities.
+    \item \textbf{Region Growing:} Expands from a seed pixel to build a region.
+    \item \textbf{Sequential Labeling:} Assigns labels by scanning the image once.
+\end{itemize}
+
+\subsection{Concept Overview}
+\begin{itemize}
+    \item In practical computer vision, a thresholded binary image is rarely a pristine, single-object mask. Instead, it often contains multiple independent shapes scattered across the frame, frequently intermingled with noise.
+
+    \item Before a system can analyze geometric moments of a specific item (e.g., a single wrench in a bin), it must perform segmentation.
+
+    \item Segmentation isolates each physical item into a distinct, mathematically addressable entity.
+
+    \item The foundation of segmentation is the definition of a ``single object'' on a discrete grid of pixels, known as a \textbf{Connected Component}.
+
+    \item In topology, a connected component is defined as a maximal set of foreground points where a continuous path exists between any two points ($A$ and $B$), such that every step along that path lands strictly on another foreground pixel.
+
+    \item Defining connectivity on a square grid introduces paradoxes depending on which neighboring pixels are considered ``connected''.
+
+    \item \textbf{4-Connectedness (4-C):}
+          \begin{itemize}
+              \item A pixel is connected only to its four edge neighbors (top, bottom, left, right).
+              \item Limitation: Ignores diagonal connections.
+              \item Result: A thin diagonal line is broken into disconnected pixels.
+          \end{itemize}
+
+    \item \textbf{8-Connectedness (8-C):}
+          \begin{itemize}
+              \item A pixel is connected to all eight surrounding neighbors, including diagonals.
+              \item Limitation: Introduces ambiguity with topology (violates intuitive boundary separation).
+              \item Result: A diagonal ring can incorrectly allow background pixels to connect through corners, merging inside and outside regions.
+          \end{itemize}
+
+    \item \textbf{6-Connectedness (6-C):}
+          \begin{itemize}
+              \item Simulates a hexagonal grid (like a honeycomb).
+              \item Uses a neighborhood of consistent connections without ambiguous corners.
+              \item Preserves physical boundaries and avoids topological inconsistencies.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Mathematical Formulation}
+The segmentation process maps a binary input image $B(x,y) \in \{0,1\}$ to a label matrix $L(x,y) \in \{0,1,2,3,\dots,N\}$.
+
+\begin{itemize}
+    \item $B(x,y)$: The original binary image where $1$ represents foreground and $0$ represents background.
+
+    \item $L(x,y)$: The output label matrix where each connected cluster of $1$s is assigned a unique integer ID from $1$ to $N$.
+
+    \item $N$: The total number of distinct objects (connected components) found in the image.
+\end{itemize}
+
+
+\subsection{Algorithm Process: Sequential Labeling}
+To efficiently label connected components, the Sequential Labeling Algorithm performs a single-pass raster scan.
+
+\begin{itemize}
+    \item \textbf{Scan:} The algorithm traverses the image pixel-by-pixel from left-to-right and top-to-bottom.
+
+    \item \textbf{Evaluate:} When a foreground pixel $A$ is encountered, it inspects previously visited neighbors (under a 6-C neighborhood):
+          \begin{itemize}
+              \item $B$: pixel directly above
+              \item $C$: pixel directly to the left
+              \item $D$: pixel at the top-left (diagonal)
+          \end{itemize}
+
+    \item \textbf{Labeling Rules:}
+          \begin{itemize}
+              \item If $B$, $C$, and $D$ are all background ($0$), then $A$ begins a new object and is assigned a new label.
+              \item If any neighbor already has a label, $A$ inherits that label.
+          \end{itemize}
+
+    \item \textbf{Collision:}
+          \begin{itemize}
+              \item If neighboring pixels have different labels (e.g., $B=1$ and $C=2$), it indicates that two labeled regions belong to the same object.
+              \item The algorithm records this as an equivalence.
+              \item A final pass resolves these equivalences so the entire object shares a single consistent label.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Intuition and Analogy}
+Think of sequential labeling like reading a book with a highlighter.
+
+As you move across the text, the moment you encounter a black ink letter you have not yet labeled, you assign it a new color.
+
+If the ink is connected to a region already labeled (for example, directly above or to the left), you continue using that same color.
+
+Over time, every contiguous block of ink (each word or shape) becomes uniquely colored, allowing you to identify and count each object separately.
+
+\subsection{Limitations}
+\begin{itemize}
+    \item Sequential labeling can suffer from significant memory and computational overhead when processing highly complex or intertwined structures.
+
+    \item The equivalence resolution step, where colliding labels are merged, requires efficient disjoint-set (union-find) data structures.
+
+    \item In highly noisy images, thousands of small fragmented regions can produce a large number of label collisions.
+
+    \item This can lead to millions of merge operations, which may slow down real-time processing systems and create performance bottlenecks.
+\end{itemize}
+
+
+\section{Morphological Operations}
+\begin{itemize}
+    \item \textbf{Dilation:} Expands objects by adding pixels.
+    \item \textbf{Erosion:} Shrinks objects by removing pixels.
+    \item \textbf{Structuring Elements:} Shapes (box, disk, etc.) used to control operations.
+    \item \textbf{Opening:} Erosion followed by dilation; removes small noise.
+    \item \textbf{Closing:} Dilation followed by erosion; fills gaps and holes.
+\end{itemize}
+
+\subsection{Concept Overview}
+
+\begin{itemize}
+    \item Binary thresholding is often imperfect, producing images corrupted by sensor noise and structural defects.
+
+    \item These artifacts appear as:
+          \begin{itemize}
+              \item \textbf{Salt noise}: random bright speckles in the background.
+              \item \textbf{Pepper noise}: random dark holes within objects.
+          \end{itemize}
+
+    \item To refine shapes and remove noise, computer vision systems use \textbf{Mathematical Morphology}.
+
+    \item This involves a small, parameterized shape called a \textbf{Structuring Element} (e.g., $3 \times 3$ box, disk, or hexagon) with a defined origin.
+
+    \item The structuring element is slid across the image, and logical rules are applied to modify pixel values.
+\end{itemize}
+
+\subsection{Fundamental Operations}
+\begin{itemize}
+    \item \textbf{Dilation:}
+          \begin{itemize}
+              \item Expands or thickens regions of $1$s.
+              \item If the structuring element touches at least one $1$, the output pixel becomes $1$.
+              \item Used to fill small holes and close narrow gaps.
+          \end{itemize}
+
+    \item \textbf{Erosion:}
+          \begin{itemize}
+              \item Shrinks or thins regions of $1$s.
+              \item The structuring element must fully fit within $1$s for the output pixel to remain $1$.
+              \item Removes small noise and breaks thin connections.
+          \end{itemize}
+    \item \textbf{Compound Operations}
+          \begin{itemize}
+              \item \textbf{Opening:}
+                    \begin{itemize}
+                        \item Erosion followed by dilation.
+                        \item Removes small ``salt'' noise and restores object shape without regrowing noise.
+                    \end{itemize}
+
+              \item \textbf{Closing:}
+                    \begin{itemize}
+                        \item Dilation followed by erosion.
+                        \item Fills internal ``pepper'' holes and bridges gaps, then restores overall shape.
+                    \end{itemize}
+          \end{itemize}
+\end{itemize}
+
+\subsection{Mathematical Formulation}
+
+Let $f$ be the binary image and $s$ be the structuring element. Let $c = f \otimes s$ denote the count of overlapping $1$s between the image and the structuring element, and let $S$ be the total number of pixels in $s$.
+
+\begin{itemize}
+    \item \textbf{Dilation:}
+          \[
+              dilate(f, s) =
+              \begin{cases}
+                  1 & \text{if } c \ge 1 \\
+                  0 & \text{otherwise}
+              \end{cases}
+          \]
+
+    \item \textbf{Erosion:}
+          \[
+              erode(f, s) =
+              \begin{cases}
+                  1 & \text{if } c = S \\
+                  0 & \text{otherwise}
+              \end{cases}
+          \]
+
+    \item \textbf{Opening:}
+          \[
+              open(f, s) = dilate\big(erode(f, s), s\big)
+          \]
+
+    \item \textbf{Closing:}
+          \[
+              close(f, s) = erode\big(dilate(f, s), s\big)
+          \]
+\end{itemize}
+
+\subsection{Algorithm Process: Opening Operation}
+\begin{itemize}
+    \item Define the structuring element $s$ such that its size is larger than expected noise speckles but smaller than the target object.
+
+    \item \textbf{Step 1: Erosion}
+          \begin{itemize}
+              \item Slide $s$ across the image $f$.
+              \item Apply erosion (logical AND behavior).
+              \item Noise speckles are removed because they cannot fully contain $s$.
+              \item The main object survives but becomes smaller.
+          \end{itemize}
+
+    \item \textbf{Step 2: Dilation}
+          \begin{itemize}
+              \item Take the eroded image and apply the same structuring element $s$.
+              \item Slide $s$ across the image and apply dilation (logical OR behavior).
+              \item The main object expands back toward its original size.
+              \item Since noise was removed during erosion, it cannot regrow.
+          \end{itemize}
+
+    \item \textbf{Result:} The final image preserves the original object shape while eliminating small noise artifacts.
+\end{itemize}
+
+\subsection{Intuition and Analogy}
+\begin{itemize}
+    \item Think of \textbf{Erosion} as aggressively sanding down a block of wood, and \textbf{Dilation} as applying a thick coat of primer paint.
+
+    \item If a block has tiny splinters (noise), you apply \textbf{Opening}:
+          \begin{itemize}
+              \item First, sand the block (erosion) until the splinters are removed, leaving the block smaller.
+              \item Then, apply paint (dilation) to restore the block to its original size.
+              \item The splinters do not return.
+          \end{itemize}
+
+    \item If the block has tiny cracks (pepper noise), you apply \textbf{Closing}:
+          \begin{itemize}
+              \item First, apply thick paint (dilation) to fill the cracks, making the block slightly larger.
+              \item Then, sand the surface (erosion) to bring it back to its original dimensions.
+              \item The cracks remain filled.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Practical Applications}
+\begin{itemize}
+    \item Mathematical morphology is essential for cleaning thresholded images.
+
+    \item \textbf{Document scanning (OCR):}
+          \begin{itemize}
+              \item Reconnects fragmented letters.
+              \item Removes background paper texture.
+          \end{itemize}
+
+    \item \textbf{Medical imaging:}
+          \begin{itemize}
+              \item Prevents a single cell with a gap from being incorrectly counted as multiple cells.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Limitations}
+\begin{itemize}
+    \item The effectiveness of morphology depends heavily on the size of the structuring element $s$.
+
+    \item If noise clusters are larger than $s$ during an opening operation:
+          \begin{itemize}
+              \item Erosion shrinks the noise but does not fully remove it.
+              \item Dilation then regrows the remaining noise to its original size.
+              \item The operation becomes ineffective.
+          \end{itemize}
+\end{itemize}
+
+\section{Object Tracking and Dynamic Backgrounds}
+\begin{itemize}
+    \item \textbf{Change Detection:} Identifies motion between frames.
+    \item \textbf{Moving Average:} Background modeled as average of recent frames.
+    \item \textbf{Median Methods:} Uses median values for robustness to noise.
+    \item \textbf{Gaussian Mixture Models (GMM):} Models each pixel as a mixture of Gaussians to separate foreground from dynamic background.
+\end{itemize}
+
+\subsection{Concept Overview}
+
+\begin{itemize}
+    \item In advanced computer vision (e.g., surveillance or traffic monitoring), the goal is \textbf{Object Tracking}, which isolates moving objects (foreground) from the environment (background) across video frames.
+
+    \item This task is known as \textbf{Change Detection}.
+
+    \item A naive method, \textbf{frame differencing} (subtracting consecutive frames), is not robust in real-world conditions.
+
+    \item Real environments include natural fluctuations such as:
+          \begin{itemize}
+              \item Water ripples
+              \item Moving tree leaves
+              \item Camera shake
+              \item Snow or rain
+          \end{itemize}
+
+    \item These variations can falsely appear as motion when using simple subtraction.
+
+    \item To address this, systems model the background dynamically over time using more robust methods:
+
+          \begin{itemize}
+              \item \textbf{Moving Average (Mean):}
+                    \begin{itemize}
+                        \item Models the background as the average intensity over the last $K$ frames.
+                    \end{itemize}
+
+              \item \textbf{Median Filtering:}
+                    \begin{itemize}
+                        \item Stores the last $K$ frames and computes the median for each pixel.
+                        \item Ignores short-term anomalies (e.g., a passing car).
+                        \item Converges to the most stable, consistent background value.
+                    \end{itemize}
+
+              \item \textbf{Gaussian Mixture Models (GMM):}
+                    \begin{itemize}
+                        \item Models complex pixel behavior using multiple Gaussian distributions.
+                        \item Tracks a temporal histogram of each pixel.
+                        \item Handles environments where a pixel alternates between multiple states (e.g., tree leaves and sky).
+                    \end{itemize}
+          \end{itemize}
+\end{itemize}
+
+\subsection{Mathematical Formulation}
+
+\begin{itemize}
+    \item \textbf{1. Naive Background Subtraction}
+
+          \begin{itemize}
+              \item The foreground mask $F_t$ at time $t$ is defined as:
+                    \[
+                        F_t = |I_t - B| > \tau
+                    \]
+
+              \item $I_t$: Intensity of the current frame.
+
+              \item $B$: Background model (e.g., mean or median).
+
+              \item $\tau$: Threshold value used to classify pixels.
+
+              \item If the difference exceeds $\tau$, the pixel is labeled as foreground ($1$); otherwise, it is background ($0$).
+          \end{itemize}
+
+    \item \textbf{2. Gaussian Mixture Models (GMM)}
+
+          \begin{itemize}
+              \item The probability of observing a pixel intensity $x_t$ is modeled as:
+                    \[
+                        P(x_t) = \sum_{i=1}^{K} \omega_{i,t} \cdot \eta(x_t \mid \mu_{i,t}, \Sigma_{i,t})
+                    \]
+
+              \item $\omega_{i,t}$ (Weight): The prior probability of the $i$-th Gaussian, representing how frequently that intensity appears.
+
+              \item $\mu_{i,t}$ (Mean): The average intensity of the $i$-th Gaussian.
+
+              \item $\Sigma_{i,t}$ (Variance): The spread or variability of the distribution.
+
+              \item \textbf{Classification Logic:}
+                    \begin{itemize}
+                        \item Gaussians with high weight ($\omega$) and low variance ($\Sigma$) are considered background.
+                        \item A pixel $x_t$ that matches one of these Gaussians is labeled background ($0$).
+                        \item Otherwise, it is labeled foreground ($1$).
+                    \end{itemize}
+          \end{itemize}
+\end{itemize}
+
+
+\subsection{Algorithm Process}
+
+\begin{itemize}
+    \item Initialize $K$ independent Gaussian models for each pixel in the video stream.
+
+    \item For each incoming frame, analyze the pixel intensity $I_t$.
+
+    \item Compare $I_t$ against the $K$ Gaussians to find a statistical match.
+
+    \item \textbf{If a match is found:}
+          \begin{itemize}
+              \item Increase the weight $\omega$ of the matched Gaussian.
+              \item Gradually update its mean $\mu$.
+              \item Decrease the weights of unmatched Gaussians.
+          \end{itemize}
+
+    \item \textbf{If no match is found:}
+          \begin{itemize}
+              \item The pixel represents a new intensity.
+              \item Replace the lowest-weight Gaussian with a new one centered at $I_t$.
+              \item Assign it a low initial weight.
+          \end{itemize}
+
+    \item Sort Gaussians by their $\omega / \sigma$ ratio.
+
+    \item The top-ranked Gaussians define the background.
+
+    \item Output a binary mask:
+          \begin{itemize}
+              \item Pixels matching background Gaussians are labeled $0$.
+              \item All other pixels are labeled $1$.
+          \end{itemize}
+
+    \item (Optional) Apply morphological opening/closing to clean noise.
+
+    \item (Optional) Use sequential labeling to segment and track distinct objects.
+\end{itemize}
+
+\subsection{Intuition}
+
+\begin{itemize}
+    \item Imagine observing a single point in a busy city through a narrow straw during a snowstorm.
+
+    \item Most of the time (e.g., 90\%), you see the road (background).
+
+    \item Occasionally, snowflakes pass by (e.g., 8\%), and rarely, a red truck (e.g., 2\%) appears.
+
+    \item The GMM learns strong statistical patterns for frequent observations (road and snow).
+
+    \item Rare events (like the truck) do not match these patterns and are identified as foreground.
+
+    \item This allows the system to ignore noise while detecting meaningful motion.
+\end{itemize}
+
+\subsection{Practical Applications}
+
+\begin{itemize}
+    \item GMM is widely used in object tracking and surveillance systems.
+
+    \item It can:
+          \begin{itemize}
+              \item Detect vehicles on highways despite weather conditions.
+              \item Track pedestrians in crowded environments.
+              \item Ignore dynamic background elements such as moving trees or shadows.
+          \end{itemize}
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item GMM is computationally expensive, especially when maintaining $K$ Gaussians for millions of pixels at high frame rates.
+
+    \item It can adapt to gradual changes (e.g., lighting over time) but struggles with sudden global changes.
+
+    \item Example: A sudden lighting shift (like turning on a light) can temporarily disrupt the model.
+
+    \item The system requires multiple frames to re-learn the new background distribution and stabilize.
+\end{itemize}
+
+\end{document}
